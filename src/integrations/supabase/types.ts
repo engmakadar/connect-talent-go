@@ -764,6 +764,60 @@ export type Database = {
           },
         ]
       }
+      resumes: {
+        Row: {
+          certificates: Json
+          created_at: string
+          date_of_birth: string | null
+          education: Json
+          email: string | null
+          experience: Json
+          full_name: string | null
+          location: string | null
+          nationality: string | null
+          phone: string | null
+          refs: Json
+          skills: Json
+          summary: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          certificates?: Json
+          created_at?: string
+          date_of_birth?: string | null
+          education?: Json
+          email?: string | null
+          experience?: Json
+          full_name?: string | null
+          location?: string | null
+          nationality?: string | null
+          phone?: string | null
+          refs?: Json
+          skills?: Json
+          summary?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          certificates?: Json
+          created_at?: string
+          date_of_birth?: string | null
+          education?: Json
+          email?: string | null
+          experience?: Json
+          full_name?: string | null
+          location?: string | null
+          nationality?: string | null
+          phone?: string | null
+          refs?: Json
+          skills?: Json
+          summary?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscription_plans: {
         Row: {
           audience: string
