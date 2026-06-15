@@ -148,3 +148,42 @@ export const deleteCompanyUser = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/** Manager sets a company user's password directly. */
+export const setCompanyUserPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    company_id: z.string().uuid(),
+    user_id: z.string().uuid(),
+    password: z.string().min(8).max(72),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId: actorId } = context;
+    await assertCompanyManager(supabase, actorId, data.company_id);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Ensure target belongs to this company.
+    const { data: prof } = await supabaseAdmin.from("profiles").select("company_id").eq("id", data.user_id).maybeSingle();
+    if (!prof || prof.company_id !== data.company_id) throw new Error("User is not a member of this company.");
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, { password: data.password });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Manager generates a recovery link for a company user. */
+export const sendCompanyUserReset = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    company_id: z.string().uuid(),
+    user_id: z.string().uuid(),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId: actorId } = context;
+    await assertCompanyManager(supabase, actorId, data.company_id);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: prof } = await supabaseAdmin.from("profiles").select("email, company_id").eq("id", data.user_id).maybeSingle();
+    if (!prof || prof.company_id !== data.company_id) throw new Error("User is not a member of this company.");
+    if (!prof.email) throw new Error("User has no email.");
+    const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({ type: "recovery", email: prof.email });
+    if (error) throw new Error(error.message);
+    return { ok: true, actionLink: link.properties?.action_link ?? null, email: prof.email };
+  });
