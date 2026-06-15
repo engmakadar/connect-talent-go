@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Users, Plus, Search, MoreHorizontal, Ban, PowerOff, Trash2, Pencil, Mail } from "lucide-react";
+import { Users, Plus, Search, MoreHorizontal, Ban, PowerOff, Trash2, Pencil, Mail, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
@@ -17,6 +17,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { toast } from "sonner";
 import {
   inviteCompanyUser, updateCompanyUser, suspendCompanyUser, deleteCompanyUser,
+  setCompanyUserPassword, sendCompanyUserReset,
 } from "@/lib/company-users.functions";
 
 export const Route = createFileRoute("/company/users")({
