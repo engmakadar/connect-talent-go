@@ -408,3 +408,62 @@ function EditDialog({ companyId, row }: { companyId: string; row: Row }) {
     </Dialog>
   );
 }
+
+function CompanyPasswordItems({ companyId, row }: { companyId: string; row: Row }) {
+  const [open, setOpen] = useState(false);
+  const [pw, setPw] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [link, setLink] = useState<string | null>(null);
+  const setPass = useServerFn(setCompanyUserPassword);
+  const sendReset = useServerFn(sendCompanyUserReset);
+
+  const submitSet = async () => {
+    if (pw.length < 8) return toast.error("Min 8 chars.");
+    setSaving(true);
+    try {
+      await setPass({ data: { company_id: companyId, user_id: row.id, password: pw } });
+      toast.success("Password updated.");
+      setOpen(false); setPw("");
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+    finally { setSaving(false); }
+  };
+
+  const sendLink = async () => {
+    try {
+      const res = await sendReset({ data: { company_id: companyId, user_id: row.id } });
+      if (res.actionLink) { setLink(res.actionLink); toast.success("Reset link generated."); }
+      else toast.success("Reset email sent.");
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+  };
+
+  return (
+    <>
+      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setOpen(true); }}>
+        <KeyRound className="mr-2 h-4 w-4" /> Set new password
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={sendLink}>
+        <Mail className="mr-2 h-4 w-4" /> Send reset email
+      </DropdownMenuItem>
+      <Dialog open={open || !!link} onOpenChange={(v) => { if (!v) { setOpen(false); setLink(null); } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{link ? "Password reset link" : `Set password${row.email ? ` for ${row.email}` : ""}`}</DialogTitle></DialogHeader>
+          {link ? (
+            <div className="space-y-3">
+              <p className="text-sm">Share this one-time link with the user (expires shortly):</p>
+              <Input readOnly value={link} className="font-mono text-xs" onFocus={(e) => e.currentTarget.select()} />
+              <DialogFooter><Button onClick={() => setLink(null)}>Done</Button></DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div><Label>New password</Label><Input type="text" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Min 8 characters" /></div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                <Button onClick={submitSet} disabled={saving || pw.length < 8}>{saving ? "Saving…" : "Set password"}</Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
