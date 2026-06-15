@@ -152,9 +152,10 @@ function AdminReview() {
 }
 
 function JobReviewCard({
-  job, onApprove, onReject,
+  job, canModerate, onApprove, onReject,
 }: {
   job: Job;
+  canModerate: boolean;
   onApprove: (notes?: string) => void;
   onReject: (notes?: string) => void;
 }) {
@@ -182,10 +183,10 @@ function JobReviewCard({
           <Button asChild size="sm" variant="outline" className="rounded-full">
             <Link to="/jobs/$jobId" params={{ jobId: job.id }} target="_blank"><ExternalLink className="h-4 w-4" /> Preview as public</Link>
           </Button>
-          {job.status !== "approved" && (
+          {canModerate && job.status !== "approved" && (
             <Button size="sm" className="rounded-full" onClick={() => onApprove(notes)}><Check className="h-4 w-4" /> Approve</Button>
           )}
-          {job.status !== "rejected" && (
+          {canModerate && job.status !== "rejected" && (
             <Button variant="outline" size="sm" className="rounded-full" onClick={() => onReject(notes)}><X className="h-4 w-4" /> Reject</Button>
           )}
         </div>
@@ -201,10 +202,12 @@ function JobReviewCard({
         </div>
       </details>
 
-      <div className="mt-4">
-        <Label className="text-xs">Review notes (optional)</Label>
-        <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="mt-1" placeholder="Feedback for the employer..." />
-      </div>
+      {canModerate && (
+        <div className="mt-4">
+          <Label className="text-xs">Review notes (optional)</Label>
+          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="mt-1" placeholder="Feedback for the employer..." />
+        </div>
+      )}
     </div>
   );
 }
