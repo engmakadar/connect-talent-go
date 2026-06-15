@@ -7,19 +7,25 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 export function NotificationsBell({ className = "" }: { className?: string }) {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const qc = useQueryClient();
+
+  // Company / jobseeker users only see Super Admin announcements + job-related notifications.
+  // Super Admins see everything.
+  const ALLOWED_NON_ADMIN_CATEGORIES = ["announcement", "job_match", "job", "job_application", "job_status"];
 
   const { data } = useQuery({
     enabled: !!user,
-    queryKey: ["notifications", user?.id],
+    queryKey: ["notifications", user?.id, isAdmin],
     queryFn: async () => {
-      const { data } = await supabase
+      let q = supabase
         .from("notifications")
         .select("id, title, body, link, category, read_at, created_at")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(30);
+      if (!isAdmin) q = q.in("category", ALLOWED_NON_ADMIN_CATEGORIES);
+      const { data } = await q;
       return data ?? [];
     },
     refetchInterval: 60_000,
