@@ -126,7 +126,6 @@ function CompaniesTable() {
               <th className="px-5 py-3 font-semibold">Contact</th>
               <th className="px-5 py-3 font-semibold">Status</th>
               <th className="px-5 py-3 font-semibold">Plan</th>
-              <th className="px-5 py-3 font-semibold">Members</th>
               <th className="px-5 py-3 font-semibold">Team</th>
               <th className="px-5 py-3 font-semibold">Enrolled</th>
               <th className="px-5 py-3" />
