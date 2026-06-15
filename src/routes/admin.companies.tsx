@@ -126,7 +126,6 @@ function CompaniesTable() {
               <th className="px-5 py-3 font-semibold">Contact</th>
               <th className="px-5 py-3 font-semibold">Status</th>
               <th className="px-5 py-3 font-semibold">Plan</th>
-              <th className="px-5 py-3 font-semibold">Members</th>
               <th className="px-5 py-3 font-semibold">Team</th>
               <th className="px-5 py-3 font-semibold">Enrolled</th>
               <th className="px-5 py-3" />
@@ -182,14 +181,12 @@ function CompaniesTable() {
                     </SelectContent>
                   </Select>
                 </td>
-                <td className="px-5 py-4 text-sm font-semibold text-ink">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs">
-                    <UsersRound className="h-3 w-3" />
-                    {(c as Company & { member_total: number }).member_total}
-                  </span>
-                </td>
                 <td className="px-5 py-4">
-                  <TeamsCell companyId={c.id} teams={(c as Company & { teams: { id: string; name: string; member_count: number }[] }).teams} />
+                  <TeamsCell
+                    companyId={c.id}
+                    teams={(c as Company & { teams: { id: string; name: string; member_count: number }[] }).teams}
+                    memberTotal={(c as Company & { member_total: number }).member_total}
+                  />
                 </td>
                 <td className="px-5 py-4 text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</td>
                 <td className="px-5 py-4 text-right">
@@ -316,26 +313,34 @@ function CompanyDialog({ mode, company }: { mode: "create" | "edit"; company?: C
   );
 }
 
-function TeamsCell({ companyId, teams }: { companyId: string; teams: { id: string; name: string; member_count: number }[] }) {
+function TeamsCell({ companyId, teams, memberTotal }: { companyId: string; teams: { id: string; name: string; member_count: number }[]; memberTotal: number }) {
+  const label = `Team – ${memberTotal} ${memberTotal === 1 ? "member" : "members"}`;
   if (!teams.length) {
     return (
-      <Link to="/admin/companies/$companyId" params={{ companyId }} className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1">
-        <UsersRound className="h-3 w-3" /> No teams · Add
+      <Link to="/admin/companies/$companyId" params={{ companyId }} className="inline-flex flex-col gap-1 hover:text-primary">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-semibold">
+          <UsersRound className="h-3 w-3" /> {label}
+        </span>
+        <span className="text-[11px] text-muted-foreground">No teams · Add</span>
       </Link>
     );
   }
   return (
-    <div className="flex flex-wrap gap-1.5 max-w-[260px]">
-      {teams.slice(0, 4).map((t) => (
-        <Link key={t.id} to="/admin/companies/$companyId" params={{ companyId }}
-          className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-[11px] font-medium hover:bg-primary/20">
-          <UsersRound className="h-3 w-3" /> {t.name}
-          <span className="text-primary/70">·{t.member_count}</span>
-        </Link>
-      ))}
-      {teams.length > 4 && (
-        <Link to="/admin/companies/$companyId" params={{ companyId }} className="text-[11px] text-muted-foreground hover:text-primary">+{teams.length - 4} more</Link>
-      )}
+    <div className="flex flex-col gap-1.5 max-w-[280px]">
+      <Link to="/admin/companies/$companyId" params={{ companyId }} className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-semibold w-fit hover:bg-primary/20">
+        <UsersRound className="h-3 w-3" /> {label}
+      </Link>
+      <div className="flex flex-wrap gap-1">
+        {teams.slice(0, 4).map((t) => (
+          <Link key={t.id} to="/admin/companies/$companyId" params={{ companyId }}
+            className="inline-flex items-center gap-1 rounded-full bg-secondary text-ink-soft px-2 py-0.5 text-[11px] font-medium hover:bg-secondary/70">
+            {t.name}<span className="text-muted-foreground">·{t.member_count}</span>
+          </Link>
+        ))}
+        {teams.length > 4 && (
+          <Link to="/admin/companies/$companyId" params={{ companyId }} className="text-[11px] text-muted-foreground hover:text-primary">+{teams.length - 4} more</Link>
+        )}
+      </div>
     </div>
   );
 }

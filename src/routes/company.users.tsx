@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Users, Plus, Search, MoreHorizontal, Ban, PowerOff, Trash2, Pencil, Mail } from "lucide-react";
+import { Users, Plus, Search, MoreHorizontal, Ban, PowerOff, Trash2, Pencil, Mail, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
@@ -17,6 +17,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { toast } from "sonner";
 import {
   inviteCompanyUser, updateCompanyUser, suspendCompanyUser, deleteCompanyUser,
+  setCompanyUserPassword, sendCompanyUserReset,
 } from "@/lib/company-users.functions";
 
 export const Route = createFileRoute("/company/users")({
@@ -213,6 +214,8 @@ function UsersTable({ companyId, company }: { companyId: string; company: { id: 
                             <DropdownMenuItem onClick={() => onSuspend(r, !r.suspended)}><Ban className="mr-2 h-4 w-4" /> {r.suspended ? "Unsuspend" : "Suspend"}</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => onDeactivate(r, !r.deactivated)}><PowerOff className="mr-2 h-4 w-4" /> {r.deactivated ? "Reactivate" : "Deactivate"}</DropdownMenuItem>
                             <DropdownMenuSeparator />
+                            <CompanyPasswordItems companyId={companyId} row={r} />
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive" onClick={() => onDelete(r)}><Trash2 className="mr-2 h-4 w-4" /> Delete user</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -403,5 +406,64 @@ function EditDialog({ companyId, row }: { companyId: string; row: Row }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function CompanyPasswordItems({ companyId, row }: { companyId: string; row: Row }) {
+  const [open, setOpen] = useState(false);
+  const [pw, setPw] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [link, setLink] = useState<string | null>(null);
+  const setPass = useServerFn(setCompanyUserPassword);
+  const sendReset = useServerFn(sendCompanyUserReset);
+
+  const submitSet = async () => {
+    if (pw.length < 8) return toast.error("Min 8 chars.");
+    setSaving(true);
+    try {
+      await setPass({ data: { company_id: companyId, user_id: row.id, password: pw } });
+      toast.success("Password updated.");
+      setOpen(false); setPw("");
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+    finally { setSaving(false); }
+  };
+
+  const sendLink = async () => {
+    try {
+      const res = await sendReset({ data: { company_id: companyId, user_id: row.id } });
+      if (res.actionLink) { setLink(res.actionLink); toast.success("Reset link generated."); }
+      else toast.success("Reset email sent.");
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+  };
+
+  return (
+    <>
+      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setOpen(true); }}>
+        <KeyRound className="mr-2 h-4 w-4" /> Set new password
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={sendLink}>
+        <Mail className="mr-2 h-4 w-4" /> Send reset email
+      </DropdownMenuItem>
+      <Dialog open={open || !!link} onOpenChange={(v) => { if (!v) { setOpen(false); setLink(null); } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{link ? "Password reset link" : `Set password${row.email ? ` for ${row.email}` : ""}`}</DialogTitle></DialogHeader>
+          {link ? (
+            <div className="space-y-3">
+              <p className="text-sm">Share this one-time link with the user (expires shortly):</p>
+              <Input readOnly value={link} className="font-mono text-xs" onFocus={(e) => e.currentTarget.select()} />
+              <DialogFooter><Button onClick={() => setLink(null)}>Done</Button></DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div><Label>New password</Label><Input type="text" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Min 8 characters" /></div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                <Button onClick={submitSet} disabled={saving || pw.length < 8}>{saving ? "Saving…" : "Set password"}</Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

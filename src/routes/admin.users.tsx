@@ -450,14 +450,19 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
 }
 
 function EnrollMenu() {
-  const [open, setOpen] = useState(false);
   return (
-    <>
-      <Button onClick={() => setOpen(true)} className="rounded-full bg-primary hover:bg-primary/90">
-        <Plus className="h-4 w-4 mr-1" /> Enroll admin user
-      </Button>
-      <EnrollDialog role="admin" open={open} onOpenChange={setOpen} />
-    </>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button className="rounded-full bg-primary hover:bg-primary/90">
+          <Plus className="h-4 w-4 mr-1" /> Enroll user
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <EnrollItem role="admin" label="Super Admin" />
+        <EnrollItem role="employer" label="Employer (Company)" />
+        <EnrollItem role="jobseeker" label="Jobseeker" />
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
