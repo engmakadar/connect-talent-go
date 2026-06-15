@@ -120,6 +120,11 @@ export function SiteHeader() {
                   <DropdownMenuItem onClick={() => router.navigate({ to: "/profile" })}>
                     <UserIcon className="mr-2 h-4 w-4" /> Profile & Preferences
                   </DropdownMenuItem>
+                  {isJobseeker && (
+                    <DropdownMenuItem onClick={() => router.navigate({ to: "/resume" })}>
+                      <FileText className="mr-2 h-4 w-4" /> My Resume
+                    </DropdownMenuItem>
+                  )}
                   {isEmployer && !isAdmin && (
                     <DropdownMenuItem onClick={() => router.navigate({ to: "/company/users" })}>
                       <Users className="mr-2 h-4 w-4" /> Team Members
@@ -128,21 +133,21 @@ export function SiteHeader() {
                   <DropdownMenuItem onClick={() => router.navigate({ to: "/applications" })}>
                     <LayoutDashboard className="mr-2 h-4 w-4" /> My Applications
                   </DropdownMenuItem>
-                  {isEmployer && (
+                  {(isEmployer || isAdmin) && (
                     <DropdownMenuItem onClick={() => router.navigate({ to: "/billing" })}>
                       <Receipt className="mr-2 h-4 w-4" /> Billing & Invoices
                     </DropdownMenuItem>
                   )}
                 </div>
 
-                {(canReview || canPostJob || isAdmin) && (
+                {(canReview || canPostJob) && (
                   <>
                     <DropdownMenuSeparator className="my-0" />
                     <div className="py-1">
                       <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">Workspace</DropdownMenuLabel>
                       {canReview && (
                         <DropdownMenuItem onClick={() => router.navigate({ to: "/admin/review" })}>
-                          <LayoutDashboard className="mr-2 h-4 w-4" /> Review Queue
+                          <ClipboardCheck className="mr-2 h-4 w-4" /> Review Queue
                         </DropdownMenuItem>
                       )}
                       {canPostJob && (
@@ -151,14 +156,9 @@ export function SiteHeader() {
                         </DropdownMenuItem>
                       )}
                       {isAdmin && (
-                        <>
-                          <DropdownMenuItem onClick={() => router.navigate({ to: "/admin/users" })}>
-                            <Shield className="mr-2 h-4 w-4" /> Manage Users
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => router.navigate({ to: "/admin/companies" })}>
-                            <Building2 className="mr-2 h-4 w-4" /> Companies
-                          </DropdownMenuItem>
-                        </>
+                        <DropdownMenuItem onClick={() => router.navigate({ to: "/admin/dashboard" })}>
+                          <Building2 className="mr-2 h-4 w-4" /> Admin Console
+                        </DropdownMenuItem>
                       )}
                     </div>
                   </>
@@ -167,7 +167,7 @@ export function SiteHeader() {
                 <DropdownMenuSeparator className="my-0" />
                 <div className="py-1">
                   <DropdownMenuItem onClick={() => signOut().then(() => router.navigate({ to: "/" }))}>
-                    <LogOut className="mr-2 h-4 w-4" /> Sign out
+                    <LogOut className="mr-2 h-4 w-4" /> Sign Out
                   </DropdownMenuItem>
                 </div>
               </DropdownMenuContent>
