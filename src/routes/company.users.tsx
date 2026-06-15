@@ -214,6 +214,8 @@ function UsersTable({ companyId, company }: { companyId: string; company: { id: 
                             <DropdownMenuItem onClick={() => onSuspend(r, !r.suspended)}><Ban className="mr-2 h-4 w-4" /> {r.suspended ? "Unsuspend" : "Suspend"}</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => onDeactivate(r, !r.deactivated)}><PowerOff className="mr-2 h-4 w-4" /> {r.deactivated ? "Reactivate" : "Deactivate"}</DropdownMenuItem>
                             <DropdownMenuSeparator />
+                            <CompanyPasswordItems companyId={companyId} row={r} />
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive" onClick={() => onDelete(r)}><Trash2 className="mr-2 h-4 w-4" /> Delete user</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
