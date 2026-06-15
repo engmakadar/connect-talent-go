@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function SiteHeader() {
-  const { user, isAdmin, isEmployer, signOut } = useAuth();
+  const { user, isAdmin, isEmployer, isJobseeker, signOut } = useAuth();
   const perms = usePagePermissions();
   const router = useRouter();
   const { data: cs } = useCompanySummary();
