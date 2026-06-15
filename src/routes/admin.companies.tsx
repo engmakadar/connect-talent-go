@@ -181,14 +181,12 @@ function CompaniesTable() {
                     </SelectContent>
                   </Select>
                 </td>
-                <td className="px-5 py-4 text-sm font-semibold text-ink">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs">
-                    <UsersRound className="h-3 w-3" />
-                    {(c as Company & { member_total: number }).member_total}
-                  </span>
-                </td>
                 <td className="px-5 py-4">
-                  <TeamsCell companyId={c.id} teams={(c as Company & { teams: { id: string; name: string; member_count: number }[] }).teams} />
+                  <TeamsCell
+                    companyId={c.id}
+                    teams={(c as Company & { teams: { id: string; name: string; member_count: number }[] }).teams}
+                    memberTotal={(c as Company & { member_total: number }).member_total}
+                  />
                 </td>
                 <td className="px-5 py-4 text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</td>
                 <td className="px-5 py-4 text-right">
