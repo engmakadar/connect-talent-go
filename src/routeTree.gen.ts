@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ResumeRouteImport } from './routes/resume'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PostJobRouteImport } from './routes/post-job'
 import { Route as PlansRouteImport } from './routes/plans'
@@ -40,6 +41,11 @@ import { Route as AdminCompaniesCompanyIdRouteImport } from './routes/admin.comp
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResumeRoute = ResumeRouteImport.update({
+  id: '/resume',
+  path: '/resume',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -181,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/plans': typeof PlansRoute
   '/post-job': typeof PostJobRoute
   '/profile': typeof ProfileRoute
+  '/resume': typeof ResumeRoute
   '/settings': typeof SettingsRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
@@ -210,6 +217,7 @@ export interface FileRoutesByTo {
   '/plans': typeof PlansRoute
   '/post-job': typeof PostJobRoute
   '/profile': typeof ProfileRoute
+  '/resume': typeof ResumeRoute
   '/settings': typeof SettingsRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
@@ -240,6 +248,7 @@ export interface FileRoutesById {
   '/plans': typeof PlansRoute
   '/post-job': typeof PostJobRoute
   '/profile': typeof ProfileRoute
+  '/resume': typeof ResumeRoute
   '/settings': typeof SettingsRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
@@ -271,6 +280,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/post-job'
     | '/profile'
+    | '/resume'
     | '/settings'
     | '/admin/announcements'
     | '/admin/audit-logs'
@@ -300,6 +310,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/post-job'
     | '/profile'
+    | '/resume'
     | '/settings'
     | '/admin/announcements'
     | '/admin/audit-logs'
@@ -329,6 +340,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/post-job'
     | '/profile'
+    | '/resume'
     | '/settings'
     | '/admin/announcements'
     | '/admin/audit-logs'
@@ -359,6 +371,7 @@ export interface RootRouteChildren {
   PlansRoute: typeof PlansRoute
   PostJobRoute: typeof PostJobRoute
   ProfileRoute: typeof ProfileRoute
+  ResumeRoute: typeof ResumeRoute
   SettingsRoute: typeof SettingsRoute
   AdminAnnouncementsRoute: typeof AdminAnnouncementsRoute
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
@@ -387,6 +400,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resume': {
+      id: '/resume'
+      path: '/resume'
+      fullPath: '/resume'
+      preLoaderRoute: typeof ResumeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -594,6 +614,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlansRoute: PlansRoute,
   PostJobRoute: PostJobRoute,
   ProfileRoute: ProfileRoute,
+  ResumeRoute: ResumeRoute,
   SettingsRoute: SettingsRoute,
   AdminAnnouncementsRoute: AdminAnnouncementsRoute,
   AdminAuditLogsRoute: AdminAuditLogsRoute,
