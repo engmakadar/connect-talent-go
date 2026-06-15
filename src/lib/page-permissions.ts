@@ -4,7 +4,12 @@ import { useAuth } from "@/lib/auth-context";
 import type { AdminPageKey } from "@/lib/admin-nav";
 
 /** Page keys automatically granted to all employer (company) users by role. */
-const EMPLOYER_DEFAULT_KEYS: AdminPageKey[] = ["branding_settings"];
+const EMPLOYER_DEFAULT_KEYS: AdminPageKey[] = [
+  "branding_settings",
+  "dashboard",
+  "job_approval",
+  "job_moderation",
+];
 
 /** Returns the set of admin page_keys the current user can access.
  *  - Admins implicitly get all keys.
