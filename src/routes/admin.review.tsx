@@ -30,9 +30,19 @@ function AdminReview() {
   const [tab, setTab] = useState<"pending" | "approved" | "rejected" | "expired">("pending");
   const [typeFilter, setTypeFilter] = useState<"all" | "job" | "tender">("all");
 
+  // Companies need their own company_id to scope the list.
+  const { data: companyId } = useQuery({
+    enabled: !!user && !isAdmin,
+    queryKey: ["my-company-id", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("company_id").eq("id", user!.id).maybeSingle();
+      return data?.company_id ?? null;
+    },
+  });
+
   const { data: jobs, isLoading } = useQuery({
-    queryKey: ["admin-jobs", tab, typeFilter],
-    enabled: isAdmin,
+    queryKey: ["admin-jobs", tab, typeFilter, isAdmin, companyId ?? null],
+    enabled: !!user && (isAdmin || companyId !== undefined),
     queryFn: async () => {
       const nowIso = new Date().toISOString();
       let q = supabase
@@ -44,11 +54,15 @@ function AdminReview() {
       } else {
         q = q.eq("status", tab as Database["public"]["Enums"]["job_status"]);
         if (tab === "approved") {
-          // Active approved only — expired land in the Expired tab.
           q = q.or(`expires_at.is.null,expires_at.gte.${nowIso}`);
         }
       }
       if (typeFilter !== "all") q = q.eq("posting_type", typeFilter);
+      // Scope to this user's company unless they're a Super Admin.
+      if (!isAdmin) {
+        if (!companyId) return [];
+        q = q.eq("company_id", companyId);
+      }
       const { data, error } = await q;
       if (error) throw error;
       return data as unknown as Job[];
@@ -68,23 +82,17 @@ function AdminReview() {
     qc.invalidateQueries({ queryKey: ["recent-jobs"] });
   };
 
-  if (!loading && !isAdmin) {
-    return (
-      <AdminShell pageKey="job_approval" title="Job Approval">
-        <div className="rounded-2xl bg-white p-12 ring-1 ring-black/5 text-center">
-          <ShieldAlert className="mx-auto h-10 w-10 text-destructive mb-3" />
-          <h2 className="font-semibold text-ink mb-1">Super Admin only</h2>
-          <p className="text-sm text-muted-foreground">Approval actions are restricted to Super Admin users.</p>
-        </div>
-      </AdminShell>
-    );
-  }
+  if (loading) return null;
 
   return (
     <AdminShell
       pageKey="job_approval"
       title="Job Approval"
-      subtitle="Approve or reject new submissions. Only Super Admin users can take action — no editing here."
+      subtitle={
+        isAdmin
+          ? "Approve or reject new submissions across every company."
+          : "Track the status of your company's job submissions. Only Super Admins can approve or reject."
+      }
     >
       <div className="rounded-2xl bg-white p-6 ring-1 ring-black/5 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -110,6 +118,15 @@ function AdminReview() {
           </div>
         </div>
 
+        {!isAdmin && (
+          <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+            <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0" />
+            <p>
+              You're viewing your company's submissions in read-only mode. Approval and rejection are reserved for Super Admins.
+            </p>
+          </div>
+        )}
+
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
           <TabsContent value={tab} className="space-y-3">
             {isLoading ? (
@@ -121,6 +138,7 @@ function AdminReview() {
                 <JobReviewCard
                   key={job.id}
                   job={job}
+                  canModerate={isAdmin}
                   onApprove={(notes) => updateStatus(job.id, "approved", notes)}
                   onReject={(notes) => updateStatus(job.id, "rejected", notes)}
                 />
@@ -134,9 +152,10 @@ function AdminReview() {
 }
 
 function JobReviewCard({
-  job, onApprove, onReject,
+  job, canModerate, onApprove, onReject,
 }: {
   job: Job;
+  canModerate: boolean;
   onApprove: (notes?: string) => void;
   onReject: (notes?: string) => void;
 }) {
@@ -164,10 +183,10 @@ function JobReviewCard({
           <Button asChild size="sm" variant="outline" className="rounded-full">
             <Link to="/jobs/$jobId" params={{ jobId: job.id }} target="_blank"><ExternalLink className="h-4 w-4" /> Preview as public</Link>
           </Button>
-          {job.status !== "approved" && (
+          {canModerate && job.status !== "approved" && (
             <Button size="sm" className="rounded-full" onClick={() => onApprove(notes)}><Check className="h-4 w-4" /> Approve</Button>
           )}
-          {job.status !== "rejected" && (
+          {canModerate && job.status !== "rejected" && (
             <Button variant="outline" size="sm" className="rounded-full" onClick={() => onReject(notes)}><X className="h-4 w-4" /> Reject</Button>
           )}
         </div>
@@ -183,10 +202,12 @@ function JobReviewCard({
         </div>
       </details>
 
-      <div className="mt-4">
-        <Label className="text-xs">Review notes (optional)</Label>
-        <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="mt-1" placeholder="Feedback for the employer..." />
-      </div>
+      {canModerate && (
+        <div className="mt-4">
+          <Label className="text-xs">Review notes (optional)</Label>
+          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="mt-1" placeholder="Feedback for the employer..." />
+        </div>
+      )}
     </div>
   );
 }
