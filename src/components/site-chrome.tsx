@@ -2,7 +2,7 @@ import { Link, useRouter } from "@tanstack/react-router";
 import {
   LogOut, User as UserIcon, Shield, Plus, LayoutDashboard, Users,
   Facebook, Linkedin, Twitter, Instagram, Mail, Phone, MapPin,
-  Building2, Receipt, ChevronDown,
+  Building2, Receipt, ChevronDown, ClipboardCheck, FileText,
 } from "lucide-react";
 import logo from "@/assets/sahan-logo.png";
 import { useAuth } from "@/lib/auth-context";
