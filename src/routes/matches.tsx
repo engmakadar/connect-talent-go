@@ -103,8 +103,8 @@ function MatchesPage() {
 
   const downloadCv = async () => {
     if (!resume) { toast.error("Build your resume first."); return; }
-    const { default: jsPDF } = await import("jspdf");
-    generateEuropassPdf(jsPDF, resume);
+    const mod = await import("jspdf");
+    generateEuropassPdf(mod.default, resume);
   };
 
   if (loading || !user) return null;

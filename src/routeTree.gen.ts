@@ -14,6 +14,7 @@ import { Route as ResumeRouteImport } from './routes/resume'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PostJobRouteImport } from './routes/post-job'
 import { Route as PlansRouteImport } from './routes/plans'
+import { Route as MatchesRouteImport } from './routes/matches'
 import { Route as BillingRouteImport } from './routes/billing'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ApplicationsRouteImport } from './routes/applications'
@@ -61,6 +62,11 @@ const PostJobRoute = PostJobRouteImport.update({
 const PlansRoute = PlansRouteImport.update({
   id: '/plans',
   path: '/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MatchesRoute = MatchesRouteImport.update({
+  id: '/matches',
+  path: '/matches',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BillingRoute = BillingRouteImport.update({
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/applications': typeof ApplicationsRoute
   '/auth': typeof AuthRoute
   '/billing': typeof BillingRoute
+  '/matches': typeof MatchesRoute
   '/plans': typeof PlansRoute
   '/post-job': typeof PostJobRoute
   '/profile': typeof ProfileRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/applications': typeof ApplicationsRoute
   '/auth': typeof AuthRoute
   '/billing': typeof BillingRoute
+  '/matches': typeof MatchesRoute
   '/plans': typeof PlansRoute
   '/post-job': typeof PostJobRoute
   '/profile': typeof ProfileRoute
@@ -245,6 +253,7 @@ export interface FileRoutesById {
   '/applications': typeof ApplicationsRoute
   '/auth': typeof AuthRoute
   '/billing': typeof BillingRoute
+  '/matches': typeof MatchesRoute
   '/plans': typeof PlansRoute
   '/post-job': typeof PostJobRoute
   '/profile': typeof ProfileRoute
@@ -277,6 +286,7 @@ export interface FileRouteTypes {
     | '/applications'
     | '/auth'
     | '/billing'
+    | '/matches'
     | '/plans'
     | '/post-job'
     | '/profile'
@@ -307,6 +317,7 @@ export interface FileRouteTypes {
     | '/applications'
     | '/auth'
     | '/billing'
+    | '/matches'
     | '/plans'
     | '/post-job'
     | '/profile'
@@ -337,6 +348,7 @@ export interface FileRouteTypes {
     | '/applications'
     | '/auth'
     | '/billing'
+    | '/matches'
     | '/plans'
     | '/post-job'
     | '/profile'
@@ -368,6 +380,7 @@ export interface RootRouteChildren {
   ApplicationsRoute: typeof ApplicationsRoute
   AuthRoute: typeof AuthRoute
   BillingRoute: typeof BillingRoute
+  MatchesRoute: typeof MatchesRoute
   PlansRoute: typeof PlansRoute
   PostJobRoute: typeof PostJobRoute
   ProfileRoute: typeof ProfileRoute
@@ -428,6 +441,13 @@ declare module '@tanstack/react-router' {
       path: '/plans'
       fullPath: '/plans'
       preLoaderRoute: typeof PlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/matches': {
+      id: '/matches'
+      path: '/matches'
+      fullPath: '/matches'
+      preLoaderRoute: typeof MatchesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/billing': {
@@ -611,6 +631,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApplicationsRoute: ApplicationsRoute,
   AuthRoute: AuthRoute,
   BillingRoute: BillingRoute,
+  MatchesRoute: MatchesRoute,
   PlansRoute: PlansRoute,
   PostJobRoute: PostJobRoute,
   ProfileRoute: ProfileRoute,
