@@ -97,6 +97,7 @@ function JobDetail() {
     a.click();
   };
 
+  // Education is shown only in the sidebar (corner placement). Requirements must always come last.
   const sections: { title: string; body: string; icon: React.ReactNode }[] = isTender
     ? [
         { title: "About the tender", body: job.description, icon: <Briefcase className="h-4 w-4" /> },
@@ -105,7 +106,6 @@ function JobDetail() {
         { title: "About the role", body: job.description, icon: <Briefcase className="h-4 w-4" /> },
         { title: "Duties & Responsibilities", body: job.responsibilities, icon: <CheckCircle2 className="h-4 w-4" /> },
         { title: "Requirements", body: job.requirements, icon: <CheckCircle2 className="h-4 w-4" /> },
-        { title: "Education", body: job.education, icon: <GraduationCap className="h-4 w-4" /> },
       ];
 
   return (
@@ -161,14 +161,14 @@ function JobDetail() {
           </div>
 
           <article className="space-y-6">
-            {sections.map((s) => (
+            {/* About + Duties first, then Skills/Tender Docs, then Requirements at the very end. */}
+            {sections.filter((s) => s.title !== "Requirements").map((s) => (
               <div key={s.title} className="rounded-2xl bg-card p-6 ring-1 ring-black/5">
                 <h2 className="font-serif text-lg font-semibold tracking-tight mb-4 flex items-center gap-3 text-ink">
                   <span className="inline-grid place-items-center h-8 w-8 rounded-full bg-primary-soft text-primary">{s.icon}</span>
                   {s.title}
                 </h2>
                 <RichTextView html={s.body} />
-
               </div>
             ))}
 
@@ -191,8 +191,6 @@ function JobDetail() {
               </div>
             )}
 
-            {/* Company details intentionally live in the sidebar (corner of the layout), not below the posting details. */}
-
             {job.skills && job.skills.length > 0 && (
               <div className="rounded-2xl bg-card p-6 ring-1 ring-black/5">
                 <h2 className="font-serif text-lg font-semibold tracking-tight mb-4 text-ink">Skills</h2>
@@ -201,6 +199,17 @@ function JobDetail() {
                 </div>
               </div>
             )}
+
+            {/* Requirements is always the last section on the job posting. */}
+            {sections.filter((s) => s.title === "Requirements").map((s) => (
+              <div key={s.title} className="rounded-2xl bg-card p-6 ring-1 ring-black/5">
+                <h2 className="font-serif text-lg font-semibold tracking-tight mb-4 flex items-center gap-3 text-ink">
+                  <span className="inline-grid place-items-center h-8 w-8 rounded-full bg-primary-soft text-primary">{s.icon}</span>
+                  {s.title}
+                </h2>
+                <RichTextView html={s.body} />
+              </div>
+            ))}
           </article>
         </div>
 

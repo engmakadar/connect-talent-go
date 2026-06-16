@@ -121,9 +121,14 @@ export function SiteHeader() {
                     <UserIcon className="mr-2 h-4 w-4" /> Profile & Preferences
                   </DropdownMenuItem>
                   {isJobseeker && (
-                    <DropdownMenuItem onClick={() => router.navigate({ to: "/resume" })}>
-                      <FileText className="mr-2 h-4 w-4" /> My Resume
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem onClick={() => router.navigate({ to: "/matches" })}>
+                        <LayoutDashboard className="mr-2 h-4 w-4" /> Matched Jobs
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.navigate({ to: "/resume" })}>
+                        <FileText className="mr-2 h-4 w-4" /> My Resume
+                      </DropdownMenuItem>
+                    </>
                   )}
                   {isEmployer && !isAdmin && (
                     <DropdownMenuItem onClick={() => router.navigate({ to: "/company/users" })}>

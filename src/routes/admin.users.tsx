@@ -367,9 +367,14 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
   };
 
   const save = async () => {
+    const isEmployer = roleSet.has("employer");
+    // Promoting a user to Employer requires linking them to a company.
+    if (isEmployer && !form.company_id) {
+      toast.error("Employers must be linked to a company. Choose one before saving.");
+      return;
+    }
     setSaving(true);
     try {
-      const isEmployer = roleSet.has("employer");
       const update = {
         full_name: form.full_name || null,
         location: form.location || null,

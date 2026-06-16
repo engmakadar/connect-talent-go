@@ -14,7 +14,8 @@ export type AdminPageKey =
   | "subscription_plans" | "transactions" | "invoices" | "revenue_analytics"
   | "announcements" | "notifications" | "messaging_center"
   | "audit_logs" | "permissions" | "roles_rbac" | "security_settings"
-  | "apis_integrations" | "email_sms" | "branding_settings";
+  | "apis_integrations" | "email_sms" | "branding_settings"
+  | "my_resume" | "my_billing" | "my_invoices" | "matched_jobs";
 
 export interface AdminNavItem {
   key: AdminPageKey;
@@ -96,6 +97,15 @@ export const ADMIN_NAV: AdminNavSection[] = [
       { key: "apis_integrations", label: "APIs & Integrations", icon: Plug, soon: true },
       { key: "email_sms", label: "Email/SMS Settings", icon: Mail, soon: true },
       { key: "branding_settings", label: "Brand Settings", to: "/admin/branding", icon: Palette },
+    ],
+  },
+  {
+    title: "User Tools",
+    items: [
+      { key: "my_resume", label: "My Resume", to: "/resume", icon: FileText },
+      { key: "my_billing", label: "Billing", to: "/billing", icon: CreditCard },
+      { key: "my_invoices", label: "Invoices", to: "/billing", icon: Receipt },
+      { key: "matched_jobs", label: "Matched Jobs", to: "/matches", icon: Sparkles },
     ],
   },
 ];
