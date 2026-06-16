@@ -98,6 +98,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
       { key: "email_sms", label: "Email/SMS Settings", icon: Mail, soon: true },
       { key: "branding_settings", label: "Brand Settings", to: "/admin/branding", icon: Palette },
     ],
+  },
   {
     title: "User Tools",
     items: [
