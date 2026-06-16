@@ -186,7 +186,7 @@ type ResumeData = {
   education: unknown; experience: unknown; certificates: unknown; skills: unknown; refs: unknown;
 };
 
-type JsPdfCtor = new (opts: { unit: string; format: string }) => {
+type JsPdfCtor = new (opts: { unit: "pt"; format: "a4" }) => {
   internal: { pageSize: { getWidth(): number; getHeight(): number } };
   setFont(name: string, style?: string): void;
   setFontSize(n: number): void;
