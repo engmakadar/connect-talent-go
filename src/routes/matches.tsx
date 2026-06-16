@@ -234,7 +234,7 @@ function generateEuropassPdf(JsPDF: JsPdfCtor, r: ResumeData) {
     if (right) {
       doc.setFont("helvetica", "italic"); doc.setTextColor(110, 110, 110);
       const w = doc.splitTextToSize(right, pageW - margin * 2);
-      doc.text(w[0], pageW - margin, y, ); // jspdf accepts options arg; cast trick:
+      doc.text(w[0], pageW - margin, y);
     }
     y += 13;
   };
