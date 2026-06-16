@@ -97,6 +97,7 @@ function JobDetail() {
     a.click();
   };
 
+  // Education is shown only in the sidebar (corner placement). Requirements must always come last.
   const sections: { title: string; body: string; icon: React.ReactNode }[] = isTender
     ? [
         { title: "About the tender", body: job.description, icon: <Briefcase className="h-4 w-4" /> },
@@ -105,7 +106,6 @@ function JobDetail() {
         { title: "About the role", body: job.description, icon: <Briefcase className="h-4 w-4" /> },
         { title: "Duties & Responsibilities", body: job.responsibilities, icon: <CheckCircle2 className="h-4 w-4" /> },
         { title: "Requirements", body: job.requirements, icon: <CheckCircle2 className="h-4 w-4" /> },
-        { title: "Education", body: job.education, icon: <GraduationCap className="h-4 w-4" /> },
       ];
 
   return (
