@@ -14,7 +14,8 @@ export type AdminPageKey =
   | "subscription_plans" | "transactions" | "invoices" | "revenue_analytics"
   | "announcements" | "notifications" | "messaging_center"
   | "audit_logs" | "permissions" | "roles_rbac" | "security_settings"
-  | "apis_integrations" | "email_sms" | "branding_settings";
+  | "apis_integrations" | "email_sms" | "branding_settings"
+  | "my_resume" | "my_billing" | "my_invoices" | "matched_jobs";
 
 export interface AdminNavItem {
   key: AdminPageKey;
