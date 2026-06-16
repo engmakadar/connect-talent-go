@@ -98,6 +98,14 @@ export const ADMIN_NAV: AdminNavSection[] = [
       { key: "email_sms", label: "Email/SMS Settings", icon: Mail, soon: true },
       { key: "branding_settings", label: "Brand Settings", to: "/admin/branding", icon: Palette },
     ],
+  {
+    title: "User Tools",
+    items: [
+      { key: "my_resume", label: "My Resume", to: "/resume", icon: FileText },
+      { key: "my_billing", label: "Billing", to: "/billing", icon: CreditCard },
+      { key: "my_invoices", label: "Invoices", to: "/billing", icon: Receipt },
+      { key: "matched_jobs", label: "Matched Jobs", to: "/matches", icon: Sparkles },
+    ],
   },
 ];
 
