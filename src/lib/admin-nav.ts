@@ -11,11 +11,11 @@ export type AdminPageKey =
   | "all_users" | "employers" | "candidates" | "user_verification"
   | "job_approval" | "job_moderation" | "post_job" | "fraud_detection" | "categories"
   | "ai_matching" | "recommendations" | "cv_parsing"
-  | "subscription_plans" | "transactions" | "invoices" | "revenue_analytics"
+  | "subscription_plans" | "transactions" | "revenue_analytics"
   | "announcements" | "notifications" | "messaging_center"
   | "audit_logs" | "permissions" | "roles_rbac" | "security_settings"
   | "apis_integrations" | "email_sms" | "branding_settings"
-  | "my_resume" | "my_billing" | "my_invoices" | "matched_jobs";
+  | "my_resume" | "my_billing" | "matched_jobs";
 
 export interface AdminNavItem {
   key: AdminPageKey;
