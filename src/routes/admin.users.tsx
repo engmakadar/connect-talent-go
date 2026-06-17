@@ -22,6 +22,7 @@ import { logAudit } from "@/lib/audit";
 import { useServerFn } from "@tanstack/react-start";
 import { activateUser, enrollUserFull } from "@/lib/admin-actions.functions";
 import { setUserPassword, sendPasswordReset } from "@/lib/admin-password.functions";
+import { addExistingUserToCompanyTeam } from "@/lib/company-users.functions";
 
 
 export const Route = createFileRoute("/admin/users")({
