@@ -406,9 +406,16 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
           .delete()
           .eq("user_id", row.id)
           .neq("company_id", form.company_id);
-        // Ensure membership exists for the selected company.
+        // Decide role: become owner if the company has no owner yet, else recruiter.
+        const { data: owners } = await supabase
+          .from("company_member_roles")
+          .select("user_id")
+          .eq("company_id", form.company_id)
+          .eq("role", "owner" as never)
+          .limit(1);
+        const assignedRole = owners && owners.length > 0 ? "recruiter" : "owner";
         await supabase.from("company_member_roles").upsert(
-          { user_id: row.id, company_id: form.company_id, role: "recruiter" as never },
+          { user_id: row.id, company_id: form.company_id, role: assignedRole as never },
           { onConflict: "user_id,company_id,role" } as never,
         );
         // Also ensure the profile reflects the selected company (the DB trigger
