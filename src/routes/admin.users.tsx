@@ -285,6 +285,8 @@ function UsersTable() {
                               {r.deactivated ? "Reactivate" : "Deactivate"}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
+                            <AddToCompanyTeamItem userId={r.id} currentCompanyId={r.company_id} onChanged={() => qc.invalidateQueries({ queryKey: ["admin-users-full"] })} />
+                            <DropdownMenuSeparator />
                             <PasswordResetMenuItems userId={r.id} email={r.email} />
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive" onClick={() => removeUser(r.id)} disabled={r.id === user?.id}>
