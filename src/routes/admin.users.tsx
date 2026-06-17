@@ -371,9 +371,9 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
 
   const save = async () => {
     const isEmployer = roleSet.has("employer");
-    // Promoting a user to Employer requires linking them to a company.
+    // Promoting a user to Company (Employer) requires linking them to a company.
     if (isEmployer && !form.company_id) {
-      toast.error("Employers must be linked to a company. Choose one before saving.");
+      toast.error("Company members must be linked to a company. Choose one before saving.");
       return;
     }
     setSaving(true);
@@ -396,6 +396,34 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
       }
       for (const r of toRemove) {
         await supabase.from("user_roles").delete().eq("user_id", row.id).eq("role", r as never);
+      }
+
+      // Auto-link company membership when becoming a Company member.
+      if (isEmployer && form.company_id) {
+        await supabase.from("company_member_roles").upsert(
+          { user_id: row.id, company_id: form.company_id, role: "recruiter" as never },
+          { onConflict: "user_id,company_id,role" } as never,
+        );
+      }
+      // If Company role was removed, drop company memberships.
+      if (!isEmployer && original.has("employer")) {
+        await supabase.from("company_member_roles").delete().eq("user_id", row.id);
+      }
+
+      if (toAdd.length || toRemove.length) {
+        await logAudit({
+          action: "user.role_change",
+          resource_type: "user",
+          resource_id: row.id,
+          metadata: {
+            previous_roles: [...original],
+            new_roles: [...roleSet],
+            added: toAdd,
+            removed: toRemove,
+            company_id: isEmployer ? form.company_id : null,
+            actor_id: user?.id ?? null,
+          },
+        });
       }
       await logAudit({ action: "user.profile_update", resource_type: "user", resource_id: row.id, metadata: { ...update, roles: [...roleSet] } });
       toast.success("User updated.");
@@ -429,7 +457,7 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
                 return (
                   <button key={r} type="button" disabled={disabled} onClick={() => toggleRole(r)}
                     className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize ring-1 transition ${active ? "bg-primary text-primary-foreground ring-primary" : "bg-secondary text-ink-soft ring-transparent hover:ring-black/10"} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}>
-                    {r === "admin" ? "Super Admin" : r}
+                    {r === "admin" ? "Super Admin" : r === "employer" ? "Company" : r}
                   </button>
                 );
               })}
