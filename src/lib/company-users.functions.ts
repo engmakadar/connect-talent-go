@@ -12,6 +12,49 @@ async function assertCompanyManager(supabase: any, actorId: string, companyId: s
   throw new Error("You don't have permission to manage this company's users.");
 }
 
+/** Admin / company owner / manager links an EXISTING user to a company's team. */
+export const addExistingUserToCompanyTeam = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    company_id: z.string().uuid(),
+    user_id: z.string().uuid(),
+    role: z.enum(["owner", "manager", "recruiter", "viewer"]).default("recruiter"),
+    team_id: z.string().uuid().nullable().optional(),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId: actorId } = context;
+    await assertCompanyManager(supabase, actorId, data.company_id);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: prof, error: pe } = await supabaseAdmin
+      .from("profiles").select("id, company_id").eq("id", data.user_id).maybeSingle();
+    if (pe) throw new Error(pe.message);
+    if (!prof) throw new Error("User not found.");
+    if (prof.company_id && prof.company_id !== data.company_id) {
+      throw new Error("User already belongs to another company. Remove them from that company first.");
+    }
+    // Set profile.company_id (trigger also covers this, but be explicit).
+    await supabaseAdmin.from("profiles").update({ company_id: data.company_id }).eq("id", data.user_id);
+    // Grant the company role; ensures auto-team-membership via trigger semantics.
+    await supabaseAdmin.from("company_member_roles").upsert(
+      { user_id: data.user_id, company_id: data.company_id, role: data.role },
+      { onConflict: "user_id,company_id,role" }
+    );
+    // Make sure the user holds the "employer" app role so RBAC treats them as a company member.
+    await supabaseAdmin.from("user_roles").upsert(
+      { user_id: data.user_id, role: "employer" as never },
+      { onConflict: "user_id,role" }
+    );
+    if (data.team_id) {
+      const { data: existing } = await supabaseAdmin
+        .from("company_team_members").select("id").eq("user_id", data.user_id).eq("team_id", data.team_id).maybeSingle();
+      if (!existing) {
+        await supabaseAdmin.from("company_team_members").insert({ user_id: data.user_id, team_id: data.team_id });
+      }
+    }
+    return { ok: true };
+  });
+
 /** Invite a new internal user to the caller's company. */
 export const inviteCompanyUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
