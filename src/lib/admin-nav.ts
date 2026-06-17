@@ -11,11 +11,11 @@ export type AdminPageKey =
   | "all_users" | "employers" | "candidates" | "user_verification"
   | "job_approval" | "job_moderation" | "post_job" | "fraud_detection" | "categories"
   | "ai_matching" | "recommendations" | "cv_parsing"
-  | "subscription_plans" | "transactions" | "invoices" | "revenue_analytics"
+  | "subscription_plans" | "transactions" | "revenue_analytics"
   | "announcements" | "notifications" | "messaging_center"
   | "audit_logs" | "permissions" | "roles_rbac" | "security_settings"
   | "apis_integrations" | "email_sms" | "branding_settings"
-  | "my_resume" | "my_billing" | "my_invoices" | "matched_jobs";
+  | "my_resume" | "my_billing" | "matched_jobs";
 
 export interface AdminNavItem {
   key: AdminPageKey;
@@ -69,8 +69,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
     title: "Billing & Revenue",
     items: [
       { key: "subscription_plans", label: "Subscription Plans", to: "/admin/plans", icon: CreditCard },
-      { key: "transactions", label: "Transactions", icon: Receipt, soon: true },
-      { key: "invoices", label: "Invoices", icon: FileText, soon: true },
+      { key: "transactions", label: "Transactions & Invoices", icon: Receipt, soon: true },
       { key: "revenue_analytics", label: "Revenue Analytics", icon: FileBarChart, soon: true },
     ],
   },
@@ -103,8 +102,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
     title: "User Tools",
     items: [
       { key: "my_resume", label: "My Resume", to: "/resume", icon: FileText },
-      { key: "my_billing", label: "Billing", to: "/billing", icon: CreditCard },
-      { key: "my_invoices", label: "Invoices", to: "/billing", icon: Receipt },
+      { key: "my_billing", label: "Billing & Invoices", to: "/billing", icon: Receipt },
       { key: "matched_jobs", label: "Matched Jobs", to: "/matches", icon: Sparkles },
     ],
   },

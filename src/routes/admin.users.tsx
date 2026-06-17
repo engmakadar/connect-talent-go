@@ -22,6 +22,7 @@ import { logAudit } from "@/lib/audit";
 import { useServerFn } from "@tanstack/react-start";
 import { activateUser, enrollUserFull } from "@/lib/admin-actions.functions";
 import { setUserPassword, sendPasswordReset } from "@/lib/admin-password.functions";
+import { addExistingUserToCompanyTeam } from "@/lib/company-users.functions";
 
 
 export const Route = createFileRoute("/admin/users")({
@@ -284,6 +285,8 @@ function UsersTable() {
                               {r.deactivated ? "Reactivate" : "Deactivate"}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
+                            <AddToCompanyTeamItem userId={r.id} currentCompanyId={r.company_id} onChanged={() => qc.invalidateQueries({ queryKey: ["admin-users-full"] })} />
+                            <DropdownMenuSeparator />
                             <PasswordResetMenuItems userId={r.id} email={r.email} />
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive" onClick={() => removeUser(r.id)} disabled={r.id === user?.id}>
@@ -464,8 +467,10 @@ function EnrollMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <EnrollItem role="admin" label="Super Admin" />
-        <EnrollItem role="employer" label="Employer (Company)" />
         <EnrollItem role="jobseeker" label="Jobseeker" />
+        <div className="px-2 py-1.5 text-[11px] text-muted-foreground border-t border-border mt-1">
+          Company team members are created by the company itself in their Users page.
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -739,6 +744,77 @@ function PasswordResetMenuItems({ userId, email }: { userId: string; email: stri
               </DialogFooter>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function AddToCompanyTeamItem({ userId, currentCompanyId, onChanged }: { userId: string; currentCompanyId: string | null; onChanged: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [companyId, setCompanyId] = useState<string>("");
+  const [role, setRole] = useState<"owner" | "manager" | "recruiter" | "viewer">("recruiter");
+  const [saving, setSaving] = useState(false);
+  const addToTeam = useServerFn(addExistingUserToCompanyTeam);
+
+  const { data: companies } = useQuery({
+    queryKey: ["companies-options"],
+    queryFn: async () => (await supabase.from("companies").select("id, name").order("name")).data ?? [],
+    enabled: open,
+  });
+
+  const submit = async () => {
+    if (!companyId) return toast.error("Pick a company.");
+    setSaving(true);
+    try {
+      await addToTeam({ data: { user_id: userId, company_id: companyId, role } });
+      await logAudit({ action: "user.role_change", resource_type: "user", resource_id: userId, metadata: { added_to_company: companyId, role } });
+      toast.success("User added to company team.");
+      setOpen(false); setCompanyId("");
+      onChanged();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to add to team");
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <>
+      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setOpen(true); }}>
+        <Building2 className="mr-2 h-4 w-4" /> {currentCompanyId ? "Change / add company team" : "Add to company team"}
+      </DropdownMenuItem>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Add user to company team</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Company</Label>
+              <Select value={companyId} onValueChange={setCompanyId}>
+                <SelectTrigger><SelectValue placeholder="Select company" /></SelectTrigger>
+                <SelectContent>
+                  {(companies ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Team role</Label>
+              <Select value={role} onValueChange={(v) => setRole(v as typeof role)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="owner">Owner</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="recruiter">Recruiter</SelectItem>
+                  <SelectItem value="viewer">Viewer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              The user will be granted the Employer app role and linked to this company. Only Super Admins and company Owners/Managers can perform this action.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button onClick={submit} disabled={saving}>{saving ? "Adding…" : "Add to team"}</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
