@@ -464,8 +464,10 @@ function EnrollMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <EnrollItem role="admin" label="Super Admin" />
-        <EnrollItem role="employer" label="Employer (Company)" />
         <EnrollItem role="jobseeker" label="Jobseeker" />
+        <div className="px-2 py-1.5 text-[11px] text-muted-foreground border-t border-border mt-1">
+          Company team members are created by the company itself in their Users page.
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
