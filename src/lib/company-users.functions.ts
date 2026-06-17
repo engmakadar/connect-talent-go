@@ -5,10 +5,18 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 async function assertCompanyManager(supabase: any, actorId: string, companyId: string) {
   const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: actorId, _role: "admin" });
   if (isAdmin) return;
-  const { data: isOwner } = await supabase.rpc("has_company_role", { _user_id: actorId, _company_id: companyId, _role: "owner" });
-  if (isOwner) return;
-  const { data: isMgr } = await supabase.rpc("has_company_role", { _user_id: actorId, _company_id: companyId, _role: "manager" });
-  if (isMgr) return;
+  // Any member of the company can manage its users (full CRUD for company team).
+  const { data: roles } = await supabase
+    .from("company_member_roles")
+    .select("role")
+    .eq("user_id", actorId)
+    .eq("company_id", companyId)
+    .limit(1);
+  if (roles && roles.length > 0) return;
+  // Fallback: profile linked to the company.
+  const { data: prof } = await supabase
+    .from("profiles").select("company_id").eq("id", actorId).maybeSingle();
+  if (prof?.company_id === companyId) return;
   throw new Error("You don't have permission to manage this company's users.");
 }
 
