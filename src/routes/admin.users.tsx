@@ -400,10 +400,20 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
 
       // Auto-link company membership when becoming a Company member.
       if (isEmployer && form.company_id) {
+        // Remove memberships from any other company (company switch).
+        await supabase
+          .from("company_member_roles")
+          .delete()
+          .eq("user_id", row.id)
+          .neq("company_id", form.company_id);
+        // Ensure membership exists for the selected company.
         await supabase.from("company_member_roles").upsert(
           { user_id: row.id, company_id: form.company_id, role: "recruiter" as never },
           { onConflict: "user_id,company_id,role" } as never,
         );
+        // Also ensure the profile reflects the selected company (the DB trigger
+        // only fills it when NULL, so we force-sync here for company switches).
+        await supabase.from("profiles").update({ company_id: form.company_id }).eq("id", row.id);
       }
       // If Company role was removed, drop company memberships.
       if (!isEmployer && original.has("employer")) {
