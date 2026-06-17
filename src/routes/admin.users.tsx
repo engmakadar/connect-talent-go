@@ -457,7 +457,7 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
                 return (
                   <button key={r} type="button" disabled={disabled} onClick={() => toggleRole(r)}
                     className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize ring-1 transition ${active ? "bg-primary text-primary-foreground ring-primary" : "bg-secondary text-ink-soft ring-transparent hover:ring-black/10"} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}>
-                    {r === "admin" ? "Super Admin" : r}
+                    {r === "admin" ? "Super Admin" : r === "employer" ? "Company" : r}
                   </button>
                 );
               })}
