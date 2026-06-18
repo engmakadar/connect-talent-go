@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Receipt, CheckCircle2, Clock, XCircle, CreditCard, Smartphone, Sparkles } from "lucide-react";
+import { Receipt, CheckCircle2, Clock, XCircle, CreditCard, Smartphone, Sparkles, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useCompanySummary } from "@/hooks/use-company-summary";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { downloadReceipt } from "@/lib/receipt";
 
 export const Route = createFileRoute("/billing")({
   head: () => ({ meta: [{ title: "Billing & Invoices — SahanJobs" }] }),
@@ -50,14 +52,17 @@ function BillingPage() {
   const companyId = cs?.company?.id ?? null;
 
   const { data: txs, isLoading } = useQuery({
-    enabled: !!user && !!companyId,
-    queryKey: ["billing-transactions", companyId],
+    enabled: !!user,
+    queryKey: ["billing-transactions", user?.id, companyId],
     queryFn: async (): Promise<Tx[]> => {
-      const { data, error } = await supabase
+      // Company users: show transactions for their company. Jobseekers: show their own.
+      const query = supabase
         .from("payment_transactions")
         .select("id, amount, currency, method, reference, status, notes, created_at, plan_id")
-        .eq("company_id", companyId!)
         .order("created_at", { ascending: false });
+      const { data, error } = companyId
+        ? await query.eq("company_id", companyId)
+        : await query.eq("user_id", user!.id);
       if (error) throw error;
       return (data ?? []) as Tx[];
     },
@@ -111,10 +116,6 @@ function BillingPage() {
         {/* Invoices */}
         {loading || isLoading ? (
           <div className="h-40 rounded-2xl bg-white animate-pulse ring-1 ring-black/5" />
-        ) : !companyId ? (
-          <div className="rounded-2xl bg-white p-12 text-center ring-1 ring-black/5">
-            <p className="text-muted-foreground">Link your account to a company to see invoices.</p>
-          </div>
         ) : !txs?.length ? (
           <div className="rounded-2xl bg-white p-12 text-center ring-1 ring-black/5">
             <Receipt className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
@@ -130,6 +131,7 @@ function BillingPage() {
                   <th className="px-5 py-3 font-semibold">Payment method</th>
                   <th className="px-5 py-3 font-semibold">Amount</th>
                   <th className="px-5 py-3 font-semibold">Status</th>
+                  <th className="px-5 py-3 font-semibold text-right">Receipt</th>
                 </tr>
               </thead>
               <tbody>
@@ -163,6 +165,17 @@ function BillingPage() {
                         {isTrial ? "Free" : `${tx.currency} ${Number(tx.amount).toFixed(2)}`}
                       </td>
                       <td className="px-5 py-4"><StatusBadge status={tx.status} /></td>
+                      <td className="px-5 py-4 text-right">
+                        <Button size="sm" variant="outline" onClick={() => downloadReceipt({
+                          id: tx.id, created_at: tx.created_at, amount: tx.amount, currency: tx.currency,
+                          method: tx.method, reference: tx.reference, status: tx.status, notes: tx.notes,
+                          payer_name: user?.user_metadata?.full_name ?? null,
+                          payer_email: user?.email ?? null,
+                          company_name: cs?.company?.name ?? null,
+                        })}>
+                          <Download className="h-3.5 w-3.5" /> Receipt
+                        </Button>
+                      </td>
                     </tr>
                   );
                 })}

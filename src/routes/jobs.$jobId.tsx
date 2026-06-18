@@ -54,6 +54,7 @@ function JobDetail() {
       const { data } = await supabase.from("jobs")
         .select("id, title, company, location, category, employment_type, salary_min, salary_max, currency, created_at, company_id")
         .eq("status", "approved").eq("category", job!.category).neq("id", job!.id)
+        .or(`expires_at.is.null,expires_at.gte.${new Date().toISOString()}`)
         .order("created_at", { ascending: false }).limit(3);
       return data ?? [];
     },

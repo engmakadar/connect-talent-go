@@ -25,6 +25,7 @@ import { Route as OnboardingCompanyRouteImport } from './routes/onboarding.compa
 import { Route as JobsJobIdRouteImport } from './routes/jobs.$jobId'
 import { Route as CompanyUsersRouteImport } from './routes/company.users'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminTransactionsRouteImport } from './routes/admin.transactions'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
 import { Route as AdminReviewRouteImport } from './routes/admin.review'
 import { Route as AdminPostJobRouteImport } from './routes/admin.post-job'
@@ -119,6 +120,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/admin/users',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTransactionsRoute = AdminTransactionsRouteImport.update({
+  id: '/admin/transactions',
+  path: '/admin/transactions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRolesRoute = AdminRolesRouteImport.update({
   id: '/admin/roles',
   path: '/admin/roles',
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/admin/post-job': typeof AdminPostJobRoute
   '/admin/review': typeof AdminReviewRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/company/users': typeof CompanyUsersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
@@ -239,6 +246,7 @@ export interface FileRoutesByTo {
   '/admin/post-job': typeof AdminPostJobRoute
   '/admin/review': typeof AdminReviewRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/company/users': typeof CompanyUsersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
@@ -271,6 +279,7 @@ export interface FileRoutesById {
   '/admin/post-job': typeof AdminPostJobRoute
   '/admin/review': typeof AdminReviewRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/company/users': typeof CompanyUsersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
@@ -304,6 +313,7 @@ export interface FileRouteTypes {
     | '/admin/post-job'
     | '/admin/review'
     | '/admin/roles'
+    | '/admin/transactions'
     | '/admin/users'
     | '/company/users'
     | '/jobs/$jobId'
@@ -335,6 +345,7 @@ export interface FileRouteTypes {
     | '/admin/post-job'
     | '/admin/review'
     | '/admin/roles'
+    | '/admin/transactions'
     | '/admin/users'
     | '/company/users'
     | '/jobs/$jobId'
@@ -366,6 +377,7 @@ export interface FileRouteTypes {
     | '/admin/post-job'
     | '/admin/review'
     | '/admin/roles'
+    | '/admin/transactions'
     | '/admin/users'
     | '/company/users'
     | '/jobs/$jobId'
@@ -398,6 +410,7 @@ export interface RootRouteChildren {
   AdminPostJobRoute: typeof AdminPostJobRoute
   AdminReviewRoute: typeof AdminReviewRoute
   AdminRolesRoute: typeof AdminRolesRoute
+  AdminTransactionsRoute: typeof AdminTransactionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   CompanyUsersRoute: typeof CompanyUsersRoute
   JobsJobIdRoute: typeof JobsJobIdRoute
@@ -518,6 +531,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/transactions': {
+      id: '/admin/transactions'
+      path: '/admin/transactions'
+      fullPath: '/admin/transactions'
+      preLoaderRoute: typeof AdminTransactionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/roles': {
@@ -649,6 +669,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminPostJobRoute: AdminPostJobRoute,
   AdminReviewRoute: AdminReviewRoute,
   AdminRolesRoute: AdminRolesRoute,
+  AdminTransactionsRoute: AdminTransactionsRoute,
   AdminUsersRoute: AdminUsersRoute,
   CompanyUsersRoute: CompanyUsersRoute,
   JobsJobIdRoute: JobsJobIdRoute,

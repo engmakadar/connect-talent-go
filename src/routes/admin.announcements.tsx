@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Megaphone, Send, Users, Building2, Mail, MessageSquare, Bell } from "lucide-react";
+import { Megaphone, Send, Users, Building2, Mail, MessageSquare, Bell, ShieldAlert } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { AdminShell } from "@/components/admin-shell";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
 import { publishAnnouncement } from "@/lib/announcements.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,15 +18,28 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/announcements")({
   head: () => ({ meta: [{ title: "Announcements — SahanJobs Admin" }] }),
-  component: () => (
+  component: AnnouncementsPage,
+});
+
+function AnnouncementsPage() {
+  const { isAdmin } = useAuth();
+  return (
     <AdminShell pageKey="announcements" title="Announcements" subtitle="Broadcast messages to users across the platform.">
-      <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
-        <ComposePanel />
+      <div className={`grid gap-6 ${isAdmin ? "lg:grid-cols-[420px_1fr]" : ""}`}>
+        {isAdmin ? <ComposePanel /> : (
+          <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-6 h-fit">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-muted text-muted-foreground"><ShieldAlert className="h-5 w-5" /></div>
+              <h2 className="font-display text-lg font-bold text-ink">Compose restricted</h2>
+            </div>
+            <p className="text-sm text-muted-foreground">Only Super Admins can send announcements. You can view recent broadcasts on the right.</p>
+          </div>
+        )}
         <HistoryPanel />
       </div>
     </AdminShell>
-  ),
-});
+  );
+}
 
 function ComposePanel() {
   const qc = useQueryClient();
