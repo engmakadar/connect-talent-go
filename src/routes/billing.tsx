@@ -135,6 +135,7 @@ function BillingPage() {
                   <th className="px-5 py-3 font-semibold">Payment method</th>
                   <th className="px-5 py-3 font-semibold">Amount</th>
                   <th className="px-5 py-3 font-semibold">Status</th>
+                  <th className="px-5 py-3 font-semibold text-right">Receipt</th>
                 </tr>
               </thead>
               <tbody>
@@ -168,6 +169,17 @@ function BillingPage() {
                         {isTrial ? "Free" : `${tx.currency} ${Number(tx.amount).toFixed(2)}`}
                       </td>
                       <td className="px-5 py-4"><StatusBadge status={tx.status} /></td>
+                      <td className="px-5 py-4 text-right">
+                        <Button size="sm" variant="outline" onClick={() => downloadReceipt({
+                          id: tx.id, created_at: tx.created_at, amount: tx.amount, currency: tx.currency,
+                          method: tx.method, reference: tx.reference, status: tx.status, notes: tx.notes,
+                          payer_name: user?.user_metadata?.full_name ?? null,
+                          payer_email: user?.email ?? null,
+                          company_name: cs?.company?.name ?? null,
+                        })}>
+                          <Download className="h-3.5 w-3.5" /> Receipt
+                        </Button>
+                      </td>
                     </tr>
                   );
                 })}
