@@ -8,8 +8,7 @@ async function getAdminClient() {
 }
 
 async function assertCompanyManager(supabase: any, actorId: string, companyId: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data: adminRow } = await supabaseAdmin.from("user_roles").select("user_id").eq("user_id", actorId).eq("role", "admin").maybeSingle();
+  const { data: adminRow } = await supabase.from("user_roles").select("user_id").eq("user_id", actorId).eq("role", "admin").maybeSingle();
   if (adminRow) return;
   // Any member of the company can manage its users (full CRUD for company team).
   const { data: roles } = await supabase
