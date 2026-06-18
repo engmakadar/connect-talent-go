@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TrustRouteImport } from './routes/trust'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResumeRouteImport } from './routes/resume'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -40,6 +41,11 @@ import { Route as AdminAuditLogsRouteImport } from './routes/admin.audit-logs'
 import { Route as AdminAnnouncementsRouteImport } from './routes/admin.announcements'
 import { Route as AdminCompaniesCompanyIdRouteImport } from './routes/admin.companies.$companyId'
 
+const TrustRoute = TrustRouteImport.update({
+  id: '/trust',
+  path: '/trust',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -202,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/resume': typeof ResumeRoute
   '/settings': typeof SettingsRoute
+  '/trust': typeof TrustRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/branding': typeof AdminBrandingRoute
@@ -234,6 +241,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/resume': typeof ResumeRoute
   '/settings': typeof SettingsRoute
+  '/trust': typeof TrustRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/branding': typeof AdminBrandingRoute
@@ -267,6 +275,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/resume': typeof ResumeRoute
   '/settings': typeof SettingsRoute
+  '/trust': typeof TrustRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/branding': typeof AdminBrandingRoute
@@ -301,6 +310,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/resume'
     | '/settings'
+    | '/trust'
     | '/admin/announcements'
     | '/admin/audit-logs'
     | '/admin/branding'
@@ -333,6 +343,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/resume'
     | '/settings'
+    | '/trust'
     | '/admin/announcements'
     | '/admin/audit-logs'
     | '/admin/branding'
@@ -365,6 +376,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/resume'
     | '/settings'
+    | '/trust'
     | '/admin/announcements'
     | '/admin/audit-logs'
     | '/admin/branding'
@@ -398,6 +410,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   ResumeRoute: typeof ResumeRoute
   SettingsRoute: typeof SettingsRoute
+  TrustRoute: typeof TrustRoute
   AdminAnnouncementsRoute: typeof AdminAnnouncementsRoute
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
   AdminBrandingRoute: typeof AdminBrandingRoute
@@ -421,6 +434,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/trust': {
+      id: '/trust'
+      path: '/trust'
+      fullPath: '/trust'
+      preLoaderRoute: typeof TrustRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -657,6 +677,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   ResumeRoute: ResumeRoute,
   SettingsRoute: SettingsRoute,
+  TrustRoute: TrustRoute,
   AdminAnnouncementsRoute: AdminAnnouncementsRoute,
   AdminAuditLogsRoute: AdminAuditLogsRoute,
   AdminBrandingRoute: AdminBrandingRoute,
