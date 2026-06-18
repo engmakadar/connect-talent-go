@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Receipt, CheckCircle2, Clock, XCircle, CreditCard, Smartphone, Sparkles } from "lucide-react";
+import { Receipt, CheckCircle2, Clock, XCircle, CreditCard, Smartphone, Sparkles, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useCompanySummary } from "@/hooks/use-company-summary";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { downloadReceipt } from "@/lib/receipt";
 
 export const Route = createFileRoute("/billing")({
   head: () => ({ meta: [{ title: "Billing & Invoices — SahanJobs" }] }),
@@ -50,14 +52,17 @@ function BillingPage() {
   const companyId = cs?.company?.id ?? null;
 
   const { data: txs, isLoading } = useQuery({
-    enabled: !!user && !!companyId,
-    queryKey: ["billing-transactions", companyId],
+    enabled: !!user,
+    queryKey: ["billing-transactions", user?.id, companyId],
     queryFn: async (): Promise<Tx[]> => {
-      const { data, error } = await supabase
+      // Company users: show transactions for their company. Jobseekers: show their own.
+      const query = supabase
         .from("payment_transactions")
         .select("id, amount, currency, method, reference, status, notes, created_at, plan_id")
-        .eq("company_id", companyId!)
         .order("created_at", { ascending: false });
+      const { data, error } = companyId
+        ? await query.eq("company_id", companyId)
+        : await query.eq("user_id", user!.id);
       if (error) throw error;
       return (data ?? []) as Tx[];
     },
