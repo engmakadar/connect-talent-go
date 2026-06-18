@@ -2,6 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function getAdminClient() {
+  const { getSupabaseAdminClient } = await import("@/lib/supabase-admin.server");
+  return getSupabaseAdminClient();
+}
+
 async function assertCompanyManager(supabase: any, actorId: string, companyId: string) {
   const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: actorId, _role: "admin" });
   if (isAdmin) return;
@@ -32,7 +37,7 @@ export const addExistingUserToCompanyTeam = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getAdminClient();
 
     const { data: prof, error: pe } = await supabaseAdmin
       .from("profiles").select("id, company_id").eq("id", data.user_id).maybeSingle();
@@ -79,7 +84,7 @@ export const inviteCompanyUser = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getAdminClient();
 
     // Trial-limit check: Free plan -> max 2 internal users.
     const { data: sub } = await supabaseAdmin
@@ -144,7 +149,7 @@ export const updateCompanyUser = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getAdminClient();
     const full_name = `${data.first_name} ${data.last_name}`.trim();
     await supabaseAdmin.from("profiles").update({
       first_name: data.first_name, last_name: data.last_name, full_name, phone: data.phone || null,
