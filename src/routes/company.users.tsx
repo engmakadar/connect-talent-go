@@ -20,6 +20,16 @@ import {
   setCompanyUserPassword, sendCompanyUserReset,
 } from "@/lib/company-users.functions";
 
+function generatePassword(len = 14) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  const specials = "!@#$%^&*";
+  let out = "";
+  const arr = new Uint32Array(len - 2);
+  (globalThis.crypto ?? window.crypto).getRandomValues(arr);
+  for (let i = 0; i < arr.length; i++) out += chars[arr[i] % chars.length];
+  return out + specials[Math.floor(Math.random() * specials.length)] + Math.floor(Math.random() * 10);
+}
+
 export const Route = createFileRoute("/company/users")({
   head: () => ({ meta: [{ title: "Team users — SahanJobs" }] }),
   component: CompanyUsersPage,
