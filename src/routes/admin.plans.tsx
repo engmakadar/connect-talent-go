@@ -31,6 +31,13 @@ export const Route = createFileRoute("/admin/plans")({
 type Plan = {
   id: string; code: string; name: string; price_cents: number; currency: string;
   billing_interval: string; description: string | null; is_active: boolean; sort_order: number;
+  audience: string;
+};
+
+const AUDIENCE_LABEL: Record<string, string> = {
+  employer: "Companies",
+  jobseeker: "Job seekers",
+  all: "Everyone",
 };
 
 function PlansTable() {
