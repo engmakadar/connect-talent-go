@@ -45,14 +45,14 @@ const PAYMENT_METHODS = [
 
 function PlansPage() {
   const { isEmployer, isJobseeker, user } = useAuth();
-  // Default to employer-facing tiers for guests (most visit pricing as buyers).
-  const audience: "employer" | "jobseeker" = !user
-    ? "employer"
-    : isEmployer
+  // Signed-in users are locked to their role. Guests can toggle.
+  const lockedAudience: "employer" | "jobseeker" | null = isEmployer
     ? "employer"
     : isJobseeker
     ? "jobseeker"
-    : "employer";
+    : null;
+  const [guestAudience, setGuestAudience] = useState<"employer" | "jobseeker">("employer");
+  const audience: "employer" | "jobseeker" = lockedAudience ?? guestAudience;
 
   const { data, isLoading } = useQuery({
     queryKey: ["public-plans", audience],
@@ -61,7 +61,7 @@ function PlansPage() {
         .from("subscription_plans")
         .select("id, code, name, price_cents, currency, billing_interval, description, sort_order, audience")
         .eq("is_active", true)
-        .in("audience", [audience, "all"])
+        .eq("audience", audience)
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return data as Plan[];
@@ -85,8 +85,24 @@ function PlansPage() {
               ? "Post jobs, showcase your brand, and reach top candidates. Pay with card or mobile money — confirmed by our team within 24 hours."
               : "Boost your profile, unlock premium applications, and get noticed faster by employers."}
           </p>
+          {!lockedAudience && (
+            <div className="mt-6 inline-flex rounded-full bg-white p-1 ring-1 ring-black/10 shadow-sm">
+              {(["employer", "jobseeker"] as const).map((a) => (
+                <button
+                  key={a}
+                  onClick={() => setGuestAudience(a)}
+                  className={`px-5 py-2 text-sm font-semibold rounded-full transition ${
+                    audience === a ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-ink"
+                  }`}
+                >
+                  {a === "employer" ? "Employers" : "Job Seekers"}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
+
 
 
       <section className="mx-auto w-full max-w-6xl px-4 md:px-8 py-12 flex-1">
