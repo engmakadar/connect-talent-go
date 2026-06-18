@@ -723,12 +723,15 @@ function KpiTile({ label, value, icon: Icon, color }: {
   );
 }
 
-function ChartCard({ title, icon: Icon, children }: { title: string; icon: typeof Briefcase; children: React.ReactNode }) {
+function ChartCard({ title, subtitle, icon: Icon, children }: { title: string; subtitle?: string; icon: typeof Briefcase; children: React.ReactNode }) {
   return (
     <div className="rounded-2xl bg-white p-5 ring-1 ring-black/5 shadow-sm">
-      <div className="flex items-center gap-2 mb-3">
-        <Icon className="h-4 w-4 text-primary" />
-        <p className="font-display font-semibold text-ink">{title}</p>
+      <div className="flex items-start gap-2 mb-3">
+        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"><Icon className="h-3.5 w-3.5" /></span>
+        <div className="min-w-0">
+          <p className="font-display font-semibold text-ink leading-tight">{title}</p>
+          {subtitle && <p className="text-[11px] text-muted-foreground">{subtitle}</p>}
+        </div>
       </div>
       {children}
     </div>
