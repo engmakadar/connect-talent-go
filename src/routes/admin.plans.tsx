@@ -130,6 +130,7 @@ function PlanDialog({ mode, plan }: { mode: "create" | "edit"; plan?: Plan }) {
     description: plan?.description ?? "",
     is_active: plan?.is_active ?? true,
     sort_order: plan?.sort_order ?? 0,
+    audience: plan?.audience ?? "employer",
   });
   const [saving, setSaving] = useState(false);
 
