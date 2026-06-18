@@ -602,12 +602,17 @@ function CompanyDashboard() {
     },
   });
 
-  const tiles = useMemo(() => ([
-    { label: "Total positions", value: data?.kpis.total ?? "—", icon: Briefcase, color: "from-primary/15 to-primary/5 text-primary" },
-    { label: "Active positions", value: data?.kpis.active ?? "—", icon: ClipboardCheck, color: "from-emerald-100 to-emerald-50 text-emerald-700" },
-    { label: "Expired positions", value: data?.kpis.expired ?? "—", icon: CircleAlert, color: "from-amber-100 to-amber-50 text-amber-700" },
-    { label: "Team users", value: data?.kpis.team ?? "—", icon: Users, color: "from-blue-100 to-blue-50 text-blue-700" },
-  ]), [data]);
+  const tiles = useMemo(() => {
+    if (!data) return [];
+    return [
+      { label: "Total positions", value: data.kpis.total, icon: Briefcase, color: "from-primary/15 to-primary/5 text-primary" },
+      { label: "Active positions", value: data.kpis.active, icon: ClipboardCheck, color: "from-emerald-100 to-emerald-50 text-emerald-700" },
+      { label: "Expired positions", value: data.kpis.expired, icon: CircleAlert, color: "from-amber-100 to-amber-50 text-amber-700" },
+      { label: "Team users", value: data.kpis.team, icon: Users, color: "from-blue-100 to-blue-50 text-blue-700" },
+      { label: "Total subscribed", value: `$${data.totalSubscribed.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`, icon: Wallet, color: "from-primary/15 to-primary/5 text-primary" },
+      { label: "Subscriptions", value: data.subscriptionCount, icon: CalendarClock, color: "from-gold/20 to-gold/5 text-gold-foreground" },
+    ];
+  }, [data]);
 
   if (!companyId) {
     return (
@@ -623,31 +628,9 @@ function CompanyDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* KPI row */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* KPI row — all 6 in one line */}
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
         {tiles.map((t) => <KpiTile key={t.label} {...t} />)}
-      </div>
-
-      {/* Subscription totals */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl bg-white p-5 ring-1 ring-black/5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total subscribed</p>
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-primary/15 to-primary/5 text-primary"><Wallet className="h-4 w-4" /></span>
-          </div>
-          <p className="mt-3 font-display text-3xl font-bold text-ink">
-            ${data.totalSubscribed.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">Sum of confirmed payments to date.</p>
-        </div>
-        <div className="rounded-2xl bg-white p-5 ring-1 ring-black/5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Subscription frequency</p>
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-gold/20 to-gold/5 text-gold-foreground"><CalendarClock className="h-4 w-4" /></span>
-          </div>
-          <p className="mt-3 font-display text-3xl font-bold text-ink">{data.subscriptionCount}</p>
-          <p className="text-xs text-muted-foreground mt-1">Total subscription records on file.</p>
-        </div>
       </div>
 
       {/* Charts */}
