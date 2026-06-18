@@ -982,7 +982,127 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      jobs_public: {
+        Row: {
+          application_url: string | null
+          category: string | null
+          category_id: string | null
+          company: string | null
+          company_id: string | null
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          education: string | null
+          employment_type: Database["public"]["Enums"]["employment_type"] | null
+          experience_text: string | null
+          experience_years: number | null
+          expires_at: string | null
+          has_pending_edit: boolean | null
+          id: string | null
+          location: string | null
+          pending_changes: Json | null
+          posted_by: string | null
+          posting_type: Database["public"]["Enums"]["posting_type"] | null
+          requirements: string | null
+          responsibilities: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          salary_max: number | null
+          salary_min: number | null
+          skills: string[] | null
+          status: Database["public"]["Enums"]["job_status"] | null
+          tender_documents: Json | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          application_url?: string | null
+          category?: string | null
+          category_id?: string | null
+          company?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          education?: string | null
+          employment_type?:
+            | Database["public"]["Enums"]["employment_type"]
+            | null
+          experience_text?: string | null
+          experience_years?: number | null
+          expires_at?: string | null
+          has_pending_edit?: boolean | null
+          id?: string | null
+          location?: string | null
+          pending_changes?: Json | null
+          posted_by?: string | null
+          posting_type?: Database["public"]["Enums"]["posting_type"] | null
+          requirements?: string | null
+          responsibilities?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          skills?: string[] | null
+          status?: Database["public"]["Enums"]["job_status"] | null
+          tender_documents?: Json | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          application_url?: string | null
+          category?: string | null
+          category_id?: string | null
+          company?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          education?: string | null
+          employment_type?:
+            | Database["public"]["Enums"]["employment_type"]
+            | null
+          experience_text?: string | null
+          experience_years?: number | null
+          expires_at?: string | null
+          has_pending_edit?: boolean | null
+          id?: string | null
+          location?: string | null
+          pending_changes?: Json | null
+          posted_by?: string | null
+          posting_type?: Database["public"]["Enums"]["posting_type"] | null
+          requirements?: string | null
+          responsibilities?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          skills?: string[] | null
+          status?: Database["public"]["Enums"]["job_status"] | null
+          tender_documents?: Json | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "job_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_company_teams_summary: {
@@ -993,6 +1113,7 @@ export type Database = {
           team_name: string
         }[]
       }
+      get_job_apply_email: { Args: { _job_id: string }; Returns: string }
       has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
       has_company_role: {
         Args: {

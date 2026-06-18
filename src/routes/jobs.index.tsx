@@ -46,8 +46,9 @@ function JobsPage() {
     queryKey: ["jobs-list", !!companyMap],
     enabled: !!companyMap,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("jobs").select("*")
+      const client = supabase as unknown as { from: (t: string) => { select: (s: string) => { eq: (k: string, v: string) => { eq: (k: string, v: string) => { order: (k: string, o: { ascending: boolean }) => Promise<{ data: unknown; error: unknown }> } } } } };
+      const { data, error } = await client
+        .from("jobs_public").select("*")
         .eq("status", "approved").eq("posting_type", "job")
         .order("created_at", { ascending: false });
       if (error) throw error;

@@ -28,13 +28,33 @@ function JobDetail() {
   const { jobId } = Route.useParams();
   const [copied, setCopied] = useState(false);
 
+  type JobRow = {
+    id: string; title: string; company: string; location: string; category: string; status: string;
+    employment_type: string; salary_min: number | null; salary_max: number | null; currency: string;
+    description: string; responsibilities: string; requirements: string; education: string | null;
+    experience_years: number | null; experience_text: string | null; skills: string[] | null;
+    application_url: string | null; expires_at: string | null; created_at: string;
+    posting_type: string | null; tender_documents: unknown;
+    company_id: string | null;
+  };
   const { data: job, isLoading } = useQuery({
     queryKey: ["job", jobId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("jobs").select("*").eq("id", jobId).maybeSingle();
+      const client = supabase as unknown as { from: (t: string) => { select: (s: string) => { eq: (k: string, v: string) => { maybeSingle: () => Promise<{ data: JobRow | null; error: unknown }> } } } };
+      const { data, error } = await client.from("jobs_public").select("*").eq("id", jobId).maybeSingle();
       if (error) throw error;
       if (!data) throw notFound();
       return data;
+    },
+  });
+
+  const { data: applyEmail } = useQuery({
+    enabled: !!job,
+    queryKey: ["job-apply-email", jobId],
+    queryFn: async () => {
+      const rpc = supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ data: string | null }>;
+      const { data } = await rpc("get_job_apply_email", { _job_id: jobId });
+      return data ?? null;
     },
   });
 
@@ -245,8 +265,8 @@ function JobDetail() {
               <a href={job.application_url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90">
                 Apply now <ExternalLink className="h-4 w-4" />
               </a>
-            ) : job.application_email ? (
-              <a href={`mailto:${job.application_email}`} className="flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90">
+            ) : applyEmail ? (
+              <a href={`mailto:${applyEmail}`} className="flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90">
                 Apply via email <Mail className="h-4 w-4" />
               </a>
             ) : null}
