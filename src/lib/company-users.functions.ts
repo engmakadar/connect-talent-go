@@ -86,7 +86,8 @@ export const inviteCompanyUser = createServerFn({ method: "POST" })
     await assertCompanyManager(supabase, actorId, data.company_id);
     const supabaseAdmin = await getAdminClient();
 
-    // Trial-limit check: Free plan -> max 2 internal users.
+    // Trial-limit check: Free plan -> cap internal users (configurable).
+    const FREE_PLAN_USER_LIMIT = 25;
     const { data: sub } = await supabaseAdmin
       .from("subscriptions")
       .select("plan, active, trial_ends_at, valid_until")
@@ -100,8 +101,8 @@ export const inviteCompanyUser = createServerFn({ method: "POST" })
         .from("profiles")
         .select("id", { count: "exact", head: true })
         .eq("company_id", data.company_id);
-      if ((count ?? 0) >= 2) {
-        throw new Error("Free trial limit reached (2 users). Upgrade your plan to add more.");
+      if ((count ?? 0) >= FREE_PLAN_USER_LIMIT) {
+        throw new Error(`Free plan limit reached (${FREE_PLAN_USER_LIMIT} users). Upgrade your plan to add more.`);
       }
     }
 
