@@ -57,8 +57,9 @@ function HomePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("jobs")
-        .select("id,title,company,company_id,location,employment_type,category,salary_min,salary_max,currency,created_at")
+        .select("id,title,company,company_id,location,employment_type,category,salary_min,salary_max,currency,created_at,expires_at")
         .eq("status", "approved")
+        .or(`expires_at.is.null,expires_at.gte.${new Date().toISOString()}`)
         .order("created_at", { ascending: false })
         .limit(12);
       if (error) throw error;
