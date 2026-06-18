@@ -69,7 +69,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
     title: "Billing & Revenue",
     items: [
       { key: "subscription_plans", label: "Subscription Plans", to: "/admin/plans", icon: CreditCard },
-      { key: "transactions", label: "Transactions & Invoices", icon: Receipt, soon: true },
+      { key: "transactions", label: "Transactions & Invoices", to: "/admin/transactions", icon: Receipt },
       { key: "revenue_analytics", label: "Revenue Analytics", icon: FileBarChart, soon: true },
     ],
   },
