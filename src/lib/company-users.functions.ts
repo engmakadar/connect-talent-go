@@ -2,11 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function getAdminClient() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return supabaseAdmin;
-}
-
 async function assertCompanyManager(supabase: any, actorId: string, companyId: string) {
   const { data: adminRow } = await supabase.from("user_roles").select("user_id").eq("user_id", actorId).eq("role", "admin").maybeSingle();
   if (adminRow) return;
@@ -37,9 +32,8 @@ export const addExistingUserToCompanyTeam = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
-    const supabaseAdmin = await getAdminClient();
 
-    const { data: prof, error: pe } = await supabaseAdmin
+    const { data: prof, error: pe } = await supabase
       .from("profiles").select("id, company_id").eq("id", data.user_id).maybeSingle();
     if (pe) throw new Error(pe.message);
     if (!prof) throw new Error("User not found.");
@@ -47,22 +41,22 @@ export const addExistingUserToCompanyTeam = createServerFn({ method: "POST" })
       throw new Error("User already belongs to another company. Remove them from that company first.");
     }
     // Set profile.company_id (trigger also covers this, but be explicit).
-    await supabaseAdmin.from("profiles").update({ company_id: data.company_id }).eq("id", data.user_id);
+    await supabase.from("profiles").update({ company_id: data.company_id }).eq("id", data.user_id);
     // Grant the company role; ensures auto-team-membership via trigger semantics.
-    await supabaseAdmin.from("company_member_roles").upsert(
+    await supabase.from("company_member_roles").upsert(
       { user_id: data.user_id, company_id: data.company_id, role: data.role },
       { onConflict: "user_id,company_id,role" }
     );
     // Make sure the user holds the "employer" app role so RBAC treats them as a company member.
-    await supabaseAdmin.from("user_roles").upsert(
+    await supabase.from("user_roles").upsert(
       { user_id: data.user_id, role: "employer" as never },
       { onConflict: "user_id,role" }
     );
     if (data.team_id) {
-      const { data: existing } = await supabaseAdmin
+      const { data: existing } = await supabase
         .from("company_team_members").select("id").eq("user_id", data.user_id).eq("team_id", data.team_id).maybeSingle();
       if (!existing) {
-        await supabaseAdmin.from("company_team_members").insert({ user_id: data.user_id, team_id: data.team_id });
+        await supabase.from("company_team_members").insert({ user_id: data.user_id, team_id: data.team_id });
       }
     }
     return { ok: true };
@@ -84,11 +78,10 @@ export const inviteCompanyUser = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
-    const supabaseAdmin = await getAdminClient();
 
     // Trial-limit check: Free plan -> cap internal users (configurable).
     const FREE_PLAN_USER_LIMIT = 25;
-    const { data: sub } = await supabaseAdmin
+    const { data: sub } = await supabase
       .from("subscriptions")
       .select("plan, active, trial_ends_at, valid_until")
       .eq("company_id", data.company_id)
@@ -97,7 +90,7 @@ export const inviteCompanyUser = createServerFn({ method: "POST" })
       .maybeSingle();
     const isTrial = !sub || (sub.plan ?? "Free").toLowerCase() === "free";
     if (isTrial) {
-      const { count } = await supabaseAdmin
+      const { count } = await supabase
         .from("profiles")
         .select("id", { count: "exact", head: true })
         .eq("company_id", data.company_id);
@@ -112,16 +105,19 @@ export const inviteCompanyUser = createServerFn({ method: "POST" })
     // The handle_new_user trigger would otherwise insert user_roles(role=employer),
     // which fires enforce_employer_company_link and fails because the profile has
     // no company_id and no company_member_roles row yet ("Database error creating new user").
-    const { data: created, error: ue } = await supabaseAdmin.auth.admin.createUser({
+    const { createClient } = await import("@supabase/supabase-js");
+    const authClient = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+      auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+    });
+    const { data: created, error: ue } = await authClient.auth.signUp({
       email: data.email,
       password,
-      email_confirm: true,
-      user_metadata: { full_name, first_name: data.first_name, last_name: data.last_name },
+      options: { data: { full_name, first_name: data.first_name, last_name: data.last_name } },
     });
     if (ue || !created.user) throw new Error(ue?.message ?? "Failed to create user.");
     const newId = created.user.id;
 
-    await supabaseAdmin.from("profiles").update({
+    await supabase.from("profiles").update({
       first_name: data.first_name,
       last_name: data.last_name,
       full_name,
@@ -130,15 +126,15 @@ export const inviteCompanyUser = createServerFn({ method: "POST" })
       company_id: data.company_id,
     }).eq("id", newId);
     // Insert company membership first so the employer-role check passes.
-    await supabaseAdmin.from("company_member_roles").upsert(
+    await supabase.from("company_member_roles").upsert(
       { user_id: newId, company_id: data.company_id, role: data.role },
       { onConflict: "user_id,company_id,role" }
     );
     // Replace default 'jobseeker' role created by the trigger with 'employer'.
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", newId).eq("role", "jobseeker");
-    await supabaseAdmin.from("user_roles").upsert({ user_id: newId, role: "employer" }, { onConflict: "user_id,role" });
+    await supabase.from("user_roles").delete().eq("user_id", newId).eq("role", "jobseeker" as never);
+    await supabase.from("user_roles").upsert({ user_id: newId, role: "employer" as never }, { onConflict: "user_id,role" });
     if (data.team_id) {
-      await supabaseAdmin.from("company_team_members").insert({ user_id: newId, team_id: data.team_id });
+      await supabase.from("company_team_members").insert({ user_id: newId, team_id: data.team_id });
     }
     return { ok: true, userId: newId, tempPassword: data.password ? null : password };
   });
@@ -157,24 +153,23 @@ export const updateCompanyUser = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
-    const supabaseAdmin = await getAdminClient();
     const full_name = `${data.first_name} ${data.last_name}`.trim();
-    await supabaseAdmin.from("profiles").update({
+    await supabase.from("profiles").update({
       first_name: data.first_name, last_name: data.last_name, full_name, phone: data.phone || null,
     }).eq("id", data.user_id);
 
     // Replace role within this company
-    await supabaseAdmin.from("company_member_roles").delete().eq("user_id", data.user_id).eq("company_id", data.company_id);
-    await supabaseAdmin.from("company_member_roles").insert({ user_id: data.user_id, company_id: data.company_id, role: data.role });
+    await supabase.from("company_member_roles").delete().eq("user_id", data.user_id).eq("company_id", data.company_id);
+    await supabase.from("company_member_roles").insert({ user_id: data.user_id, company_id: data.company_id, role: data.role });
 
     // Replace team membership scoped to this company
-    const { data: existing } = await supabaseAdmin
+    const { data: existing } = await supabase
       .from("company_team_members")
       .select("id, team:company_teams!inner(company_id)")
       .eq("user_id", data.user_id)
       .eq("team.company_id", data.company_id);
-    if (existing?.length) await supabaseAdmin.from("company_team_members").delete().in("id", existing.map((e: any) => e.id));
-    if (data.team_id) await supabaseAdmin.from("company_team_members").insert({ user_id: data.user_id, team_id: data.team_id });
+    if (existing?.length) await supabase.from("company_team_members").delete().in("id", existing.map((e: any) => e.id));
+    if (data.team_id) await supabase.from("company_team_members").insert({ user_id: data.user_id, team_id: data.team_id });
     return { ok: true };
   });
 
@@ -189,11 +184,10 @@ export const suspendCompanyUser = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
-    const supabaseAdmin = await getAdminClient();
     const patch: Record<string, unknown> = {};
     if (typeof data.suspended === "boolean") patch.suspended = data.suspended;
     if (typeof data.deactivated === "boolean") patch.deactivated = data.deactivated;
-    await supabaseAdmin.from("profiles").update(patch as never).eq("id", data.user_id).eq("company_id", data.company_id);
+    await supabase.from("profiles").update(patch as never).eq("id", data.user_id).eq("company_id", data.company_id);
     return { ok: true };
   });
 
@@ -207,9 +201,9 @@ export const deleteCompanyUser = createServerFn({ method: "POST" })
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
     if (actorId === data.user_id) throw new Error("You cannot delete yourself.");
-    const supabaseAdmin = await getAdminClient();
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
+    const { error } = await supabase.from("profiles").update({ deactivated: true, suspended: true }).eq("id", data.user_id).eq("company_id", data.company_id);
     if (error) throw new Error(error.message);
+    await supabase.from("company_member_roles").delete().eq("user_id", data.user_id).eq("company_id", data.company_id);
     return { ok: true };
   });
 
@@ -224,13 +218,10 @@ export const setCompanyUserPassword = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
-    const supabaseAdmin = await getAdminClient();
     // Ensure target belongs to this company.
-    const { data: prof } = await supabaseAdmin.from("profiles").select("company_id").eq("id", data.user_id).maybeSingle();
+    const { data: prof } = await supabase.from("profiles").select("company_id").eq("id", data.user_id).maybeSingle();
     if (!prof || prof.company_id !== data.company_id) throw new Error("User is not a member of this company.");
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, { password: data.password });
-    if (error) throw new Error(error.message);
-    return { ok: true };
+    throw new Error("Direct password setting is unavailable in this environment. Use Send reset email instead.");
   });
 
 /** Manager generates a recovery link for a company user. */
@@ -243,11 +234,14 @@ export const sendCompanyUserReset = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
-    const supabaseAdmin = await getAdminClient();
-    const { data: prof } = await supabaseAdmin.from("profiles").select("email, company_id").eq("id", data.user_id).maybeSingle();
+    const { data: prof } = await supabase.from("profiles").select("email, company_id").eq("id", data.user_id).maybeSingle();
     if (!prof || prof.company_id !== data.company_id) throw new Error("User is not a member of this company.");
     if (!prof.email) throw new Error("User has no email.");
-    const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({ type: "recovery", email: prof.email });
+    const { createClient } = await import("@supabase/supabase-js");
+    const authClient = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+      auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+    });
+    const { error } = await authClient.auth.resetPasswordForEmail(prof.email);
     if (error) throw new Error(error.message);
-    return { ok: true, actionLink: link.properties?.action_link ?? null, email: prof.email };
+    return { ok: true, actionLink: null, email: prof.email };
   });

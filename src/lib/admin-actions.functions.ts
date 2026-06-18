@@ -2,11 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function getAdminClient() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return supabaseAdmin;
-}
-
 /** Super Admin activates a user account: confirms email + clears suspension. */
 export const activateUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -17,10 +12,7 @@ export const activateUser = createServerFn({ method: "POST" })
     const isAdmin = !!_adminRow;
     if (!isAdmin) throw new Error("Only Super Admin can activate users.");
 
-    const supabaseAdmin = await getAdminClient();
-    const { error: e1 } = await supabaseAdmin.auth.admin.updateUserById(data.userId, { email_confirm: true });
-    if (e1) throw new Error(e1.message);
-    const { error: e2 } = await supabaseAdmin.from("profiles")
+    const { error: e2 } = await supabase.from("profiles")
       .update({ email_verified: true, suspended: false, deactivated: false, pending_approval: false })
       .eq("id", data.userId);
     if (e2) throw new Error(e2.message);
@@ -58,14 +50,12 @@ export const enrollUserFull = createServerFn({ method: "POST" })
       // Silently ignore company on non-employer
     }
 
-    const supabaseAdmin = await getAdminClient();
-
     // Resolve / create company if needed.
     let companyId: string | null = null;
     if (data.role === "employer") {
       if (data.company_id) companyId = data.company_id;
       else if (data.company_name) {
-        const { data: created, error: ce } = await supabaseAdmin
+        const { data: created, error: ce } = await supabase
           .from("companies")
           .insert({ name: data.company_name, created_by: actorId })
           .select("id")
@@ -78,17 +68,20 @@ export const enrollUserFull = createServerFn({ method: "POST" })
     const full_name = `${data.first_name} ${data.last_name}`.trim();
     const password = data.password ?? `Sahan!${Math.random().toString(36).slice(2, 10)}A1`;
 
-    // Create the auth user (email auto-confirmed). The handle_new_user trigger seeds a profile row.
-    const { data: created, error: ue } = await supabaseAdmin.auth.admin.createUser({
+    // Create the auth user with the publishable auth client. This avoids any dependency on a service-role key.
+    const { createClient } = await import("@supabase/supabase-js");
+    const authClient = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+      auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+    });
+    const { data: created, error: ue } = await authClient.auth.signUp({
       email: data.email,
       password,
-      email_confirm: true,
-      user_metadata: {
+      options: { data: {
         full_name,
         first_name: data.first_name,
         last_name: data.last_name,
-        role: data.role,
-      },
+        role: data.role === "employer" ? "jobseeker" : data.role,
+      } },
     });
     if (ue || !created.user) {
       // Surface a clean message for the common "already registered" case so the admin flow isn't blocked.
@@ -98,28 +91,24 @@ export const enrollUserFull = createServerFn({ method: "POST" })
     }
     const newUserId = created.user.id;
 
-    // Roll back the auth user if any follow-up step fails — otherwise an orphan auth row blocks reuse of the email.
-    try {
-      const { error: pe } = await supabaseAdmin.from("profiles").update({
-        first_name: data.first_name,
-        last_name: data.last_name,
-        full_name,
-        phone: data.phone || null,
-        location: data.location || null,
-        email_verified: true,
-        company_id: data.role === "employer" ? companyId : null,
-        pending_approval: true,
-      }).eq("id", newUserId);
-      if (pe) throw new Error(pe.message);
+    const { error: pe } = await supabase.from("profiles").update({
+      first_name: data.first_name,
+      last_name: data.last_name,
+      full_name,
+      phone: data.phone || null,
+      location: data.location || null,
+      email_verified: true,
+      company_id: data.role === "employer" ? companyId : null,
+      pending_approval: true,
+    }).eq("id", newUserId);
+    if (pe) throw new Error(pe.message);
 
-
-      const { error: re } = await supabaseAdmin
-        .from("user_roles")
-        .upsert({ user_id: newUserId, role: data.role }, { onConflict: "user_id,role" });
-      if (re) throw new Error(re.message);
-    } catch (err) {
-      await supabaseAdmin.auth.admin.deleteUser(newUserId).catch(() => {});
-      throw err;
+    const { error: re } = await supabase
+      .from("user_roles")
+      .upsert({ user_id: newUserId, role: data.role }, { onConflict: "user_id,role" });
+    if (re) throw new Error(re.message);
+    if (data.role === "employer") {
+      await supabase.from("user_roles").delete().eq("user_id", newUserId).eq("role", "jobseeker" as never);
     }
 
     return { ok: true, userId: newUserId, companyId, tempPassword: data.password ? null : password };

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Users, Plus, Search, MoreHorizontal, Ban, PowerOff, Trash2, Pencil, Mail, KeyRound } from "lucide-react";
+import { Users, Plus, Search, MoreHorizontal, Ban, PowerOff, Trash2, Pencil, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
@@ -17,18 +17,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { toast } from "sonner";
 import {
   inviteCompanyUser, updateCompanyUser, suspendCompanyUser, deleteCompanyUser,
-  setCompanyUserPassword, sendCompanyUserReset,
+  sendCompanyUserReset,
 } from "@/lib/company-users.functions";
-
-function generatePassword(len = 14) {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-  const specials = "!@#$%^&*";
-  let out = "";
-  const arr = new Uint32Array(len - 2);
-  (globalThis.crypto ?? window.crypto).getRandomValues(arr);
-  for (let i = 0; i < arr.length; i++) out += chars[arr[i] % chars.length];
-  return out + specials[Math.floor(Math.random() * specials.length)] + Math.floor(Math.random() * 10);
-}
 
 export const Route = createFileRoute("/company/users")({
   head: () => ({ meta: [{ title: "Team users — SahanJobs" }] }),
@@ -420,65 +410,33 @@ function EditDialog({ companyId, row }: { companyId: string; row: Row }) {
 }
 
 function CompanyPasswordItems({ companyId, row }: { companyId: string; row: Row }) {
-  const [open, setOpen] = useState(false);
-  const [pw, setPw] = useState("");
   const [saving, setSaving] = useState(false);
   const [link, setLink] = useState<string | null>(null);
-  const setPass = useServerFn(setCompanyUserPassword);
   const sendReset = useServerFn(sendCompanyUserReset);
 
-  const submitSet = async () => {
-    if (pw.length < 8) return toast.error("Min 8 chars.");
-    setSaving(true);
-    try {
-      await setPass({ data: { company_id: companyId, user_id: row.id, password: pw } });
-      toast.success("Password updated.");
-      setOpen(false); setPw("");
-    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
-    finally { setSaving(false); }
-  };
-
   const sendLink = async () => {
+    setSaving(true);
     try {
       const res = await sendReset({ data: { company_id: companyId, user_id: row.id } });
       if (res.actionLink) { setLink(res.actionLink); toast.success("Reset link generated."); }
       else toast.success("Reset email sent.");
     } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+    finally { setSaving(false); }
   };
 
   return (
     <>
-      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setOpen(true); }}>
-        <KeyRound className="mr-2 h-4 w-4" /> Set new password
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={sendLink}>
+      <DropdownMenuItem onClick={sendLink} disabled={saving}>
         <Mail className="mr-2 h-4 w-4" /> Send reset email
       </DropdownMenuItem>
-      <Dialog open={open || !!link} onOpenChange={(v) => { if (!v) { setOpen(false); setLink(null); } }}>
+      <Dialog open={!!link} onOpenChange={(v) => { if (!v) setLink(null); }}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{link ? "Password reset link" : `Set password${row.email ? ` for ${row.email}` : ""}`}</DialogTitle></DialogHeader>
-          {link ? (
-            <div className="space-y-3">
-              <p className="text-sm">Share this one-time link with the user (expires shortly):</p>
-              <Input readOnly value={link} className="font-mono text-xs" onFocus={(e) => e.currentTarget.select()} />
-              <DialogFooter><Button onClick={() => setLink(null)}>Done</Button></DialogFooter>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div>
-                <Label>New password</Label>
-                <div className="flex gap-2">
-                  <Input type="text" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Min 8 characters" />
-                  <Button type="button" variant="outline" onClick={() => setPw(generatePassword())}>Generate</Button>
-                </div>
-                {pw && <p className="mt-1 text-xs text-muted-foreground">Copy this before saving — it won't be shown again.</p>}
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                <Button onClick={submitSet} disabled={saving || pw.length < 8}>{saving ? "Saving…" : "Set password"}</Button>
-              </DialogFooter>
-            </div>
-          )}
+          <DialogHeader><DialogTitle>Password reset link{row.email ? ` for ${row.email}` : ""}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm">Share this one-time link with the user (expires shortly):</p>
+            <Input readOnly value={link ?? ""} className="font-mono text-xs" onFocus={(e) => e.currentTarget.select()} />
+            <DialogFooter><Button onClick={() => setLink(null)}>Done</Button></DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </>
