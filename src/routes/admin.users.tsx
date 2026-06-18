@@ -577,26 +577,45 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
             </div>
           </div>
           {roleSet.has("employer") && (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Company</Label>
-                <Select value={form.company_id} onValueChange={(v) => setForm({ ...form, company_id: v, team_id: "" })}>
-                  <SelectTrigger><SelectValue placeholder="Select company" /></SelectTrigger>
-                  <SelectContent>
-                    {(companies ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <p className="text-[11px] text-muted-foreground mt-1">Company role requires a linked company.</p>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Company</Label>
+                  <Select value={form.company_id} onValueChange={(v) => setForm({ ...form, company_id: v, team_id: "" })}>
+                    <SelectTrigger><SelectValue placeholder="Select company" /></SelectTrigger>
+                    <SelectContent>
+                      {(companies ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[11px] text-muted-foreground mt-1">Company role requires a linked company.</p>
+                </div>
+                <div>
+                  <Label>Team</Label>
+                  <Select value={form.team_id || "__none"} onValueChange={(v) => setForm({ ...form, team_id: v === "__none" ? "" : v })} disabled={!form.company_id}>
+                    <SelectTrigger><SelectValue placeholder={form.company_id ? "Select team" : "Pick a company first"} /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none">No team</SelectItem>
+                      {(teams ?? []).map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div>
-                <Label>Team</Label>
-                <Select value={form.team_id || "__none"} onValueChange={(v) => setForm({ ...form, team_id: v === "__none" ? "" : v })} disabled={!form.company_id}>
-                  <SelectTrigger><SelectValue placeholder={form.company_id ? "Select team" : "Pick a company first"} /></SelectTrigger>
+                <Label>Company role</Label>
+                <Select
+                  value={form.company_role}
+                  onValueChange={(v) => setForm({ ...form, company_role: v as typeof form.company_role })}
+                  disabled={!form.company_id}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none">No team</SelectItem>
-                    {(teams ?? []).map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                    <SelectItem value="owner">Owner</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="recruiter">Recruiter</SelectItem>
+                    <SelectItem value="viewer">Viewer</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-[11px] text-muted-foreground mt-1">Saved into <code>company_member_roles</code> for the selected company.</p>
               </div>
             </div>
           )}
