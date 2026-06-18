@@ -47,7 +47,7 @@ function PlatformStats() {
         supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("active", true),
         supabase.from("payment_transactions").select("amount, status, created_at, method, company_id"),
         supabase.from("companies").select("id, name, created_at").order("created_at", { ascending: false }),
-        supabase.from("jobs").select("id, status, company_id, created_at, expires_at"),
+        supabase.from("jobs").select("id, status, company_id, created_at, expires_at, category, posting_type"),
       ]);
 
       const allJobs = jobs.data ?? [];
@@ -64,13 +64,13 @@ function PlatformStats() {
         .sort((a, b) => b.jobs - a.jobs)
         .slice(0, 8);
 
-      // Companies registered per month (last 6)
-      const months: { key: string; label: string; companies: number; jobs: number; revenue: number }[] = [];
+      // Companies registered per month (last 6) + monthly source trend
+      const months: { key: string; label: string; companies: number; jobs: number; revenue: number; tender: number; jobPost: number }[] = [];
       const today = new Date();
       for (let i = 5; i >= 0; i--) {
         const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-        months.push({ key, label: d.toLocaleString(undefined, { month: "short" }), companies: 0, jobs: 0, revenue: 0 });
+        months.push({ key, label: d.toLocaleString(undefined, { month: "short" }), companies: 0, jobs: 0, revenue: 0, tender: 0, jobPost: 0 });
       }
       const bucket = (iso: string) => {
         const d = new Date(iso);
@@ -78,8 +78,26 @@ function PlatformStats() {
         return months.find((m) => m.key === key);
       };
       allCompanies.forEach((c) => { const m = bucket(c.created_at); if (m) m.companies++; });
-      allJobs.forEach((j) => { const m = bucket(j.created_at); if (m) m.jobs++; });
+      allJobs.forEach((j) => {
+        const m = bucket(j.created_at);
+        if (m) {
+          m.jobs++;
+          if ((j as { posting_type?: string }).posting_type === "tender") m.tender++;
+          else m.jobPost++;
+        }
+      });
       confirmed.forEach((t) => { const m = bucket(t.created_at as string); if (m) m.revenue += Number(t.amount ?? 0); });
+
+      // Positions by category
+      const categoryMap = new Map<string, number>();
+      allJobs.forEach((j) => {
+        const c = (j as { category?: string | null }).category;
+        if (c) categoryMap.set(c, (categoryMap.get(c) ?? 0) + 1);
+      });
+      const byCategory = Array.from(categoryMap.entries())
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 8);
 
       const activeJobs = allJobs.filter((j) => j.status === "approved" && (!j.expires_at || j.expires_at >= nowIso)).length;
       const expiredJobs = allJobs.filter((j) => j.expires_at && j.expires_at < nowIso).length;
@@ -90,7 +108,7 @@ function PlatformStats() {
         companies: companiesCount.count ?? 0,
         activeSubs: subsCount.count ?? 0,
         totalRevenue, activeJobs, expiredJobs,
-        companyJobs, months,
+        companyJobs, months, byCategory,
         recentTxns: allTxns.slice(0, 6),
       };
     },
@@ -164,6 +182,57 @@ function PlatformStats() {
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
                 <Tooltip />
                 <Bar dataKey="jobs" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+      </div>
+
+      {/* Monthly distribution — multi-line */}
+      <ChartCard title="Monthly distribution (companies, jobs, revenue)" icon={LineIcon}>
+        <ResponsiveContainer width="100%" height={280}>
+          <LineChart data={data.months} margin={{ top: 8, right: 12, bottom: 0, left: -16 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+            <YAxis yAxisId="left" tick={{ fontSize: 12 }} allowDecimals={false} />
+            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
+            <Tooltip />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Line yAxisId="left" type="monotone" dataKey="companies" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} />
+            <Line yAxisId="left" type="monotone" dataKey="jobs" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 3 }} />
+            <Line yAxisId="right" type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2.5} dot={{ r: 3 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartCard>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Job source trending — jobs vs tenders per month */}
+        <ChartCard title="Job source trending (jobs vs tenders)" icon={LineIcon}>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={data.months} margin={{ top: 8, right: 12, bottom: 0, left: -16 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+              <Tooltip />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Line type="monotone" dataKey="jobPost" name="Jobs" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="tender" name="Tenders" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 3 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        {/* Positions by category */}
+        <ChartCard title="Positions by category" icon={ChartPie}>
+          {data.byCategory.length === 0 ? (
+            <EmptyChart />
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={data.byCategory} layout="vertical" margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={130} />
+                <Tooltip />
+                <Bar dataKey="value" name="Positions" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}

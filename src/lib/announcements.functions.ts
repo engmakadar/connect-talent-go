@@ -18,7 +18,8 @@ export const publishAnnouncement = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId: actorId } = context;
-    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: actorId, _role: "admin" });
+    const { data: _adminRow } = await supabase.from("user_roles").select("user_id").eq("user_id", actorId).eq("role", "admin").maybeSingle();
+    const isAdmin = !!_adminRow;
     if (!isAdmin) throw new Error("Only Super Admin can publish announcements.");
     const supabaseAdmin = await getAdminClient();
 
