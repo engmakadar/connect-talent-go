@@ -58,7 +58,7 @@ function PlatformStats() {
 
       // Top companies by jobs posted
       const jobsByCompany = new Map<string, number>();
-      allJobs.forEach((j) => jobsByCompany.set(j.company_id, (jobsByCompany.get(j.company_id) ?? 0) + 1));
+      allJobs.forEach((j) => { if (j.company_id) jobsByCompany.set(j.company_id, (jobsByCompany.get(j.company_id) ?? 0) + 1); });
       const companyJobs = allCompanies
         .map((c) => ({ name: c.name, jobs: jobsByCompany.get(c.id) ?? 0 }))
         .sort((a, b) => b.jobs - a.jobs)
