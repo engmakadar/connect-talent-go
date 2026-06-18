@@ -168,8 +168,59 @@ function PlatformStats() {
               <Bar dataKey="companies" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               <Bar dataKey="jobs" fill="#f59e0b" radius={[4, 4, 0, 0]} />
             </BarChart>
+        </ResponsiveContainer>
+      </ChartCard>
+
+      {/* Monthly distribution — multi-line */}
+      <ChartCard title="Monthly distribution (companies, jobs, revenue)" icon={LineIcon}>
+        <ResponsiveContainer width="100%" height={280}>
+          <LineChart data={data.months} margin={{ top: 8, right: 12, bottom: 0, left: -16 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+            <YAxis yAxisId="left" tick={{ fontSize: 12 }} allowDecimals={false} />
+            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
+            <Tooltip />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Line yAxisId="left" type="monotone" dataKey="companies" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} />
+            <Line yAxisId="left" type="monotone" dataKey="jobs" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 3 }} />
+            <Line yAxisId="right" type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2.5} dot={{ r: 3 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartCard>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Job source trending — jobs vs tenders per month */}
+        <ChartCard title="Job source trending (jobs vs tenders)" icon={LineIcon}>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={data.months} margin={{ top: 8, right: 12, bottom: 0, left: -16 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+              <Tooltip />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Line type="monotone" dataKey="jobPost" name="Jobs" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="tender" name="Tenders" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 3 }} />
+            </LineChart>
           </ResponsiveContainer>
         </ChartCard>
+
+        {/* Positions by category */}
+        <ChartCard title="Positions by category" icon={ChartPie}>
+          {data.byCategory.length === 0 ? (
+            <EmptyChart />
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={data.byCategory} layout="vertical" margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={130} />
+                <Tooltip />
+                <Bar dataKey="value" name="Positions" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+      </div>
 
         <ChartCard title="Top companies by jobs posted" icon={Briefcase}>
           {data.companyJobs.length === 0 ? (
