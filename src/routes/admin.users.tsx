@@ -479,17 +479,15 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
         await supabase.from("user_roles").delete().eq("user_id", row.id).eq("role", r as never);
       }
 
-      // Company membership sync
+      // Company membership sync — write company_member_roles for the selected company.
       if (isEmployer && form.company_id) {
+        // Remove any membership rows for OTHER companies and stale role rows for this company.
         await supabase.from("company_member_roles").delete().eq("user_id", row.id).neq("company_id", form.company_id);
-        const { data: owners } = await supabase
-          .from("company_member_roles").select("user_id")
-          .eq("company_id", form.company_id).eq("role", "owner" as never).limit(1);
-        const assignedRole = owners && owners.length > 0 ? "recruiter" : "owner";
-        await supabase.from("company_member_roles").upsert(
-          { user_id: row.id, company_id: form.company_id, role: assignedRole as never },
-          { onConflict: "user_id,company_id,role" } as never,
-        );
+        await supabase.from("company_member_roles").delete().eq("user_id", row.id).eq("company_id", form.company_id);
+        const { error: cmrErr } = await supabase.from("company_member_roles").insert({
+          user_id: row.id, company_id: form.company_id, role: form.company_role as never,
+        });
+        if (cmrErr) throw cmrErr;
         await supabase.from("profiles").update({ company_id: form.company_id }).eq("id", row.id);
       }
       if (!isEmployer && original.has("employer")) {
