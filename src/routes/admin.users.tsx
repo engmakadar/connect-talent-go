@@ -85,14 +85,15 @@ function UsersTable() {
   const { data: rows, isLoading } = useQuery({
     queryKey: ["admin-users-full"],
     queryFn: async (): Promise<Row[]> => {
-      const [profilesRes, rolesRes, companiesRes, subsRes] = await Promise.all([
+      const [profilesRes, rolesRes, companiesRes, subsRes, teamMembersRes] = await Promise.all([
         supabase.from("profiles")
-          .select("id, full_name, username, email, location, headline, suspended, deactivated, email_verified, pending_approval, company_id, created_at, last_login_at")
+          .select("id, full_name, first_name, last_name, phone, username, email, location, headline, suspended, deactivated, email_verified, pending_approval, company_id, created_at, last_login_at")
           .order("created_at", { ascending: false }),
 
         supabase.from("user_roles").select("user_id, role"),
         supabase.from("companies").select("id, name, logo_url"),
         supabase.from("subscriptions").select("company_id, plan, active"),
+        supabase.from("company_team_members").select("user_id, team_id, team:company_teams!inner(id, name, company_id)"),
       ]);
       if (profilesRes.error) throw profilesRes.error;
       if (rolesRes.error) throw rolesRes.error;
@@ -113,17 +114,24 @@ function UsersTable() {
       (profilesRes.data ?? []).forEach((p) => {
         if (p.company_id) teamByCompany.set(p.company_id, (teamByCompany.get(p.company_id) ?? 0) + 1);
       });
+      const teamByUser = new Map<string, { id: string; name: string }>();
+      (teamMembersRes.data ?? []).forEach((tm: any) => {
+        if (tm.team) teamByUser.set(tm.user_id, { id: tm.team.id, name: tm.team.name });
+      });
 
       return (profilesRes.data ?? []).map((p): Row => {
         const company = p.company_id ? companyById.get(p.company_id) ?? null : null;
         const isEmployer = (rolesByUser.get(p.id) ?? []).includes("employer");
         const sub = company ? subByCompany.get(company.id) ?? null : null;
+        const t = teamByUser.get(p.id) ?? null;
         return {
           ...p,
           roles: rolesByUser.get(p.id) ?? [],
           company,
           subscription_plan: isEmployer && sub ? sub.plan : null,
           team_count: company ? teamByCompany.get(company.id) ?? 0 : 0,
+          team_id: t?.id ?? null,
+          team_name: t?.name ?? null,
         };
       });
     },
