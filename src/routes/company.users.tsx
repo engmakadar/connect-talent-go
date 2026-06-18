@@ -20,6 +20,16 @@ import {
   setCompanyUserPassword, sendCompanyUserReset,
 } from "@/lib/company-users.functions";
 
+function generatePassword(len = 14) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  const specials = "!@#$%^&*";
+  let out = "";
+  const arr = new Uint32Array(len - 2);
+  (globalThis.crypto ?? window.crypto).getRandomValues(arr);
+  for (let i = 0; i < arr.length; i++) out += chars[arr[i] % chars.length];
+  return out + specials[Math.floor(Math.random() * specials.length)] + Math.floor(Math.random() * 10);
+}
+
 export const Route = createFileRoute("/company/users")({
   head: () => ({ meta: [{ title: "Team users — SahanJobs" }] }),
   component: CompanyUsersPage,
@@ -455,7 +465,14 @@ function CompanyPasswordItems({ companyId, row }: { companyId: string; row: Row 
             </div>
           ) : (
             <div className="space-y-3">
-              <div><Label>New password</Label><Input type="text" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Min 8 characters" /></div>
+              <div>
+                <Label>New password</Label>
+                <div className="flex gap-2">
+                  <Input type="text" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Min 8 characters" />
+                  <Button type="button" variant="outline" onClick={() => setPw(generatePassword())}>Generate</Button>
+                </div>
+                {pw && <p className="mt-1 text-xs text-muted-foreground">Copy this before saving — it won't be shown again.</p>}
+              </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
                 <Button onClick={submitSet} disabled={saving || pw.length < 8}>{saving ? "Saving…" : "Set password"}</Button>
