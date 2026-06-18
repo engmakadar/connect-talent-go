@@ -36,6 +36,9 @@ type Sub = { plan: string; active: boolean };
 type Row = {
   id: string;
   full_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
   username: string | null;
   email: string | null;
   location: string | null;
@@ -51,7 +54,10 @@ type Row = {
   company: Company | null;
   subscription_plan: string | null;
   team_count: number;
+  team_id: string | null;
+  team_name: string | null;
 };
+
 
 
 type RoleFilter = "all" | "admin" | "employer" | "jobseeker";
