@@ -47,7 +47,7 @@ function methodIcon(m: string) {
 }
 
 function BillingPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const { data: cs } = useCompanySummary();
   const companyId = cs?.company?.id ?? null;
 
@@ -68,9 +68,10 @@ function BillingPage() {
     },
   });
 
-  const onTrial = !!cs?.onTrial;
+  // Super Admins are exempt from subscriptions — no trial countdown or expiry banners.
+  const onTrial = !isAdmin && !!cs?.onTrial;
   const trialDaysLeft = cs?.trialDaysLeft ?? 0;
-  const trialExpired = !!cs?.trialExpired;
+  const trialExpired = !isAdmin && !!cs?.trialExpired;
 
   return (
     <div className="min-h-screen flex flex-col bg-hero-band/40">

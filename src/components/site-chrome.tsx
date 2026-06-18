@@ -23,7 +23,8 @@ export function SiteHeader() {
   const router = useRouter();
   const { data: cs } = useCompanySummary();
   const company = cs?.company ?? null;
-  const onTrial = !!cs?.onTrial;
+  // Super Admins are exempt from subscriptions/trial — never surface trial UI to them.
+  const onTrial = !isAdmin && !!cs?.onTrial;
   const trialDaysLeft = cs?.trialDaysLeft ?? 0;
 
   const navLink =
