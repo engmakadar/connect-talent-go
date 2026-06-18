@@ -8,8 +8,9 @@ async function getAdminClient() {
 }
 
 async function assertCompanyManager(supabase: any, actorId: string, companyId: string) {
-  const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: actorId, _role: "admin" });
-  if (isAdmin) return;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: adminRow } = await supabaseAdmin.from("user_roles").select("user_id").eq("user_id", actorId).eq("role", "admin").maybeSingle();
+  if (adminRow) return;
   // Any member of the company can manage its users (full CRUD for company team).
   const { data: roles } = await supabase
     .from("company_member_roles")
