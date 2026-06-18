@@ -455,7 +455,14 @@ function CompanyPasswordItems({ companyId, row }: { companyId: string; row: Row 
             </div>
           ) : (
             <div className="space-y-3">
-              <div><Label>New password</Label><Input type="text" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Min 8 characters" /></div>
+              <div>
+                <Label>New password</Label>
+                <div className="flex gap-2">
+                  <Input type="text" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Min 8 characters" />
+                  <Button type="button" variant="outline" onClick={() => setPw(generatePassword())}>Generate</Button>
+                </div>
+                {pw && <p className="mt-1 text-xs text-muted-foreground">Copy this before saving — it won't be shown again.</p>}
+              </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
                 <Button onClick={submitSet} disabled={saving || pw.length < 8}>{saving ? "Saving…" : "Set password"}</Button>
