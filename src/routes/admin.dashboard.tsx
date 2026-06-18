@@ -168,8 +168,25 @@ function PlatformStats() {
               <Bar dataKey="companies" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               <Bar dataKey="jobs" fill="#f59e0b" radius={[4, 4, 0, 0]} />
             </BarChart>
-        </ResponsiveContainer>
-      </ChartCard>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Top companies by jobs posted" icon={Briefcase}>
+          {data.companyJobs.length === 0 ? (
+            <EmptyChart />
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={data.companyJobs} layout="vertical" margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
+                <Tooltip />
+                <Bar dataKey="jobs" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+      </div>
 
       {/* Monthly distribution — multi-line */}
       <ChartCard title="Monthly distribution (companies, jobs, revenue)" icon={LineIcon}>
@@ -216,23 +233,6 @@ function PlatformStats() {
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={130} />
                 <Tooltip />
                 <Bar dataKey="value" name="Positions" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </ChartCard>
-      </div>
-
-        <ChartCard title="Top companies by jobs posted" icon={Briefcase}>
-          {data.companyJobs.length === 0 ? (
-            <EmptyChart />
-          ) : (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={data.companyJobs} layout="vertical" margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
-                <Tooltip />
-                <Bar dataKey="jobs" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
