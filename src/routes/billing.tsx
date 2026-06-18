@@ -116,10 +116,13 @@ function BillingPage() {
         {/* Invoices */}
         {loading || isLoading ? (
           <div className="h-40 rounded-2xl bg-white animate-pulse ring-1 ring-black/5" />
-        ) : !companyId ? (
+        ) : !txs?.length ? (
           <div className="rounded-2xl bg-white p-12 text-center ring-1 ring-black/5">
-            <p className="text-muted-foreground">Link your account to a company to see invoices.</p>
+            <Receipt className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+            <p className="text-muted-foreground">No transactions yet.</p>
           </div>
+        ) : false ? (
+          <div />
         ) : !txs?.length ? (
           <div className="rounded-2xl bg-white p-12 text-center ring-1 ring-black/5">
             <Receipt className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
