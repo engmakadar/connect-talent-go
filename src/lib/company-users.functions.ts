@@ -108,11 +108,15 @@ export const inviteCompanyUser = createServerFn({ method: "POST" })
 
     const full_name = `${data.first_name} ${data.last_name}`.trim();
     const password = data.password ?? `Sahan!${Math.random().toString(36).slice(2, 10)}A1`;
+    // Create the auth user WITHOUT the 'employer' role in metadata.
+    // The handle_new_user trigger would otherwise insert user_roles(role=employer),
+    // which fires enforce_employer_company_link and fails because the profile has
+    // no company_id and no company_member_roles row yet ("Database error creating new user").
     const { data: created, error: ue } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
       password,
       email_confirm: true,
-      user_metadata: { full_name, first_name: data.first_name, last_name: data.last_name, role: "employer" },
+      user_metadata: { full_name, first_name: data.first_name, last_name: data.last_name },
     });
     if (ue || !created.user) throw new Error(ue?.message ?? "Failed to create user.");
     const newId = created.user.id;
@@ -125,11 +129,14 @@ export const inviteCompanyUser = createServerFn({ method: "POST" })
       email_verified: true,
       company_id: data.company_id,
     }).eq("id", newId);
-    await supabaseAdmin.from("user_roles").upsert({ user_id: newId, role: "employer" }, { onConflict: "user_id,role" });
+    // Insert company membership first so the employer-role check passes.
     await supabaseAdmin.from("company_member_roles").upsert(
       { user_id: newId, company_id: data.company_id, role: data.role },
       { onConflict: "user_id,company_id,role" }
     );
+    // Replace default 'jobseeker' role created by the trigger with 'employer'.
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", newId).eq("role", "jobseeker");
+    await supabaseAdmin.from("user_roles").upsert({ user_id: newId, role: "employer" }, { onConflict: "user_id,role" });
     if (data.team_id) {
       await supabaseAdmin.from("company_team_members").insert({ user_id: newId, team_id: data.team_id });
     }
