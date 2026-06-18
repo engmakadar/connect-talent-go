@@ -3,8 +3,8 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 async function getAdminClient() {
-  const { getSupabaseAdminClient } = await import("@/lib/supabase-admin.server");
-  return getSupabaseAdminClient();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
 }
 
 export const publishAnnouncement = createServerFn({ method: "POST" })
