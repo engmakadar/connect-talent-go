@@ -64,13 +64,13 @@ function PlatformStats() {
         .sort((a, b) => b.jobs - a.jobs)
         .slice(0, 8);
 
-      // Companies registered per month (last 6)
-      const months: { key: string; label: string; companies: number; jobs: number; revenue: number }[] = [];
+      // Companies registered per month (last 6) + monthly source trend
+      const months: { key: string; label: string; companies: number; jobs: number; revenue: number; tender: number; jobPost: number }[] = [];
       const today = new Date();
       for (let i = 5; i >= 0; i--) {
         const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-        months.push({ key, label: d.toLocaleString(undefined, { month: "short" }), companies: 0, jobs: 0, revenue: 0 });
+        months.push({ key, label: d.toLocaleString(undefined, { month: "short" }), companies: 0, jobs: 0, revenue: 0, tender: 0, jobPost: 0 });
       }
       const bucket = (iso: string) => {
         const d = new Date(iso);
@@ -78,8 +78,26 @@ function PlatformStats() {
         return months.find((m) => m.key === key);
       };
       allCompanies.forEach((c) => { const m = bucket(c.created_at); if (m) m.companies++; });
-      allJobs.forEach((j) => { const m = bucket(j.created_at); if (m) m.jobs++; });
+      allJobs.forEach((j) => {
+        const m = bucket(j.created_at);
+        if (m) {
+          m.jobs++;
+          if ((j as { posting_type?: string }).posting_type === "tender") m.tender++;
+          else m.jobPost++;
+        }
+      });
       confirmed.forEach((t) => { const m = bucket(t.created_at as string); if (m) m.revenue += Number(t.amount ?? 0); });
+
+      // Positions by category
+      const categoryMap = new Map<string, number>();
+      allJobs.forEach((j) => {
+        const c = (j as { category?: string | null }).category;
+        if (c) categoryMap.set(c, (categoryMap.get(c) ?? 0) + 1);
+      });
+      const byCategory = Array.from(categoryMap.entries())
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 8);
 
       const activeJobs = allJobs.filter((j) => j.status === "approved" && (!j.expires_at || j.expires_at >= nowIso)).length;
       const expiredJobs = allJobs.filter((j) => j.expires_at && j.expires_at < nowIso).length;
@@ -90,7 +108,7 @@ function PlatformStats() {
         companies: companiesCount.count ?? 0,
         activeSubs: subsCount.count ?? 0,
         totalRevenue, activeJobs, expiredJobs,
-        companyJobs, months,
+        companyJobs, months, byCategory,
         recentTxns: allTxns.slice(0, 6),
       };
     },
