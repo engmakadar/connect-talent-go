@@ -384,6 +384,20 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
     enabled: open && !!form.company_id,
   });
 
+  // Load the current company_member_roles.role for this user+company so the
+  // selector reflects what's already stored, instead of always defaulting.
+  useQuery({
+    queryKey: ["cmr-current", row.id, form.company_id],
+    enabled: open && !!form.company_id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("company_member_roles").select("role")
+        .eq("user_id", row.id).eq("company_id", form.company_id).maybeSingle();
+      if (data?.role) setForm((f) => ({ ...f, company_role: data.role as typeof f.company_role }));
+      return data ?? null;
+    },
+  });
+
   const toggleRole = (r: string) => {
     const n = new Set(roleSet);
     if (n.has(r)) {
