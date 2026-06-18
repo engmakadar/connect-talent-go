@@ -47,7 +47,7 @@ function PlatformStats() {
         supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("active", true),
         supabase.from("payment_transactions").select("amount, status, created_at, method, company_id"),
         supabase.from("companies").select("id, name, created_at").order("created_at", { ascending: false }),
-        supabase.from("jobs").select("id, status, company_id, created_at, expires_at"),
+        supabase.from("jobs").select("id, status, company_id, created_at, expires_at, category, posting_type"),
       ]);
 
       const allJobs = jobs.data ?? [];
