@@ -2,6 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function getAdminClient() {
+  const { getSupabaseAdminClient } = await import("@/lib/supabase-admin.server");
+  return getSupabaseAdminClient();
+}
+
 /** Super Admin sets a user's password directly. */
 export const setUserPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -13,7 +18,7 @@ export const setUserPassword = createServerFn({ method: "POST" })
     const { supabase, userId: actorId } = context;
     const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: actorId, _role: "admin" });
     if (!isAdmin) throw new Error("Only Super Admin can reset passwords.");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getAdminClient();
     const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, { password: data.password });
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -27,7 +32,7 @@ export const sendPasswordReset = createServerFn({ method: "POST" })
     const { supabase, userId: actorId } = context;
     const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: actorId, _role: "admin" });
     if (!isAdmin) throw new Error("Only Super Admin can send resets.");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getAdminClient();
 
     const { data: prof } = await supabaseAdmin.from("profiles").select("email").eq("id", data.userId).maybeSingle();
     if (!prof?.email) throw new Error("User has no email.");
