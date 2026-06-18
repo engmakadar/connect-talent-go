@@ -53,9 +53,7 @@ function AdminReview() {
         q = q.eq("status", "approved").not("expires_at", "is", null).lt("expires_at", nowIso);
       } else {
         q = q.eq("status", tab as Database["public"]["Enums"]["job_status"]);
-        if (tab === "approved") {
-          q = q.or(`expires_at.is.null,expires_at.gte.${nowIso}`);
-        }
+        // Approved tab shows ALL approved jobs regardless of expiration.
       }
       if (typeFilter !== "all") q = q.eq("posting_type", typeFilter);
       // Scope to this user's company unless they're a Super Admin.
