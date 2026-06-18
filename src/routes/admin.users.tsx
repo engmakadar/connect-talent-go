@@ -358,6 +358,7 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
     headline: row.headline ?? "",
     company_id: row.company_id ?? "",
     team_id: row.team_id ?? "",
+    company_role: "recruiter" as "owner" | "manager" | "recruiter" | "viewer",
   });
   const [roleSet, setRoleSet] = useState<Set<string>>(new Set(row.roles));
   const [saving, setSaving] = useState(false);
