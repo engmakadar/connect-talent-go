@@ -1,17 +1,33 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { AdminShell } from "@/components/admin-shell";
 import {
   Briefcase, Users, ClipboardCheck, ShieldCheck, Wallet, CalendarClock,
-  CircleAlert, ChartPie, LineChart as LineIcon,
+  CircleAlert, ChartPie, LineChart as LineIcon, Filter, Crown, FileDown,
+  FileJson, Search, Trash2, TrendingUp, TrendingDown, Building2, BadgeCheck,
 } from "lucide-react";
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
   LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar,
 } from "recharts";
+
+type ScopeKey = "all" | "30d" | "6m" | "ytd";
+const SCOPES: { key: ScopeKey; label: string }[] = [
+  { key: "all", label: "All Time" },
+  { key: "30d", label: "Last 30 Days" },
+  { key: "6m", label: "Last 6 Months" },
+  { key: "ytd", label: "Year To Date" },
+];
+function scopeStart(scope: ScopeKey): Date | null {
+  const now = new Date();
+  if (scope === "30d") { const d = new Date(now); d.setDate(d.getDate() - 30); return d; }
+  if (scope === "6m") { const d = new Date(now); d.setMonth(d.getMonth() - 6); return d; }
+  if (scope === "ytd") return new Date(now.getFullYear(), 0, 1);
+  return null;
+}
 
 export const Route = createFileRoute("/admin/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — SahanJobs Admin" }] }),
