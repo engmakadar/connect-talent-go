@@ -358,6 +358,7 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
     headline: row.headline ?? "",
     company_id: row.company_id ?? "",
     team_id: row.team_id ?? "",
+    company_role: "recruiter" as "owner" | "manager" | "recruiter" | "viewer",
   });
   const [roleSet, setRoleSet] = useState<Set<string>>(new Set(row.roles));
   const [saving, setSaving] = useState(false);
@@ -381,6 +382,20 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
     queryKey: ["company-teams-options", form.company_id],
     queryFn: async () => (await supabase.from("company_teams").select("id, name").eq("company_id", form.company_id).order("name")).data ?? [],
     enabled: open && !!form.company_id,
+  });
+
+  // Load the current company_member_roles.role for this user+company so the
+  // selector reflects what's already stored, instead of always defaulting.
+  useQuery({
+    queryKey: ["cmr-current", row.id, form.company_id],
+    enabled: open && !!form.company_id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("company_member_roles").select("role")
+        .eq("user_id", row.id).eq("company_id", form.company_id).maybeSingle();
+      if (data?.role) setForm((f) => ({ ...f, company_role: data.role as typeof f.company_role }));
+      return data ?? null;
+    },
   });
 
   const toggleRole = (r: string) => {
@@ -464,17 +479,15 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
         await supabase.from("user_roles").delete().eq("user_id", row.id).eq("role", r as never);
       }
 
-      // Company membership sync
+      // Company membership sync — write company_member_roles for the selected company.
       if (isEmployer && form.company_id) {
+        // Remove any membership rows for OTHER companies and stale role rows for this company.
         await supabase.from("company_member_roles").delete().eq("user_id", row.id).neq("company_id", form.company_id);
-        const { data: owners } = await supabase
-          .from("company_member_roles").select("user_id")
-          .eq("company_id", form.company_id).eq("role", "owner" as never).limit(1);
-        const assignedRole = owners && owners.length > 0 ? "recruiter" : "owner";
-        await supabase.from("company_member_roles").upsert(
-          { user_id: row.id, company_id: form.company_id, role: assignedRole as never },
-          { onConflict: "user_id,company_id,role" } as never,
-        );
+        await supabase.from("company_member_roles").delete().eq("user_id", row.id).eq("company_id", form.company_id);
+        const { error: cmrErr } = await supabase.from("company_member_roles").insert({
+          user_id: row.id, company_id: form.company_id, role: form.company_role as never,
+        });
+        if (cmrErr) throw cmrErr;
         await supabase.from("profiles").update({ company_id: form.company_id }).eq("id", row.id);
       }
       if (!isEmployer && original.has("employer")) {
@@ -564,26 +577,45 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
             </div>
           </div>
           {roleSet.has("employer") && (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Company</Label>
-                <Select value={form.company_id} onValueChange={(v) => setForm({ ...form, company_id: v, team_id: "" })}>
-                  <SelectTrigger><SelectValue placeholder="Select company" /></SelectTrigger>
-                  <SelectContent>
-                    {(companies ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <p className="text-[11px] text-muted-foreground mt-1">Company role requires a linked company.</p>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Company</Label>
+                  <Select value={form.company_id} onValueChange={(v) => setForm({ ...form, company_id: v, team_id: "" })}>
+                    <SelectTrigger><SelectValue placeholder="Select company" /></SelectTrigger>
+                    <SelectContent>
+                      {(companies ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[11px] text-muted-foreground mt-1">Company role requires a linked company.</p>
+                </div>
+                <div>
+                  <Label>Team</Label>
+                  <Select value={form.team_id || "__none"} onValueChange={(v) => setForm({ ...form, team_id: v === "__none" ? "" : v })} disabled={!form.company_id}>
+                    <SelectTrigger><SelectValue placeholder={form.company_id ? "Select team" : "Pick a company first"} /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none">No team</SelectItem>
+                      {(teams ?? []).map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div>
-                <Label>Team</Label>
-                <Select value={form.team_id || "__none"} onValueChange={(v) => setForm({ ...form, team_id: v === "__none" ? "" : v })} disabled={!form.company_id}>
-                  <SelectTrigger><SelectValue placeholder={form.company_id ? "Select team" : "Pick a company first"} /></SelectTrigger>
+                <Label>Company role</Label>
+                <Select
+                  value={form.company_role}
+                  onValueChange={(v) => setForm({ ...form, company_role: v as typeof form.company_role })}
+                  disabled={!form.company_id}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none">No team</SelectItem>
-                    {(teams ?? []).map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                    <SelectItem value="owner">Owner</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="recruiter">Recruiter</SelectItem>
+                    <SelectItem value="viewer">Viewer</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-[11px] text-muted-foreground mt-1">Saved into <code>company_member_roles</code> for the selected company.</p>
               </div>
             </div>
           )}
