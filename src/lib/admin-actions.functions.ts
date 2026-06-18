@@ -2,6 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function getAdminClient() {
+  const { getSupabaseAdminClient } = await import("@/lib/supabase-admin.server");
+  return getSupabaseAdminClient();
+}
+
 /** Super Admin activates a user account: confirms email + clears suspension. */
 export const activateUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -11,7 +16,7 @@ export const activateUser = createServerFn({ method: "POST" })
     const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: actorId, _role: "admin" });
     if (!isAdmin) throw new Error("Only Super Admin can activate users.");
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getAdminClient();
     const { error: e1 } = await supabaseAdmin.auth.admin.updateUserById(data.userId, { email_confirm: true });
     if (e1) throw new Error(e1.message);
     const { error: e2 } = await supabaseAdmin.from("profiles")
@@ -51,7 +56,7 @@ export const enrollUserFull = createServerFn({ method: "POST" })
       // Silently ignore company on non-employer
     }
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getAdminClient();
 
     // Resolve / create company if needed.
     let companyId: string | null = null;

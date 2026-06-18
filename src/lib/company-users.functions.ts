@@ -2,6 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function getAdminClient() {
+  const { getSupabaseAdminClient } = await import("@/lib/supabase-admin.server");
+  return getSupabaseAdminClient();
+}
+
 async function assertCompanyManager(supabase: any, actorId: string, companyId: string) {
   const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: actorId, _role: "admin" });
   if (isAdmin) return;
@@ -32,7 +37,7 @@ export const addExistingUserToCompanyTeam = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getAdminClient();
 
     const { data: prof, error: pe } = await supabaseAdmin
       .from("profiles").select("id, company_id").eq("id", data.user_id).maybeSingle();
@@ -79,7 +84,7 @@ export const inviteCompanyUser = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getAdminClient();
 
     // Trial-limit check: Free plan -> max 2 internal users.
     const { data: sub } = await supabaseAdmin
@@ -144,7 +149,7 @@ export const updateCompanyUser = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getAdminClient();
     const full_name = `${data.first_name} ${data.last_name}`.trim();
     await supabaseAdmin.from("profiles").update({
       first_name: data.first_name, last_name: data.last_name, full_name, phone: data.phone || null,
@@ -176,7 +181,7 @@ export const suspendCompanyUser = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getAdminClient();
     const patch: Record<string, unknown> = {};
     if (typeof data.suspended === "boolean") patch.suspended = data.suspended;
     if (typeof data.deactivated === "boolean") patch.deactivated = data.deactivated;
@@ -194,7 +199,7 @@ export const deleteCompanyUser = createServerFn({ method: "POST" })
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
     if (actorId === data.user_id) throw new Error("You cannot delete yourself.");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getAdminClient();
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -211,7 +216,7 @@ export const setCompanyUserPassword = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getAdminClient();
     // Ensure target belongs to this company.
     const { data: prof } = await supabaseAdmin.from("profiles").select("company_id").eq("id", data.user_id).maybeSingle();
     if (!prof || prof.company_id !== data.company_id) throw new Error("User is not a member of this company.");
@@ -230,7 +235,7 @@ export const sendCompanyUserReset = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getAdminClient();
     const { data: prof } = await supabaseAdmin.from("profiles").select("email, company_id").eq("id", data.user_id).maybeSingle();
     if (!prof || prof.company_id !== data.company_id) throw new Error("User is not a member of this company.");
     if (!prof.email) throw new Error("User has no email.");
