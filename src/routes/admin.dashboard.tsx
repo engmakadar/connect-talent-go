@@ -236,7 +236,8 @@ function PlatformStats() {
     URL.revokeObjectURL(url);
   }
   function exportJSON() {
-    const payload = { scope, generated_at: new Date().toISOString(), totals: { companies: data.companies, users: data.users, activeJobs: view.activeJobs, expiredJobs: view.expiredJobs, revenue: view.totalRevenue, activeSubscriptions: view.activeSubsScoped, activePartners: view.activePartners }, companies: filteredRows, months: view.months };
+    const d = data!; const v = view!;
+    const payload = { scope, generated_at: new Date().toISOString(), totals: { companies: d.companies, users: d.users, activeJobs: v.activeJobs, expiredJobs: v.expiredJobs, revenue: v.totalRevenue, activeSubscriptions: v.activeSubsScoped, activePartners: v.activePartners }, companies: filteredRows, months: v.months };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `platform-report-${scope}.json`; a.click();
