@@ -2,11 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function getAdminClient() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return supabaseAdmin;
-}
-
 /** Super Admin sets a user's password directly. */
 export const setUserPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -19,10 +14,7 @@ export const setUserPassword = createServerFn({ method: "POST" })
     const { data: _adminRow } = await supabase.from("user_roles").select("user_id").eq("user_id", actorId).eq("role", "admin").maybeSingle();
     const isAdmin = !!_adminRow;
     if (!isAdmin) throw new Error("Only Super Admin can reset passwords.");
-    const supabaseAdmin = await getAdminClient();
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, { password: data.password });
-    if (error) throw new Error(error.message);
-    return { ok: true };
+    throw new Error("Direct password setting is unavailable in this environment. Use Reset link instead.");
   });
 
 /** Super Admin generates a password-recovery link (email is best-effort). */
@@ -34,15 +26,15 @@ export const sendPasswordReset = createServerFn({ method: "POST" })
     const { data: _adminRow } = await supabase.from("user_roles").select("user_id").eq("user_id", actorId).eq("role", "admin").maybeSingle();
     const isAdmin = !!_adminRow;
     if (!isAdmin) throw new Error("Only Super Admin can send resets.");
-    const supabaseAdmin = await getAdminClient();
 
-    const { data: prof } = await supabaseAdmin.from("profiles").select("email").eq("id", data.userId).maybeSingle();
+    const { data: prof } = await supabase.from("profiles").select("email").eq("id", data.userId).maybeSingle();
     if (!prof?.email) throw new Error("User has no email.");
 
-    const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({
-      type: "recovery",
-      email: prof.email,
+    const { createClient } = await import("@supabase/supabase-js");
+    const authClient = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+      auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
     });
+    const { error } = await authClient.auth.resetPasswordForEmail(prof.email);
     if (error) throw new Error(error.message);
-    return { ok: true, actionLink: link.properties?.action_link ?? null, email: prof.email };
+    return { ok: true, actionLink: null, email: prof.email };
   });

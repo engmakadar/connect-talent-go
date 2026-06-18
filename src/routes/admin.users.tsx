@@ -16,12 +16,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CompanyLogo } from "@/components/company-logo";
-import { Users, Pencil, Search, MoreHorizontal, Ban, PowerOff, Power, Plus, UserPlus, Building2, ExternalLink, Trash2, CheckCircle2, Users2, KeyRound, Mail } from "lucide-react";
+import { Users, Pencil, Search, MoreHorizontal, Ban, PowerOff, Power, Plus, UserPlus, Building2, ExternalLink, Trash2, CheckCircle2, Users2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { logAudit } from "@/lib/audit";
 import { useServerFn } from "@tanstack/react-start";
 import { activateUser, enrollUserFull } from "@/lib/admin-actions.functions";
-import { setUserPassword, sendPasswordReset } from "@/lib/admin-password.functions";
+import { sendPasswordReset } from "@/lib/admin-password.functions";
 import { addExistingUserToCompanyTeam } from "@/lib/company-users.functions";
 
 
@@ -365,10 +365,8 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
   const { user } = useAuth();
   const qc = useQueryClient();
 
-  // Passcode reset state
-  const setPass = useServerFn(setUserPassword);
+  // Password reset state
   const sendReset = useServerFn(sendPasswordReset);
-  const [generatedPasscode, setGeneratedPasscode] = useState<string | null>(null);
   const [resetLink, setResetLink] = useState<string | null>(null);
   const [pwBusy, setPwBusy] = useState(false);
 
@@ -411,20 +409,6 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
       n.add(r);
     }
     setRoleSet(n);
-  };
-
-  const generatePasscode = async () => {
-    // Generate a strong on-demand passcode and set it via admin API.
-    const code = `Sahan!${Math.random().toString(36).slice(2, 10)}A1`;
-    setPwBusy(true);
-    try {
-      await setPass({ data: { userId: row.id, password: code } });
-      await logAudit({ action: "user.password_set", resource_type: "user", resource_id: row.id, metadata: { method: "auto_passcode" } });
-      setGeneratedPasscode(code);
-      toast.success("New passcode generated. Share it once — it is not stored.");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to generate passcode");
-    } finally { setPwBusy(false); }
   };
 
   const sendResetEmail = async () => {
@@ -526,7 +510,6 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
       await logAudit({ action: "user.profile_update", resource_type: "user", resource_id: row.id, metadata: { ...update, roles: [...roleSet], team_id: form.team_id || null } });
       toast.success("User updated.");
       setOpen(false);
-      setGeneratedPasscode(null);
       setResetLink(null);
       onSaved();
       qc.invalidateQueries({ queryKey: ["admin-users-full"] });
@@ -536,7 +519,7 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setGeneratedPasscode(null); setResetLink(null); } }}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setResetLink(null); } }}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon" className="h-8 w-8"><Pencil className="h-4 w-4" /></Button>
       </DialogTrigger>
@@ -623,24 +606,15 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
           <div className="rounded-lg border border-border p-3 space-y-2">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <Label className="text-xs uppercase tracking-wide">Auto passcode</Label>
-                <p className="text-[11px] text-muted-foreground">Generated on demand — not stored. Share once with the user.</p>
+                <Label className="text-xs uppercase tracking-wide">Password reset</Label>
+                <p className="text-[11px] text-muted-foreground">Send a reset email to let the user choose a new password.</p>
               </div>
               <div className="flex gap-2">
                 <Button type="button" size="sm" variant="outline" onClick={sendResetEmail} disabled={pwBusy}>
-                  <Mail className="h-3.5 w-3.5 mr-1" /> Reset link
-                </Button>
-                <Button type="button" size="sm" onClick={generatePasscode} disabled={pwBusy}>
-                  <KeyRound className="h-3.5 w-3.5 mr-1" /> {pwBusy ? "Working…" : "Generate"}
+                  <Mail className="h-3.5 w-3.5 mr-1" /> {pwBusy ? "Sending…" : "Send reset"}
                 </Button>
               </div>
             </div>
-            {generatedPasscode && (
-              <div className="rounded-md bg-secondary p-2 text-xs">
-                <p className="text-muted-foreground mb-1">New passcode (copy now — it will not be shown again):</p>
-                <code className="font-mono text-sm font-semibold">{generatedPasscode}</code>
-              </div>
-            )}
             {resetLink && (
               <div className="rounded-md bg-secondary p-2 text-xs space-y-1">
                 <p className="text-muted-foreground">One-time reset link:</p>
@@ -887,26 +861,12 @@ function TeamCountButton({ company, count }: { company: Company; count: number }
 
 
 function PasswordResetMenuItems({ userId, email }: { userId: string; email: string | null }) {
-  const [open, setOpen] = useState(false);
-  const [pw, setPw] = useState("");
   const [saving, setSaving] = useState(false);
-  const setPass = useServerFn(setUserPassword);
   const sendReset = useServerFn(sendPasswordReset);
   const [link, setLink] = useState<string | null>(null);
 
-  const submitSet = async () => {
-    if (pw.length < 8) return toast.error("Min 8 chars.");
-    setSaving(true);
-    try {
-      await setPass({ data: { userId, password: pw } });
-      await logAudit({ action: "user.password_set", resource_type: "user", resource_id: userId, metadata: { method: "manual" } });
-      toast.success("Password updated.");
-      setOpen(false); setPw("");
-    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
-    finally { setSaving(false); }
-  };
-
   const sendLink = async () => {
+    setSaving(true);
     try {
       const res = await sendReset({ data: { userId } });
       await logAudit({ action: "user.password_reset", resource_type: "user", resource_id: userId, metadata: { email: res.email } });
@@ -917,34 +877,22 @@ function PasswordResetMenuItems({ userId, email }: { userId: string; email: stri
         toast.success("Reset email sent.");
       }
     } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+    finally { setSaving(false); }
   };
 
   return (
     <>
-      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setOpen(true); }}>
-        <KeyRound className="mr-2 h-4 w-4" /> Set new password
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={sendLink}>
+      <DropdownMenuItem onClick={sendLink} disabled={saving}>
         <Mail className="mr-2 h-4 w-4" /> Send reset email
       </DropdownMenuItem>
-      <Dialog open={open || !!link} onOpenChange={(v) => { if (!v) { setOpen(false); setLink(null); } }}>
+      <Dialog open={!!link} onOpenChange={(v) => { if (!v) setLink(null); }}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{link ? "Password reset link" : `Set new password${email ? ` for ${email}` : ""}`}</DialogTitle></DialogHeader>
-          {link ? (
-            <div className="space-y-3">
-              <p className="text-sm">Email delivery is not yet configured. Share this one-time link with the user (expires shortly):</p>
-              <Input readOnly value={link} className="font-mono text-xs" onFocus={(e) => e.currentTarget.select()} />
-              <DialogFooter><Button onClick={() => setLink(null)}>Done</Button></DialogFooter>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div><Label>New password</Label><Input type="text" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Min 8 characters" /></div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                <Button onClick={submitSet} disabled={saving || pw.length < 8}>{saving ? "Saving…" : "Set password"}</Button>
-              </DialogFooter>
-            </div>
-          )}
+          <DialogHeader><DialogTitle>Password reset link{email ? ` for ${email}` : ""}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm">Share this one-time link with the user (expires shortly):</p>
+            <Input readOnly value={link ?? ""} className="font-mono text-xs" onFocus={(e) => e.currentTarget.select()} />
+            <DialogFooter><Button onClick={() => setLink(null)}>Done</Button></DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </>
