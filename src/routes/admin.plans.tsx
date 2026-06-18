@@ -185,6 +185,18 @@ function PlanDialog({ mode, plan }: { mode: "create" | "edit"; plan?: Plan }) {
               </Select>
             </div>
           </div>
+          <div>
+            <Label>Audience</Label>
+            <Select value={form.audience} onValueChange={(v) => setForm({ ...form, audience: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="employer">Companies (employers)</SelectItem>
+                <SelectItem value="jobseeker">Job seekers</SelectItem>
+                <SelectItem value="all">Everyone</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground mt-1">Plans are shown on the pricing page only to users matching this audience.</p>
+          </div>
           <div><Label>Description</Label><Textarea rows={3} value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
           <div className="flex items-center gap-3">
             <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
