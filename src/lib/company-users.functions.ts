@@ -235,7 +235,7 @@ export const sendCompanyUserReset = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId: actorId } = context;
     await assertCompanyManager(supabase, actorId, data.company_id);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getAdminClient();
     const { data: prof } = await supabaseAdmin.from("profiles").select("email, company_id").eq("id", data.user_id).maybeSingle();
     if (!prof || prof.company_id !== data.company_id) throw new Error("User is not a member of this company.");
     if (!prof.email) throw new Error("User has no email.");
