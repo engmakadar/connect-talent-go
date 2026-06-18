@@ -80,6 +80,7 @@ function PlansTable() {
         <thead className="border-b border-border bg-secondary/50">
           <tr className="text-left">
             <th className="px-5 py-3 font-semibold">Plan</th>
+            <th className="px-5 py-3 font-semibold">Audience</th>
             <th className="px-5 py-3 font-semibold">Code</th>
             <th className="px-5 py-3 font-semibold">Price</th>
             <th className="px-5 py-3 font-semibold">Interval</th>
@@ -93,6 +94,9 @@ function PlansTable() {
               <td className="px-5 py-4">
                 <p className="font-medium">{p.name}</p>
                 {p.description && <p className="text-xs text-muted-foreground mt-0.5 max-w-md truncate">{p.description}</p>}
+              </td>
+              <td className="px-5 py-4">
+                <Badge variant="outline" className="capitalize text-[10px]">{AUDIENCE_LABEL[p.audience] ?? p.audience}</Badge>
               </td>
               <td className="px-5 py-4 font-mono text-xs text-muted-foreground">{p.code}</td>
               <td className="px-5 py-4 font-semibold">{p.price_cents === 0 ? "Free" : `${p.currency} ${(p.price_cents / 100).toFixed(2)}`}</td>
