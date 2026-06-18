@@ -75,15 +75,25 @@ function ResumePage() {
     enabled: !!user,
     queryKey: ["resume", user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("resumes").select("*").eq("user_id", user!.id).maybeSingle();
+      const [{ data }, { data: prof }] = await Promise.all([
+        supabase.from("resumes").select("*").eq("user_id", user!.id).maybeSingle(),
+        supabase.from("profiles").select("full_name, first_name, last_name, email").eq("id", user!.id).maybeSingle(),
+      ]);
+      // Profile name/email are authoritative and non-editable.
+      const lockedName =
+        prof?.full_name ||
+        [prof?.first_name, prof?.last_name].filter(Boolean).join(" ").trim() ||
+        user?.user_metadata?.full_name ||
+        "";
+      const lockedEmail = prof?.email ?? user?.email ?? "";
       if (data) {
         setForm({
-          full_name: data.full_name ?? "",
+          full_name: lockedName,
           location: data.location ?? "",
           date_of_birth: data.date_of_birth ?? "",
           nationality: data.nationality ?? "",
           phone: data.phone ?? "",
-          email: data.email ?? user?.email ?? "",
+          email: lockedEmail,
           summary: data.summary ?? "",
           education: (data.education as EducationEntry[] | null) ?? [],
           experience: (data.experience as ExperienceEntry[] | null) ?? [],
@@ -92,7 +102,7 @@ function ResumePage() {
           refs: (data.refs as ReferenceEntry[] | null) ?? [],
         });
       } else {
-        setForm((f) => ({ ...f, email: user?.email ?? "" }));
+        setForm((f) => ({ ...f, full_name: lockedName, email: lockedEmail }));
       }
       return data ?? null;
     },
@@ -149,12 +159,16 @@ function ResumePage() {
         {/* Personal Information */}
         <SectionCard icon={User} title="Personal information" description="The basics employers see first.">
           <div className="grid sm:grid-cols-2 gap-4">
-            <Field label="Full name"><Input value={form.full_name} maxLength={120} onChange={(e) => update("full_name", e.target.value)} /></Field>
+            <Field label="Full name" hint="Synced from your account profile">
+              <Input value={form.full_name} readOnly disabled className="bg-secondary/60 cursor-not-allowed" />
+            </Field>
+            <Field label="Email" hint="Synced from your account login">
+              <Input type="email" value={form.email} readOnly disabled className="bg-secondary/60 cursor-not-allowed" />
+            </Field>
             <Field label="Location"><Input value={form.location} maxLength={140} onChange={(e) => update("location", e.target.value)} placeholder="Mogadishu, Somalia" /></Field>
             <Field label="Date of birth"><Input type="date" value={form.date_of_birth} onChange={(e) => update("date_of_birth", e.target.value)} /></Field>
             <Field label="Nationality"><Input value={form.nationality} maxLength={80} onChange={(e) => update("nationality", e.target.value)} /></Field>
             <Field label="Phone number"><Input value={form.phone} maxLength={40} onChange={(e) => update("phone", e.target.value)} placeholder="+252…" /></Field>
-            <Field label="Email"><Input type="email" value={form.email} maxLength={160} onChange={(e) => update("email", e.target.value)} /></Field>
           </div>
           <div>
             <Label className="mb-1.5 block">Personal summary</Label>
@@ -385,11 +399,12 @@ function RepeatableSection<T>({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
       <Label className="mb-1.5 block">{label}</Label>
       {children}
+      {hint && <p className="text-[11px] text-muted-foreground mt-1">{hint}</p>}
     </div>
   );
 }
