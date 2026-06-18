@@ -2,6 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function getAdminClient() {
+  const { getSupabaseAdminClient } = await import("@/lib/supabase-admin.server");
+  return getSupabaseAdminClient();
+}
+
 export const publishAnnouncement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({
@@ -15,7 +20,7 @@ export const publishAnnouncement = createServerFn({ method: "POST" })
     const { supabase, userId: actorId } = context;
     const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: actorId, _role: "admin" });
     if (!isAdmin) throw new Error("Only Super Admin can publish announcements.");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getAdminClient();
 
     const { data: ann, error } = await supabaseAdmin.from("announcements").insert({
       title: data.title, body: data.body, audience: data.audience,
