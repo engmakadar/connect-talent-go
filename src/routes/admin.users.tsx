@@ -36,6 +36,9 @@ type Sub = { plan: string; active: boolean };
 type Row = {
   id: string;
   full_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
   username: string | null;
   email: string | null;
   location: string | null;
@@ -51,7 +54,10 @@ type Row = {
   company: Company | null;
   subscription_plan: string | null;
   team_count: number;
+  team_id: string | null;
+  team_name: string | null;
 };
+
 
 
 type RoleFilter = "all" | "admin" | "employer" | "jobseeker";
@@ -79,14 +85,15 @@ function UsersTable() {
   const { data: rows, isLoading } = useQuery({
     queryKey: ["admin-users-full"],
     queryFn: async (): Promise<Row[]> => {
-      const [profilesRes, rolesRes, companiesRes, subsRes] = await Promise.all([
+      const [profilesRes, rolesRes, companiesRes, subsRes, teamMembersRes] = await Promise.all([
         supabase.from("profiles")
-          .select("id, full_name, username, email, location, headline, suspended, deactivated, email_verified, pending_approval, company_id, created_at, last_login_at")
+          .select("id, full_name, first_name, last_name, phone, username, email, location, headline, suspended, deactivated, email_verified, pending_approval, company_id, created_at, last_login_at")
           .order("created_at", { ascending: false }),
 
         supabase.from("user_roles").select("user_id, role"),
         supabase.from("companies").select("id, name, logo_url"),
         supabase.from("subscriptions").select("company_id, plan, active"),
+        supabase.from("company_team_members").select("user_id, team_id, team:company_teams!inner(id, name, company_id)"),
       ]);
       if (profilesRes.error) throw profilesRes.error;
       if (rolesRes.error) throw rolesRes.error;
@@ -107,17 +114,24 @@ function UsersTable() {
       (profilesRes.data ?? []).forEach((p) => {
         if (p.company_id) teamByCompany.set(p.company_id, (teamByCompany.get(p.company_id) ?? 0) + 1);
       });
+      const teamByUser = new Map<string, { id: string; name: string }>();
+      (teamMembersRes.data ?? []).forEach((tm: any) => {
+        if (tm.team) teamByUser.set(tm.user_id, { id: tm.team.id, name: tm.team.name });
+      });
 
       return (profilesRes.data ?? []).map((p): Row => {
         const company = p.company_id ? companyById.get(p.company_id) ?? null : null;
         const isEmployer = (rolesByUser.get(p.id) ?? []).includes("employer");
         const sub = company ? subByCompany.get(company.id) ?? null : null;
+        const t = teamByUser.get(p.id) ?? null;
         return {
           ...p,
           roles: rolesByUser.get(p.id) ?? [],
           company,
           subscription_plan: isEmployer && sub ? sub.plan : null,
           team_count: company ? teamByCompany.get(company.id) ?? 0 : 0,
+          team_id: t?.id ?? null,
+          team_name: t?.name ?? null,
         };
       });
     },
@@ -337,15 +351,25 @@ function StatusBadge({ row }: { row: Row }) {
 function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
-    full_name: row.full_name ?? "",
+    first_name: row.first_name ?? "",
+    last_name: row.last_name ?? "",
+    phone: row.phone ?? "",
     location: row.location ?? "",
     headline: row.headline ?? "",
     company_id: row.company_id ?? "",
+    team_id: row.team_id ?? "",
   });
   const [roleSet, setRoleSet] = useState<Set<string>>(new Set(row.roles));
   const [saving, setSaving] = useState(false);
   const { user } = useAuth();
   const qc = useQueryClient();
+
+  // Passcode reset state
+  const setPass = useServerFn(setUserPassword);
+  const sendReset = useServerFn(sendPasswordReset);
+  const [generatedPasscode, setGeneratedPasscode] = useState<string | null>(null);
+  const [resetLink, setResetLink] = useState<string | null>(null);
+  const [pwBusy, setPwBusy] = useState(false);
 
   const { data: companies } = useQuery({
     queryKey: ["companies-options"],
@@ -353,12 +377,17 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
     enabled: open,
   });
 
+  const { data: teams } = useQuery({
+    queryKey: ["company-teams-options", form.company_id],
+    queryFn: async () => (await supabase.from("company_teams").select("id, name").eq("company_id", form.company_id).order("name")).data ?? [],
+    enabled: open && !!form.company_id,
+  });
+
   const toggleRole = (r: string) => {
     const n = new Set(roleSet);
     if (n.has(r)) {
       n.delete(r);
     } else {
-      // Super Admin cannot also be Employer or Jobseeker.
       if (r === "admin") { n.delete("employer"); n.delete("jobseeker"); }
       if ((r === "employer" || r === "jobseeker") && n.has("admin")) {
         toast.error("Super Admin cannot also hold Employer or Jobseeker roles.");
@@ -369,17 +398,54 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
     setRoleSet(n);
   };
 
+  const generatePasscode = async () => {
+    // Generate a strong on-demand passcode and set it via admin API.
+    const code = `Sahan!${Math.random().toString(36).slice(2, 10)}A1`;
+    setPwBusy(true);
+    try {
+      await setPass({ data: { userId: row.id, password: code } });
+      await logAudit({ action: "user.password_set", resource_type: "user", resource_id: row.id, metadata: { method: "auto_passcode" } });
+      setGeneratedPasscode(code);
+      toast.success("New passcode generated. Share it once — it is not stored.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to generate passcode");
+    } finally { setPwBusy(false); }
+  };
+
+  const sendResetEmail = async () => {
+    setPwBusy(true);
+    try {
+      const res = await sendReset({ data: { userId: row.id } });
+      await logAudit({ action: "user.password_reset", resource_type: "user", resource_id: row.id });
+      if (res.actionLink) setResetLink(res.actionLink);
+      toast.success(res.actionLink ? "Reset link generated." : "Reset email sent.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to send reset");
+    } finally { setPwBusy(false); }
+  };
+
   const save = async () => {
     const isEmployer = roleSet.has("employer");
-    // Promoting a user to Company (Employer) requires linking them to a company.
     if (isEmployer && !form.company_id) {
       toast.error("Company members must be linked to a company. Choose one before saving.");
       return;
     }
+    if (!isEmployer && form.company_id) {
+      toast.error("Only Company role can be linked to a company. Remove the company or grant Company role.");
+      return;
+    }
+    if (!form.first_name.trim() || !form.last_name.trim()) {
+      toast.error("First name and last name are required.");
+      return;
+    }
     setSaving(true);
     try {
+      const full_name = `${form.first_name.trim()} ${form.last_name.trim()}`.trim();
       const update = {
-        full_name: form.full_name || null,
+        first_name: form.first_name.trim(),
+        last_name: form.last_name.trim(),
+        full_name,
+        phone: form.phone.trim() || null,
         location: form.location || null,
         headline: form.headline || null,
         company_id: isEmployer ? (form.company_id || null) : null,
@@ -398,53 +464,57 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
         await supabase.from("user_roles").delete().eq("user_id", row.id).eq("role", r as never);
       }
 
-      // Auto-link company membership when becoming a Company member.
+      // Company membership sync
       if (isEmployer && form.company_id) {
-        // Remove memberships from any other company (company switch).
-        await supabase
-          .from("company_member_roles")
-          .delete()
-          .eq("user_id", row.id)
-          .neq("company_id", form.company_id);
-        // Decide role: become owner if the company has no owner yet, else recruiter.
+        await supabase.from("company_member_roles").delete().eq("user_id", row.id).neq("company_id", form.company_id);
         const { data: owners } = await supabase
-          .from("company_member_roles")
-          .select("user_id")
-          .eq("company_id", form.company_id)
-          .eq("role", "owner" as never)
-          .limit(1);
+          .from("company_member_roles").select("user_id")
+          .eq("company_id", form.company_id).eq("role", "owner" as never).limit(1);
         const assignedRole = owners && owners.length > 0 ? "recruiter" : "owner";
         await supabase.from("company_member_roles").upsert(
           { user_id: row.id, company_id: form.company_id, role: assignedRole as never },
           { onConflict: "user_id,company_id,role" } as never,
         );
-        // Also ensure the profile reflects the selected company (the DB trigger
-        // only fills it when NULL, so we force-sync here for company switches).
         await supabase.from("profiles").update({ company_id: form.company_id }).eq("id", row.id);
       }
-      // If Company role was removed, drop company memberships.
       if (!isEmployer && original.has("employer")) {
         await supabase.from("company_member_roles").delete().eq("user_id", row.id);
       }
 
+      // Team membership sync (scoped to the selected company)
+      if (form.company_id) {
+        const { data: existing } = await supabase
+          .from("company_team_members")
+          .select("id, team:company_teams!inner(company_id)")
+          .eq("user_id", row.id)
+          .eq("team.company_id", form.company_id);
+        if (existing?.length) {
+          await supabase.from("company_team_members").delete().in("id", existing.map((e: any) => e.id));
+        }
+        if (form.team_id) {
+          await supabase.from("company_team_members").insert({ user_id: row.id, team_id: form.team_id });
+        }
+      } else {
+        // No company → drop all team memberships
+        await supabase.from("company_team_members").delete().eq("user_id", row.id);
+      }
+
       if (toAdd.length || toRemove.length) {
         await logAudit({
-          action: "user.role_change",
-          resource_type: "user",
-          resource_id: row.id,
+          action: "user.role_change", resource_type: "user", resource_id: row.id,
           metadata: {
-            previous_roles: [...original],
-            new_roles: [...roleSet],
-            added: toAdd,
-            removed: toRemove,
+            previous_roles: [...original], new_roles: [...roleSet],
+            added: toAdd, removed: toRemove,
             company_id: isEmployer ? form.company_id : null,
             actor_id: user?.id ?? null,
           },
         });
       }
-      await logAudit({ action: "user.profile_update", resource_type: "user", resource_id: row.id, metadata: { ...update, roles: [...roleSet] } });
+      await logAudit({ action: "user.profile_update", resource_type: "user", resource_id: row.id, metadata: { ...update, roles: [...roleSet], team_id: form.team_id || null } });
       toast.success("User updated.");
       setOpen(false);
+      setGeneratedPasscode(null);
+      setResetLink(null);
       onSaved();
       qc.invalidateQueries({ queryKey: ["admin-users-full"] });
     } catch (e) {
@@ -453,14 +523,27 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setGeneratedPasscode(null); setResetLink(null); } }}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon" className="h-8 w-8"><Pencil className="h-4 w-4" /></Button>
       </DialogTrigger>
-      <DialogContent>
-        <DialogHeader><DialogTitle>Edit user</DialogTitle></DialogHeader>
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit user</DialogTitle>
+        </DialogHeader>
         <div className="space-y-3">
-          <div><Label>Full name</Label><Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>First name *</Label><Input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></div>
+            <div><Label>Last name *</Label><Input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} /></div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Email</Label>
+              <Input value={row.email ?? ""} readOnly className="bg-secondary/40" />
+              <p className="text-[11px] text-muted-foreground mt-1">Email is managed by sign-in and cannot be edited here.</p>
+            </div>
+            <div><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+1 555…" /></div>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div><Label>Location</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="City, Country" /></div>
             <div><Label>Headline</Label><Input value={form.headline} onChange={(e) => setForm({ ...form, headline: e.target.value })} /></div>
@@ -481,17 +564,58 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
             </div>
           </div>
           {roleSet.has("employer") && (
-            <div>
-              <Label>Company</Label>
-              <Select value={form.company_id} onValueChange={(v) => setForm({ ...form, company_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Select company" /></SelectTrigger>
-                <SelectContent>
-                  {(companies ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <p className="text-[11px] text-muted-foreground mt-1">Employers must be linked to a company.</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Company</Label>
+                <Select value={form.company_id} onValueChange={(v) => setForm({ ...form, company_id: v, team_id: "" })}>
+                  <SelectTrigger><SelectValue placeholder="Select company" /></SelectTrigger>
+                  <SelectContent>
+                    {(companies ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground mt-1">Company role requires a linked company.</p>
+              </div>
+              <div>
+                <Label>Team</Label>
+                <Select value={form.team_id || "__none"} onValueChange={(v) => setForm({ ...form, team_id: v === "__none" ? "" : v })} disabled={!form.company_id}>
+                  <SelectTrigger><SelectValue placeholder={form.company_id ? "Select team" : "Pick a company first"} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none">No team</SelectItem>
+                    {(teams ?? []).map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
+
+          <div className="rounded-lg border border-border p-3 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <Label className="text-xs uppercase tracking-wide">Auto passcode</Label>
+                <p className="text-[11px] text-muted-foreground">Generated on demand — not stored. Share once with the user.</p>
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" size="sm" variant="outline" onClick={sendResetEmail} disabled={pwBusy}>
+                  <Mail className="h-3.5 w-3.5 mr-1" /> Reset link
+                </Button>
+                <Button type="button" size="sm" onClick={generatePasscode} disabled={pwBusy}>
+                  <KeyRound className="h-3.5 w-3.5 mr-1" /> {pwBusy ? "Working…" : "Generate"}
+                </Button>
+              </div>
+            </div>
+            {generatedPasscode && (
+              <div className="rounded-md bg-secondary p-2 text-xs">
+                <p className="text-muted-foreground mb-1">New passcode (copy now — it will not be shown again):</p>
+                <code className="font-mono text-sm font-semibold">{generatedPasscode}</code>
+              </div>
+            )}
+            {resetLink && (
+              <div className="rounded-md bg-secondary p-2 text-xs space-y-1">
+                <p className="text-muted-foreground">One-time reset link:</p>
+                <Input readOnly value={resetLink} className="font-mono text-[11px] bg-white" onFocus={(e) => e.currentTarget.select()} />
+              </div>
+            )}
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>

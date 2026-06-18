@@ -31,6 +31,13 @@ export const Route = createFileRoute("/admin/plans")({
 type Plan = {
   id: string; code: string; name: string; price_cents: number; currency: string;
   billing_interval: string; description: string | null; is_active: boolean; sort_order: number;
+  audience: string;
+};
+
+const AUDIENCE_LABEL: Record<string, string> = {
+  employer: "Companies",
+  jobseeker: "Job seekers",
+  all: "Everyone",
 };
 
 function PlansTable() {
@@ -73,6 +80,7 @@ function PlansTable() {
         <thead className="border-b border-border bg-secondary/50">
           <tr className="text-left">
             <th className="px-5 py-3 font-semibold">Plan</th>
+            <th className="px-5 py-3 font-semibold">Audience</th>
             <th className="px-5 py-3 font-semibold">Code</th>
             <th className="px-5 py-3 font-semibold">Price</th>
             <th className="px-5 py-3 font-semibold">Interval</th>
@@ -86,6 +94,9 @@ function PlansTable() {
               <td className="px-5 py-4">
                 <p className="font-medium">{p.name}</p>
                 {p.description && <p className="text-xs text-muted-foreground mt-0.5 max-w-md truncate">{p.description}</p>}
+              </td>
+              <td className="px-5 py-4">
+                <Badge variant="outline" className="capitalize text-[10px]">{AUDIENCE_LABEL[p.audience] ?? p.audience}</Badge>
               </td>
               <td className="px-5 py-4 font-mono text-xs text-muted-foreground">{p.code}</td>
               <td className="px-5 py-4 font-semibold">{p.price_cents === 0 ? "Free" : `${p.currency} ${(p.price_cents / 100).toFixed(2)}`}</td>
@@ -119,6 +130,7 @@ function PlanDialog({ mode, plan }: { mode: "create" | "edit"; plan?: Plan }) {
     description: plan?.description ?? "",
     is_active: plan?.is_active ?? true,
     sort_order: plan?.sort_order ?? 0,
+    audience: plan?.audience ?? "employer",
   });
   const [saving, setSaving] = useState(false);
 
@@ -172,6 +184,18 @@ function PlanDialog({ mode, plan }: { mode: "create" | "edit"; plan?: Plan }) {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+          <div>
+            <Label>Audience</Label>
+            <Select value={form.audience} onValueChange={(v) => setForm({ ...form, audience: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="employer">Companies (employers)</SelectItem>
+                <SelectItem value="jobseeker">Job seekers</SelectItem>
+                <SelectItem value="all">Everyone</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground mt-1">Plans are shown on the pricing page only to users matching this audience.</p>
           </div>
           <div><Label>Description</Label><Textarea rows={3} value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
           <div className="flex items-center gap-3">
