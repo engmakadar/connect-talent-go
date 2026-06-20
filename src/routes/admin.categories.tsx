@@ -13,8 +13,29 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/admin/categories")({
   head: () => ({ meta: [{ title: "Job Categories — SahanJobs Admin" }] }),
   component: () => (
-    <AdminShell pageKey="categories" title="Job Categories" subtitle="Categories surface in filters and on each job posting." actions={<CategoryDialog mode="create" />}>
-      <CategoriesTable />
+    <AdminShell pageKey="categories" title="Job Categories" subtitle="Categories and employment types surface in filters and on each job posting.">
+      <div className="space-y-8">
+        <section className="space-y-3">
+          <div className="flex items-end justify-between flex-wrap gap-3">
+            <div>
+              <h2 className="font-display text-xl font-semibold text-ink">Categories</h2>
+              <p className="text-sm text-muted-foreground">Industry / function categories for jobs and tenders.</p>
+            </div>
+            <CategoryDialog mode="create" />
+          </div>
+          <CategoriesTable />
+        </section>
+        <section className="space-y-3">
+          <div className="flex items-end justify-between flex-wrap gap-3">
+            <div>
+              <h2 className="font-display text-xl font-semibold text-ink">Employment Types</h2>
+              <p className="text-sm text-muted-foreground">Enroll the employment types companies can choose when posting a job.</p>
+            </div>
+            <EmploymentTypeDialog mode="create" />
+          </div>
+          <EmploymentTypesTable />
+        </section>
+      </div>
     </AdminShell>
   ),
 });
