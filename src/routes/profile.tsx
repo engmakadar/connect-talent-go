@@ -1,6 +1,6 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
@@ -10,6 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Upload, Sparkles } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { parseResume } from "@/lib/cv-parser.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/profile")({
@@ -26,6 +29,9 @@ function Profile() {
     min_salary: "", skills: "", notify_email: true, resume_url: "",
   });
   const [saving, setSaving] = useState(false);
+  const [parsing, setParsing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const parseFn = useServerFn(parseResume);
 
   useEffect(() => {
     if (!loading && !user) router.navigate({ to: "/auth" });
