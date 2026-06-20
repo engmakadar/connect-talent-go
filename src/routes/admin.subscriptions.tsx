@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Receipt, Search, Sparkles, CheckCircle2, XCircle, Clock, Power, Building2, Gift } from "lucide-react";
+import { Receipt, Search, Sparkles, CheckCircle2, XCircle, Clock, Power, Building2, Gift, User } from "lucide-react";
 import { AdminShell } from "@/components/admin-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
