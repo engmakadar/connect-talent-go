@@ -153,7 +153,7 @@ function ResumePage() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to save"),
   });
 
-  if (loading || !user) return null;
+  if (loading || !user || subLoading || subActive === false) return null;
 
   const update = <K extends keyof ResumeForm>(key: K, value: ResumeForm[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
