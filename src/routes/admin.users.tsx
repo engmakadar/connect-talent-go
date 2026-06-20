@@ -108,6 +108,7 @@ function UsersTable() {
       (companiesRes.data ?? []).forEach((c) => companyById.set(c.id, c));
       const subByCompany = new Map<string, Sub>();
       (subsRes.data ?? []).forEach((s) => {
+        if (!s.company_id) return;
         if (!subByCompany.has(s.company_id) || s.active) subByCompany.set(s.company_id, { plan: s.plan, active: s.active });
       });
       const teamByCompany = new Map<string, number>();
