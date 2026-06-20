@@ -899,7 +899,7 @@ export type Database = {
       subscriptions: {
         Row: {
           active: boolean
-          company_id: string
+          company_id: string | null
           created_at: string
           id: string
           plan: string
@@ -910,7 +910,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
-          company_id: string
+          company_id?: string | null
           created_at?: string
           id?: string
           plan?: string
@@ -921,7 +921,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
-          company_id?: string
+          company_id?: string | null
           created_at?: string
           id?: string
           plan?: string
