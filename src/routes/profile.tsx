@@ -86,6 +86,56 @@ function Profile() {
 
   if (loading || !user) return null;
 
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { toast.error("File must be under 10MB."); return; }
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+    const isDocx = file.name.toLowerCase().endsWith(".docx") ||
+      file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    if (!isPdf && !isDocx) { toast.error("Please upload a PDF or DOCX resume."); return; }
+
+    setParsing(true);
+    try {
+      let parsed: Awaited<ReturnType<typeof parseFn>>;
+      if (isPdf) {
+        const arrayBuf = await file.arrayBuffer();
+        const bytes = new Uint8Array(arrayBuf);
+        let binary = "";
+        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        const base64 = btoa(binary);
+        parsed = await parseFn({ data: { filename: file.name, mimeType: "application/pdf", base64 } });
+      } else {
+        // DOCX: extract text in the browser, send plain text.
+        const mammoth = await import("mammoth/mammoth.browser");
+        const arrayBuffer = await file.arrayBuffer();
+        const { value: text } = await mammoth.extractRawText({ arrayBuffer });
+        parsed = await parseFn({ data: { filename: file.name, mimeType: file.type || "application/vnd.openxmlformats-officedocument.wordprocessingml.document", text } });
+      }
+      // Prefill — user reviews then clicks Save changes.
+      setProfile((p) => ({
+        ...p,
+        full_name: parsed.full_name ?? p.full_name,
+        headline: parsed.headline ?? p.headline,
+        bio: parsed.bio ?? p.bio,
+        location: parsed.location ?? p.location,
+      }));
+      setPrefs((pr) => ({
+        ...pr,
+        skills: parsed.skills?.length ? parsed.skills.join(", ") : pr.skills,
+        preferred_categories: parsed.preferred_categories?.length
+          ? parsed.preferred_categories.join(", ")
+          : pr.preferred_categories,
+      }));
+      toast.success("Resume parsed — review the fields below and click Save.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to parse resume");
+    } finally {
+      setParsing(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
@@ -94,6 +144,31 @@ function Profile() {
           <h1 className="font-display text-4xl font-bold tracking-tight mb-2">Profile</h1>
           <p className="text-muted-foreground">Public information shown alongside applications.</p>
         </div>
+
+        <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="font-semibold text-ink">Auto-fill from your CV</p>
+              <p className="text-sm text-muted-foreground">Upload a PDF or DOCX resume — we'll parse it and pre-fill the fields below.</p>
+            </div>
+          </div>
+          <div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              className="hidden"
+              onChange={handleResumeUpload}
+            />
+            <Button type="button" disabled={parsing} onClick={() => fileInputRef.current?.click()}>
+              <Upload className="h-4 w-4" /> {parsing ? "Parsing…" : "Upload resume"}
+            </Button>
+          </div>
+        </div>
+
 
         <div className="space-y-4 rounded-xl border border-border bg-card p-6">
           <div className="grid sm:grid-cols-2 gap-4">
