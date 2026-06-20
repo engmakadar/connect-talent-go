@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Receipt, Search, Sparkles, CheckCircle2, XCircle, Clock, Power, Building2, Gift } from "lucide-react";
+import { Receipt, Search, Sparkles, CheckCircle2, XCircle, Clock, Power, Building2, Gift, User } from "lucide-react";
 import { AdminShell } from "@/components/admin-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,8 @@ export const Route = createFileRoute("/admin/subscriptions")({
 
 type SubRow = {
   id: string;
-  company_id: string;
+  company_id: string | null;
+  user_id: string | null;
   plan: string;
   active: boolean;
   trial_ends_at: string | null;
@@ -34,9 +35,10 @@ type SubRow = {
   created_at: string;
 };
 type CompanyRow = { id: string; name: string; contact_email: string | null };
+type ProfileRow = { id: string; full_name: string | null; email: string | null };
 
 function SubscriptionsPanel() {
-  const [tab, setTab] = useState<"all" | "active" | "expired" | "trial" | "none">("all");
+  const [tab, setTab] = useState<"all" | "active" | "expired" | "trial" | "jobseekers" | "none">("all");
 
   return (
     <div className="space-y-4">
@@ -45,6 +47,7 @@ function SubscriptionsPanel() {
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="active">Active</TabsTrigger>
           <TabsTrigger value="trial">Free Trial</TabsTrigger>
+          <TabsTrigger value="jobseekers">Jobseekers</TabsTrigger>
           <TabsTrigger value="expired">Expired</TabsTrigger>
           <TabsTrigger value="none">No Subscription</TabsTrigger>
         </TabsList>
@@ -54,7 +57,7 @@ function SubscriptionsPanel() {
   );
 }
 
-function SubscriptionsTable({ status }: { status: "all" | "active" | "expired" | "trial" }) {
+function SubscriptionsTable({ status }: { status: "all" | "active" | "expired" | "trial" | "jobseekers" }) {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
@@ -62,15 +65,18 @@ function SubscriptionsTable({ status }: { status: "all" | "active" | "expired" |
   const { data, isLoading } = useQuery({
     queryKey: ["admin-subscriptions"],
     queryFn: async () => {
-      const [subs, companies] = await Promise.all([
+      const [subs, companies, profiles] = await Promise.all([
         supabase.from("subscriptions").select("*").order("created_at", { ascending: false }),
         supabase.from("companies").select("id, name, contact_email"),
+        supabase.from("profiles").select("id, full_name, email"),
       ]);
       if (subs.error) throw subs.error;
-      const companyMap = new Map((companies.data ?? []).map((c) => [c.id, c]));
+      const companyMap = new Map((companies.data ?? []).map((c) => [c.id, c as CompanyRow]));
+      const profileMap = new Map((profiles.data ?? []).map((p) => [p.id, p as ProfileRow]));
       return ((subs.data as SubRow[]) ?? []).map((s) => ({
         ...s,
-        company: companyMap.get(s.company_id) ?? null,
+        company: s.company_id ? companyMap.get(s.company_id) ?? null : null,
+        profile: s.user_id ? profileMap.get(s.user_id) ?? null : null,
       }));
     },
   });
@@ -80,14 +86,17 @@ function SubscriptionsTable({ status }: { status: "all" | "active" | "expired" |
     const list = data ?? [];
     return list.filter((s) => {
       const isTrial = !!s.trial_ends_at;
+      const isJobseeker = !!s.user_id && !s.company_id;
       const endsAt = s.valid_until ? new Date(s.valid_until).getTime() : null;
       const expired = endsAt !== null && endsAt < now;
       const effectiveActive = s.active && !expired;
       if (status === "active" && !effectiveActive) return false;
       if (status === "expired" && !expired) return false;
       if (status === "trial" && !isTrial) return false;
+      if (status === "jobseekers" && !isJobseeker) return false;
       if (q) {
-        const hay = [s.company?.name, s.company?.contact_email, s.plan].filter(Boolean).join(" ").toLowerCase();
+        const hay = [s.company?.name, s.company?.contact_email, s.profile?.full_name, s.profile?.email, s.plan]
+          .filter(Boolean).join(" ").toLowerCase();
         if (!hay.includes(q.toLowerCase())) return false;
       }
       return true;
@@ -108,7 +117,7 @@ function SubscriptionsTable({ status }: { status: "all" | "active" | "expired" |
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[240px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search company, plan…" className="pl-10" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search company, jobseeker, plan…" className="pl-10" />
         </div>
       </div>
 
@@ -124,7 +133,8 @@ function SubscriptionsTable({ status }: { status: "all" | "active" | "expired" |
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-secondary/50 text-left">
               <tr>
-                <th className="px-4 py-3 font-semibold">Company</th>
+                <th className="px-4 py-3 font-semibold">Subscriber</th>
+                <th className="px-4 py-3 font-semibold">Kind</th>
                 <th className="px-4 py-3 font-semibold">Plan</th>
                 <th className="px-4 py-3 font-semibold">Type</th>
                 <th className="px-4 py-3 font-semibold">Start</th>
@@ -136,14 +146,26 @@ function SubscriptionsTable({ status }: { status: "all" | "active" | "expired" |
             <tbody>
               {rows.map((s) => {
                 const isTrial = !!s.trial_ends_at;
+                const isJobseeker = !!s.user_id && !s.company_id;
                 const endsAt = s.valid_until ? new Date(s.valid_until).getTime() : null;
                 const expired = endsAt !== null && endsAt < now;
                 const effectiveActive = s.active && !expired;
+                const displayName = isJobseeker
+                  ? (s.profile?.full_name || s.profile?.email || "Jobseeker")
+                  : (s.company?.name ?? "—");
+                const displayEmail = isJobseeker ? s.profile?.email : s.company?.contact_email;
                 return (
                   <tr key={s.id} className="border-b border-border/60 last:border-0 hover:bg-secondary/30">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-ink">{s.company?.name ?? "—"}</div>
-                      <div className="text-xs text-muted-foreground">{s.company?.contact_email ?? "—"}</div>
+                      <div className="font-medium text-ink">{displayName}</div>
+                      <div className="text-xs text-muted-foreground">{displayEmail ?? "—"}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {isJobseeker ? (
+                        <Badge className="bg-sky-100 text-sky-800 border-0"><User className="h-3 w-3 mr-1" /> Jobseeker</Badge>
+                      ) : (
+                        <Badge className="bg-violet-100 text-violet-800 border-0"><Building2 className="h-3 w-3 mr-1" /> Company</Badge>
+                      )}
                     </td>
                     <td className="px-4 py-3">{s.plan}</td>
                     <td className="px-4 py-3">
