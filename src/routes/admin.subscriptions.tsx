@@ -133,7 +133,8 @@ function SubscriptionsTable({ status }: { status: "all" | "active" | "expired" |
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-secondary/50 text-left">
               <tr>
-                <th className="px-4 py-3 font-semibold">Company</th>
+                <th className="px-4 py-3 font-semibold">Subscriber</th>
+                <th className="px-4 py-3 font-semibold">Kind</th>
                 <th className="px-4 py-3 font-semibold">Plan</th>
                 <th className="px-4 py-3 font-semibold">Type</th>
                 <th className="px-4 py-3 font-semibold">Start</th>
@@ -145,14 +146,26 @@ function SubscriptionsTable({ status }: { status: "all" | "active" | "expired" |
             <tbody>
               {rows.map((s) => {
                 const isTrial = !!s.trial_ends_at;
+                const isJobseeker = !!s.user_id && !s.company_id;
                 const endsAt = s.valid_until ? new Date(s.valid_until).getTime() : null;
                 const expired = endsAt !== null && endsAt < now;
                 const effectiveActive = s.active && !expired;
+                const displayName = isJobseeker
+                  ? (s.profile?.full_name || s.profile?.email || "Jobseeker")
+                  : (s.company?.name ?? "—");
+                const displayEmail = isJobseeker ? s.profile?.email : s.company?.contact_email;
                 return (
                   <tr key={s.id} className="border-b border-border/60 last:border-0 hover:bg-secondary/30">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-ink">{s.company?.name ?? "—"}</div>
-                      <div className="text-xs text-muted-foreground">{s.company?.contact_email ?? "—"}</div>
+                      <div className="font-medium text-ink">{displayName}</div>
+                      <div className="text-xs text-muted-foreground">{displayEmail ?? "—"}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {isJobseeker ? (
+                        <Badge className="bg-sky-100 text-sky-800 border-0"><User className="h-3 w-3 mr-1" /> Jobseeker</Badge>
+                      ) : (
+                        <Badge className="bg-violet-100 text-violet-800 border-0"><Building2 className="h-3 w-3 mr-1" /> Company</Badge>
+                      )}
                     </td>
                     <td className="px-4 py-3">{s.plan}</td>
                     <td className="px-4 py-3">
