@@ -11,7 +11,7 @@ export type AdminPageKey =
   | "all_users" | "employers" | "candidates" | "user_verification"
   | "job_approval" | "job_moderation" | "post_job" | "fraud_detection" | "categories"
   | "ai_matching" | "recommendations" | "cv_parsing"
-  | "subscription_plans" | "transactions" | "revenue_analytics"
+  | "subscription_plans" | "subscriptions_list" | "transactions" | "revenue_analytics"
   | "announcements" | "notifications" | "messaging_center"
   | "audit_logs" | "permissions" | "roles_rbac" | "security_settings"
   | "apis_integrations" | "email_sms" | "branding_settings"
@@ -69,6 +69,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
     title: "Billing & Revenue",
     items: [
       { key: "subscription_plans", label: "Subscription Plans", to: "/admin/plans", icon: CreditCard },
+      { key: "subscriptions_list", label: "Subscriptions List", to: "/admin/subscriptions", icon: Receipt },
       { key: "transactions", label: "Transactions & Invoices", to: "/admin/transactions", icon: Receipt },
       { key: "revenue_analytics", label: "Revenue Analytics", icon: FileBarChart, soon: true },
     ],
