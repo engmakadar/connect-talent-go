@@ -54,7 +54,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
       { key: "job_approval", label: "Job Approval", to: "/admin/review", icon: ClipboardCheck },
       { key: "job_moderation", label: "Job Moderation", to: "/admin/jobs", icon: FileText },
       { key: "categories", label: "Categories", to: "/admin/categories", icon: Tags },
-      { key: "fraud_detection", label: "Fraud Detection", icon: AlertTriangle, soon: true },
+      { key: "fraud_detection", label: "Fraud Detection", to: "/admin/review", icon: AlertTriangle },
     ],
   },
   {
