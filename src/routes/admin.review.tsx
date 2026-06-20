@@ -27,7 +27,7 @@ export const Route = createFileRoute("/admin/review")({
 function AdminReview() {
   const { user, isAdmin, loading } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"pending" | "approved" | "rejected" | "expired">("pending");
+  const [tab, setTab] = useState<"pending" | "approved" | "rejected" | "expired" | "flagged_fraud">("pending");
   const [typeFilter, setTypeFilter] = useState<"all" | "job" | "tender">("all");
 
   // Companies need their own company_id to scope the list.
@@ -100,6 +100,7 @@ function AdminReview() {
               <TabsTrigger value="approved">Approved</TabsTrigger>
               <TabsTrigger value="rejected">Rejected</TabsTrigger>
               <TabsTrigger value="expired">Expired</TabsTrigger>
+              <TabsTrigger value="flagged_fraud" className="text-rose-700 data-[state=active]:text-rose-700">Fraud</TabsTrigger>
             </TabsList>
           </Tabs>
 
