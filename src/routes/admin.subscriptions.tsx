@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Receipt, Search, Sparkles, CheckCircle2, XCircle, Clock, Power } from "lucide-react";
+import { Receipt, Search, Sparkles, CheckCircle2, XCircle, Clock, Power, Building2, Gift } from "lucide-react";
 import { AdminShell } from "@/components/admin-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/subscriptions")({
@@ -16,9 +17,9 @@ export const Route = createFileRoute("/admin/subscriptions")({
     <AdminShell
       pageKey="subscriptions_list"
       title="Subscriptions List"
-      subtitle="All companies subscribed to a plan — including free trials. Activate or deactivate to override access."
+      subtitle="All companies subscribed to a plan — including free trials. Activate, deactivate, or grant a trial to override access."
     >
-      <SubscriptionsTable />
+      <SubscriptionsPanel />
     </AdminShell>
   ),
 });
@@ -32,11 +33,30 @@ type SubRow = {
   valid_until: string | null;
   created_at: string;
 };
+type CompanyRow = { id: string; name: string; contact_email: string | null };
 
-function SubscriptionsTable() {
+function SubscriptionsPanel() {
+  const [tab, setTab] = useState<"all" | "active" | "expired" | "trial" | "none">("all");
+
+  return (
+    <div className="space-y-4">
+      <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+        <TabsList className="bg-secondary">
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="active">Active</TabsTrigger>
+          <TabsTrigger value="trial">Free Trial</TabsTrigger>
+          <TabsTrigger value="expired">Expired</TabsTrigger>
+          <TabsTrigger value="none">No Subscription</TabsTrigger>
+        </TabsList>
+      </Tabs>
+      {tab === "none" ? <NoSubscriptionTable /> : <SubscriptionsTable status={tab} />}
+    </div>
+  );
+}
+
+function SubscriptionsTable({ status }: { status: "all" | "active" | "expired" | "trial" }) {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
-  const [status, setStatus] = useState<"all" | "active" | "expired" | "trial">("all");
   const [busy, setBusy] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -90,15 +110,6 @@ function SubscriptionsTable() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search company, plan…" className="pl-10" />
         </div>
-        <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
-          <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All subscriptions</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="expired">Expired</SelectItem>
-            <SelectItem value="trial">Free trial</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm overflow-hidden">
@@ -166,6 +177,106 @@ function SubscriptionsTable() {
                   </tr>
                 );
               })}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function NoSubscriptionTable() {
+  const qc = useQueryClient();
+  const [q, setQ] = useState("");
+  const [days, setDays] = useState<string>("14");
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-companies-without-sub"],
+    queryFn: async () => {
+      const [companies, subs] = await Promise.all([
+        supabase.from("companies").select("id, name, contact_email").order("name"),
+        supabase.from("subscriptions").select("company_id"),
+      ]);
+      const subbed = new Set((subs.data ?? []).map((s) => s.company_id));
+      return ((companies.data as CompanyRow[]) ?? []).filter((c) => !subbed.has(c.id));
+    },
+  });
+
+  const rows = useMemo(() => {
+    const list = data ?? [];
+    if (!q) return list;
+    const needle = q.toLowerCase();
+    return list.filter((c) =>
+      [c.name, c.contact_email].filter(Boolean).join(" ").toLowerCase().includes(needle)
+    );
+  }, [data, q]);
+
+  const grantTrial = async (companyId: string) => {
+    setBusy(companyId);
+    const n = Math.max(1, Math.min(90, Number(days) || 14));
+    const validUntil = new Date(Date.now() + n * 24 * 60 * 60 * 1000).toISOString();
+    const { error } = await supabase.from("subscriptions").insert({
+      company_id: companyId,
+      plan: "free_trial",
+      active: true,
+      trial_ends_at: validUntil,
+      valid_until: validUntil,
+    });
+    setBusy(null);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Free trial granted for ${n} day${n === 1 ? "" : "s"}.`);
+    qc.invalidateQueries({ queryKey: ["admin-companies-without-sub"] });
+    qc.invalidateQueries({ queryKey: ["admin-subscriptions"] });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-3 items-center">
+        <div className="relative flex-1 min-w-[240px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search company…" className="pl-10" />
+        </div>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Trial length:</span>
+          <Select value={days} onValueChange={setDays}>
+            <SelectTrigger className="w-[110px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[7, 14, 30, 60, 90].map((d) => <SelectItem key={d} value={String(d)}>{d} days</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm overflow-hidden">
+        {isLoading ? (
+          <div className="h-40 bg-secondary animate-pulse" />
+        ) : !rows.length ? (
+          <div className="py-16 text-center">
+            <Building2 className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+            <p className="text-muted-foreground text-sm">Every company has a subscription.</p>
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="border-b border-border bg-secondary/50 text-left">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Company</th>
+                <th className="px-4 py-3 font-semibold">Contact</th>
+                <th className="px-4 py-3 font-semibold text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((c) => (
+                <tr key={c.id} className="border-b border-border/60 last:border-0 hover:bg-secondary/30">
+                  <td className="px-4 py-3 font-medium text-ink">{c.name}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{c.contact_email ?? "—"}</td>
+                  <td className="px-4 py-3 text-right">
+                    <Button size="sm" disabled={busy === c.id} onClick={() => grantTrial(c.id)}>
+                      <Gift className="h-3.5 w-3.5" /> Grant trial
+                    </Button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}
