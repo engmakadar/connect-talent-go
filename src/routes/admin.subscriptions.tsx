@@ -117,7 +117,7 @@ function SubscriptionsTable({ status }: { status: "all" | "active" | "expired" |
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[240px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search company, plan…" className="pl-10" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search company, jobseeker, plan…" className="pl-10" />
         </div>
       </div>
 
