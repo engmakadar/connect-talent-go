@@ -52,7 +52,7 @@ function SubscriptionsPanel() {
           <TabsTrigger value="none">No Subscription</TabsTrigger>
         </TabsList>
       </Tabs>
-      {tab === "none" ? <NoSubscriptionTable /> : <SubscriptionsTable status={tab} />}
+      {tab === "none" ? <NoSubscriptionTable /> : tab === "jobseekers" ? <JobseekersPanel /> : <SubscriptionsTable status={tab} />}
     </div>
   );
 }
