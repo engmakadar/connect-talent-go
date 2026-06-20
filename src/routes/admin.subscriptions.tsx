@@ -306,3 +306,185 @@ function NoSubscriptionTable() {
     </div>
   );
 }
+
+type JobseekerRow = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  sub: SubRow | null;
+};
+
+function JobseekersPanel() {
+  const qc = useQueryClient();
+  const [q, setQ] = useState("");
+  const [filter, setFilter] = useState<"all" | "active" | "none">("all");
+  const [days, setDays] = useState<string>("14");
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-jobseekers-subs"],
+    queryFn: async () => {
+      const [roles, profiles, subs] = await Promise.all([
+        supabase.from("user_roles").select("user_id, role").eq("role", "jobseeker"),
+        supabase.from("profiles").select("id, full_name, email"),
+        supabase.from("subscriptions").select("*").order("created_at", { ascending: false }),
+      ]);
+      if (roles.error) throw roles.error;
+      const profileMap = new Map((profiles.data ?? []).map((p) => [p.id, p as ProfileRow]));
+      const subByUser = new Map<string, SubRow>();
+      ((subs.data as SubRow[]) ?? []).forEach((s) => {
+        if (s.user_id && !subByUser.has(s.user_id)) subByUser.set(s.user_id, s);
+      });
+      const ids = Array.from(new Set((roles.data ?? []).map((r) => r.user_id as string)));
+      return ids.map<JobseekerRow>((id) => {
+        const p = profileMap.get(id);
+        return {
+          id,
+          full_name: p?.full_name ?? null,
+          email: p?.email ?? null,
+          sub: subByUser.get(id) ?? null,
+        };
+      });
+    },
+  });
+
+  const now = Date.now();
+  const rows = useMemo(() => {
+    const list = data ?? [];
+    return list.filter((r) => {
+      const endsAt = r.sub?.valid_until ? new Date(r.sub.valid_until).getTime() : null;
+      const expired = endsAt !== null && endsAt < now;
+      const activeSub = !!r.sub && r.sub.active && !expired;
+      if (filter === "active" && !activeSub) return false;
+      if (filter === "none" && (r.sub != null)) return false;
+      if (q) {
+        const hay = [r.full_name, r.email, r.sub?.plan].filter(Boolean).join(" ").toLowerCase();
+        if (!hay.includes(q.toLowerCase())) return false;
+      }
+      return true;
+    });
+  }, [data, q, filter, now]);
+
+  const grantTrial = async (userId: string) => {
+    setBusy(userId);
+    const n = Math.max(1, Math.min(90, Number(days) || 14));
+    const validUntil = new Date(Date.now() + n * 24 * 60 * 60 * 1000).toISOString();
+    const { error } = await supabase.from("subscriptions").insert({
+      user_id: userId,
+      plan: "free_trial",
+      active: true,
+      trial_ends_at: validUntil,
+      valid_until: validUntil,
+    });
+    setBusy(null);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Free trial granted for ${n} day${n === 1 ? "" : "s"}.`);
+    qc.invalidateQueries({ queryKey: ["admin-jobseekers-subs"] });
+    qc.invalidateQueries({ queryKey: ["admin-subscriptions"] });
+  };
+
+  const toggleActive = async (subId: string, next: boolean) => {
+    setBusy(subId);
+    const { error } = await supabase.from("subscriptions").update({ active: next }).eq("id", subId);
+    setBusy(null);
+    if (error) { toast.error(error.message); return; }
+    toast.success(next ? "Subscription activated" : "Subscription deactivated");
+    qc.invalidateQueries({ queryKey: ["admin-jobseekers-subs"] });
+    qc.invalidateQueries({ queryKey: ["admin-subscriptions"] });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-3 items-center">
+        <div className="relative flex-1 min-w-[240px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search jobseeker…" className="pl-10" />
+        </div>
+        <Select value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
+          <SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All jobseekers</SelectItem>
+            <SelectItem value="active">Active subscription</SelectItem>
+            <SelectItem value="none">No subscription</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Trial length:</span>
+          <Select value={days} onValueChange={setDays}>
+            <SelectTrigger className="w-[110px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[7, 14, 30, 60, 90].map((d) => <SelectItem key={d} value={String(d)}>{d} days</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm overflow-hidden">
+        {isLoading ? (
+          <div className="h-40 bg-secondary animate-pulse" />
+        ) : !rows.length ? (
+          <div className="py-16 text-center">
+            <User className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+            <p className="text-muted-foreground text-sm">No jobseekers found.</p>
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="border-b border-border bg-secondary/50 text-left">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Jobseeker</th>
+                <th className="px-4 py-3 font-semibold">Plan</th>
+                <th className="px-4 py-3 font-semibold">End</th>
+                <th className="px-4 py-3 font-semibold">Status</th>
+                <th className="px-4 py-3 font-semibold text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const endsAt = r.sub?.valid_until ? new Date(r.sub.valid_until).getTime() : null;
+                const expired = endsAt !== null && endsAt < now;
+                const activeSub = !!r.sub && r.sub.active && !expired;
+                return (
+                  <tr key={r.id} className="border-b border-border/60 last:border-0 hover:bg-secondary/30">
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-ink">{r.full_name || r.email || "Jobseeker"}</div>
+                      <div className="text-xs text-muted-foreground">{r.email ?? "—"}</div>
+                    </td>
+                    <td className="px-4 py-3">{r.sub?.plan ?? <span className="text-muted-foreground">—</span>}</td>
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{r.sub?.valid_until ? new Date(r.sub.valid_until).toLocaleDateString() : "—"}</td>
+                    <td className="px-4 py-3">
+                      {activeSub ? (
+                        <Badge className="bg-emerald-100 text-emerald-800 border-0"><CheckCircle2 className="h-3 w-3 mr-1" /> Active</Badge>
+                      ) : r.sub && expired ? (
+                        <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" /> Expired</Badge>
+                      ) : r.sub ? (
+                        <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" /> Inactive</Badge>
+                      ) : (
+                        <Badge variant="outline">None</Badge>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {r.sub ? (
+                        <Button
+                          size="sm"
+                          variant={r.sub.active ? "outline" : "default"}
+                          disabled={busy === r.sub.id}
+                          onClick={() => toggleActive(r.sub!.id, !r.sub!.active)}
+                        >
+                          <Power className="h-3.5 w-3.5" /> {r.sub.active ? "Deactivate" : "Activate"}
+                        </Button>
+                      ) : (
+                        <Button size="sm" disabled={busy === r.id} onClick={() => grantTrial(r.id)}>
+                          <Gift className="h-3.5 w-3.5" /> Grant trial
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
