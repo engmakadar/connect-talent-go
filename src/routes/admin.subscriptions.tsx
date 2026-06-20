@@ -26,7 +26,8 @@ export const Route = createFileRoute("/admin/subscriptions")({
 
 type SubRow = {
   id: string;
-  company_id: string;
+  company_id: string | null;
+  user_id: string | null;
   plan: string;
   active: boolean;
   trial_ends_at: string | null;
@@ -34,9 +35,10 @@ type SubRow = {
   created_at: string;
 };
 type CompanyRow = { id: string; name: string; contact_email: string | null };
+type ProfileRow = { id: string; full_name: string | null; email: string | null };
 
 function SubscriptionsPanel() {
-  const [tab, setTab] = useState<"all" | "active" | "expired" | "trial" | "none">("all");
+  const [tab, setTab] = useState<"all" | "active" | "expired" | "trial" | "jobseekers" | "none">("all");
 
   return (
     <div className="space-y-4">
@@ -45,6 +47,7 @@ function SubscriptionsPanel() {
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="active">Active</TabsTrigger>
           <TabsTrigger value="trial">Free Trial</TabsTrigger>
+          <TabsTrigger value="jobseekers">Jobseekers</TabsTrigger>
           <TabsTrigger value="expired">Expired</TabsTrigger>
           <TabsTrigger value="none">No Subscription</TabsTrigger>
         </TabsList>
@@ -54,7 +57,7 @@ function SubscriptionsPanel() {
   );
 }
 
-function SubscriptionsTable({ status }: { status: "all" | "active" | "expired" | "trial" }) {
+function SubscriptionsTable({ status }: { status: "all" | "active" | "expired" | "trial" | "jobseekers" }) {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
