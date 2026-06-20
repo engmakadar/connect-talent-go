@@ -65,15 +65,18 @@ function SubscriptionsTable({ status }: { status: "all" | "active" | "expired" |
   const { data, isLoading } = useQuery({
     queryKey: ["admin-subscriptions"],
     queryFn: async () => {
-      const [subs, companies] = await Promise.all([
+      const [subs, companies, profiles] = await Promise.all([
         supabase.from("subscriptions").select("*").order("created_at", { ascending: false }),
         supabase.from("companies").select("id, name, contact_email"),
+        supabase.from("profiles").select("id, full_name, email"),
       ]);
       if (subs.error) throw subs.error;
-      const companyMap = new Map((companies.data ?? []).map((c) => [c.id, c]));
+      const companyMap = new Map((companies.data ?? []).map((c) => [c.id, c as CompanyRow]));
+      const profileMap = new Map((profiles.data ?? []).map((p) => [p.id, p as ProfileRow]));
       return ((subs.data as SubRow[]) ?? []).map((s) => ({
         ...s,
-        company: companyMap.get(s.company_id) ?? null,
+        company: s.company_id ? companyMap.get(s.company_id) ?? null : null,
+        profile: s.user_id ? profileMap.get(s.user_id) ?? null : null,
       }));
     },
   });
@@ -83,14 +86,17 @@ function SubscriptionsTable({ status }: { status: "all" | "active" | "expired" |
     const list = data ?? [];
     return list.filter((s) => {
       const isTrial = !!s.trial_ends_at;
+      const isJobseeker = !!s.user_id && !s.company_id;
       const endsAt = s.valid_until ? new Date(s.valid_until).getTime() : null;
       const expired = endsAt !== null && endsAt < now;
       const effectiveActive = s.active && !expired;
       if (status === "active" && !effectiveActive) return false;
       if (status === "expired" && !expired) return false;
       if (status === "trial" && !isTrial) return false;
+      if (status === "jobseekers" && !isJobseeker) return false;
       if (q) {
-        const hay = [s.company?.name, s.company?.contact_email, s.plan].filter(Boolean).join(" ").toLowerCase();
+        const hay = [s.company?.name, s.company?.contact_email, s.profile?.full_name, s.profile?.email, s.plan]
+          .filter(Boolean).join(" ").toLowerCase();
         if (!hay.includes(q.toLowerCase())) return false;
       }
       return true;
