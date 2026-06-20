@@ -105,6 +105,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          flagged_fraud: boolean
+          flagged_reason: string | null
           hq_location: string | null
           id: string
           kyc_documents: Json
@@ -131,6 +133,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          flagged_fraud?: boolean
+          flagged_reason?: string | null
           hq_location?: string | null
           id?: string
           kyc_documents?: Json
@@ -157,6 +161,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          flagged_fraud?: boolean
+          flagged_reason?: string | null
           hq_location?: string | null
           id?: string
           kyc_documents?: Json
@@ -276,6 +282,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      employment_types: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       job_applications: {
         Row: {
@@ -1105,6 +1138,10 @@ export type Database = {
       }
     }
     Functions: {
+      company_has_active_subscription: {
+        Args: { _company_id: string }
+        Returns: boolean
+      }
       get_company_teams_summary: {
         Args: { _company_id: string }
         Returns: {
@@ -1149,7 +1186,7 @@ export type Database = {
         | "contract"
         | "internship"
         | "remote"
-      job_status: "pending" | "approved" | "rejected"
+      job_status: "pending" | "approved" | "rejected" | "flagged_fraud"
       posting_type: "job" | "tender"
     }
     CompositeTypes: {
@@ -1288,7 +1325,7 @@ export const Constants = {
         "internship",
         "remote",
       ],
-      job_status: ["pending", "approved", "rejected"],
+      job_status: ["pending", "approved", "rejected", "flagged_fraud"],
       posting_type: ["job", "tender"],
     },
   },
