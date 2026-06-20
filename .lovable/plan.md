@@ -1,79 +1,57 @@
-# System Guide – Company Management & Data Reset
+# Implementation Plan
 
-Big batch. I'll ship it in **3 sequential migrations + UI work** to keep things reviewable. Confirm before I start — especially the **destructive data purge** in section 2.
+This is a sizable change touching auth flow, admin nav, super-admin tools, schema, and a new CV parser. I'll group it into 5 work areas. Please confirm or adjust before I start.
 
----
+## 1. Company Registration & Approval Workflow
 
-## 1. Companies page — "Team" column
-- Add a **Team** column to `src/routes/admin.companies.tsx` showing the list of internal teams for each company (chips: team name + member count), pulled from `company_teams` + `company_team_members`.
-- Clicking a team chip opens the existing Company Detail page (`admin.companies.$companyId.tsx`) and scrolls to the team panel.
-- This replaces the Team field previously removed from All Users.
+- Add `companies.approval_status` (`pending` | `approved` | `rejected` | `flagged_fraud`) and `flagged_reason` text.
+- On company signup → status = `pending`. Super-admin gets it in a new **Company Approvals** queue (reuse `/admin/review` pattern, new tab "Companies").
+- **Default company admin nav** (gated by status & subscription):
+  - Always: Dashboard, Job Management, Billing & Revenue (Subscriptions List hidden), Audit Log (scoped to own company), Brand Settings.
+  - Hide "Admin Console" / advanced sections until an active subscription exists (`has_active_subscription`).
+- **Job publishing rule**:
+  - Active subscription + approved company → new jobs auto-`approved`.
+  - Otherwise → `pending` (existing flow).
+- **Fraud detection**: simple heuristic on job create (suspicious URL regex, or company `flagged_fraud`) → status = `flagged_fraud`, surfaced in a new **Fraud Detection** tab on `/admin/review`.
 
-## 2. Database Reset (DESTRUCTIVE — needs your OK)
-A migration that, in order:
-1. Deletes from `job_applications`, `job_edit_history`, `jobs`, `payment_transactions`, `subscriptions`, `company_team_members`, `company_teams`, `company_member_roles`, `companies`, `page_permissions`, `user_activity_log`, `user_preferences`, `jobseeker_preferences`, `audit_logs`, `user_roles` (except Super Admin), `profiles` (except Super Admin).
-2. Deletes from `auth.users` everyone except `superadmin@demo.com`.
-3. Keeps `subscription_plans` and `job_categories` (config data) — say if you want those wiped too.
+## 2. Super Admin — Subscriptions / Trial Controls
 
-After: only the Super Admin account exists.
+Extend `/admin/subscriptions`:
+- New tab **"No Subscription"** listing companies with no subscription row.
+- "Grant Trial" action → inserts subscription row (plan = free trial, `trial_ends_at = now + 14d`, `active = true`).
+- "Extend / Override" action on existing rows → editable `valid_until` and `active`.
 
-## 3. Company User Management (CRUD)
-New route `src/routes/company.users.tsx` (gated: requires `has_company_role` owner/manager for the user's `profiles.company_id`).
-- **Create**: invite by email → creates auth user via server fn → links to company + role + optional team.
-- **Read**: table with search, role filter, status filter.
-- **Update**: edit name/phone/role/team assignment.
-- **Delete**: confirm dialog → server fn removes auth user + cascades.
-- **Suspend/Deactivate**: toggles `profiles.suspended` / `profiles.deactivated`.
-- All ops scoped to the caller's company. Super Admin keeps its global view via `admin.companies.$companyId.tsx`.
-- Nav entry shown only to employer users.
+## 3. Category Page — Employment Types
 
-## 4. Super Admin password reset
-On `admin.users.tsx` row menu, two new actions:
-- **Set new password** (preferred): dialog to enter a password → server fn calls `auth.admin.updateUserById`.
-- **Send reset email**: server fn calls `auth.admin.generateLink({type:'recovery'})` and emails via existing flow (or returns the link to copy if email isn't configured).
-- Both write to `audit_logs` with action `user.password_reset`.
+- New table `employment_types` (name, slug, active).
+- Admin Category page (`/admin/categories`) gets a second section "Employment Types" with table + add/edit/delete.
+- Job form's employment type field switches from enum/free-text to lookup from this table (kept backward-compatible).
 
-## 5. Subscription plans — modern payment flow + Free trial
-- Refresh `src/routes/plans.tsx` `SubscribeDialog` into a **stepper** (Plan → Method → Details → Confirm) with branded tiles for Visa/Mastercard/PayPal and EVC/Zaad/Sahal/Mpesa, summary panel, success state.
-- Manual confirmation only (no live gateway) — stored in `payment_transactions` as today.
-- **Free plan trial**: when a user subscribes to the Free plan, create a `subscriptions` row with `trial_ends_at = now()+30 days`. Add helper `has_active_subscription(user)` and gate:
-  - Job posting (employer): require active sub OR active trial.
-  - Company user creation: max **2 users** during trial (counted via `company_member_roles`).
-- After expiry the UI shows an "Upgrade" banner and blocks the gated actions.
+## 4. Jobseeker — My Resume Gating
 
-## 6. Notifications & Announcements
-New tables: `notifications` (per-user inbox) and `announcements` (admin broadcasts with channels: in_app / email / sms).
-- Bell icon in site header → popover with unread count + list, mark-as-read.
-- `admin.announcements.tsx`: create + view announcements; on publish, fan-out into `notifications` for the targeted audience (all / employers / jobseekers / specific company).
-- Email/SMS delivery: queued + logged in `notification_deliveries` with status `pending` (actual send wiring stubbed — say if you want me to enable Resend/Twilio now, both need keys).
+- In jobseeker nav/sidebar, hide "My Resume" route unless `has_active_subscription(auth.uid())`.
+- Route-level guard redirects to pricing if accessed directly.
 
-## 7. Activity log pagination + Excel export
-Rework `settings.tsx` Activity tab and add `admin.audit-logs.tsx` improvements:
-- Range selector: 1–30, 31–60, 61–90, 91–120, **All**, with prev/next.
-- Search box (event_type, IP) + date range filter.
-- **Download Excel** button using `xlsx` (SheetJS) — exports current filter result.
+## 5. Profile Builder — CV Parsing
 
----
+- "Upload Resume (PDF/DOCX)" button on profile builder.
+- File uploaded to `resumes` bucket (private), then sent to a `createServerFn` that:
+  - Extracts text (pdf → `pdf-parse` style; docx → `mammoth`).
+  - Calls Lovable AI Gateway (`google/gemini-2.5-flash`) with structured-output schema: `{full_name, headline, email, phone, skills[], experience[], education[]}`.
+  - Returns parsed JSON; client pre-fills profile fields (user reviews before save).
 
-## Technical details (skip if not interested)
+## Technical Notes
 
-**Migrations (3):**
-1. `team_column_support` — view/RPC `get_company_teams_summary(company_id)` for fast list rendering.
-2. `data_purge` — destructive deletes scoped to non-superadmin IDs.
-3. `notifications_and_trial` — `notifications`, `announcements`, `notification_deliveries` tables with RLS + GRANTs; `subscriptions.trial_ends_at` column; `has_active_subscription` SECURITY DEFINER fn.
+- Migrations needed for: `companies.approval_status`, `employment_types` table (+ GRANTs + RLS), optional `jobs.fraud_flag` (or reuse status enum value).
+- New server fns: `submitCompanyApproval`, `approveCompany`, `rejectCompany`, `grantTrial`, `parseResume`.
+- RLS: company users see only own audit logs (already enforced via `user_in_company`); verify policies.
+- No new external API keys — CV parsing uses existing `LOVABLE_API_KEY`.
 
-**Server functions (new in `src/lib/`):**
-- `company-users.functions.ts` — invite/update/delete/suspend (RBAC via `has_company_role`).
-- `admin-password.functions.ts` — `setUserPassword`, `sendPasswordReset`.
-- `announcements.functions.ts` — `publishAnnouncement` (fan-out).
+## Open Questions
 
-**Packages to add:** `xlsx` for Excel export.
+1. **Free trial length** when super-admin grants one — 14 days OK, or different?
+2. **Suspicious link heuristic** — start with simple blocklist (bit.ly, tinyurl, non-https, IP URLs), or do you have a specific list?
+3. **CV parser** — pre-fill and let user save, or auto-save and let them edit after?
+4. **Employment Type migration** — keep existing string values on jobs, or migrate to FK?
 
-**Out of scope (will confirm separately if you want them):** real SMS gateway, live Stripe/Paddle, marketing email sends, multi-language announcements.
-
----
-
-### Please confirm
-1. **Run the data purge?** (yes/no — destroys all jobs, users, companies, applications, payments).
-2. Keep `subscription_plans` and `job_categories` config rows? (default: yes, keep)
-3. Wire Resend for announcement emails now, or stub for later?
+Reply with answers (or "go with defaults") and I'll implement.

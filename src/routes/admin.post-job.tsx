@@ -178,15 +178,19 @@ function PostJobForm() {
       }
 
       // Subscription gate: non-admin posters need an active subscription.
+      // We also use subscription status to auto-approve below.
+      let hasActiveSub = isAdmin; // admins always allowed
       if (!isEdit && !isAdmin && form.company_id) {
         const { data: sub } = await supabase
-          .from("subscriptions").select("plan, active")
+          .from("subscriptions").select("plan, active, valid_until")
           .eq("company_id", form.company_id).eq("active", true).maybeSingle();
         if (!sub) {
           toast.error("Your company doesn't have an active subscription plan. Contact a Super Admin to activate one.");
           setSubmitting(false);
           return;
         }
+        const stillValid = !sub.valid_until || new Date(sub.valid_until) > new Date();
+        hasActiveSub = stillValid;
       }
 
       // For tenders, force-fill non-applicable fields with safe defaults so DB validation passes.
@@ -253,10 +257,34 @@ function PostJobForm() {
         return;
       }
 
+      // Fraud heuristic: scan URLs/text for suspicious patterns.
+      const haystack = [
+        cleanedPayload.application_url ?? "",
+        cleanedPayload.description ?? "",
+        cleanedPayload.requirements ?? "",
+        cleanedPayload.responsibilities ?? "",
+      ].join(" ").toLowerCase();
+      const suspiciousPatterns = [
+        /bit\.ly|tinyurl\.com|t\.co\/|goo\.gl|ow\.ly|is\.gd|buff\.ly/i,
+        /https?:\/\/\d+\.\d+\.\d+\.\d+/i, // raw IP URLs
+        /\b(wire transfer|western union|crypto payment|btc wallet|usdt wallet)\b/i,
+        /\b(work from home guarantee|earn \$?\d{3,}\/day)\b/i,
+      ];
+      const isSuspicious = suspiciousPatterns.some((re) => re.test(haystack));
+
+      // Status logic:
+      // - Admins: approve directly.
+      // - Active subscription + clean post: auto-approve.
+      // - Suspicious content: route to fraud detection.
+      // - Otherwise: pending review.
+      const initialStatus: "approved" | "pending" | "flagged_fraud" = isSuspicious
+        ? "flagged_fraud"
+        : (isAdmin || hasActiveSub) ? "approved" : "pending";
+
       const { data: inserted, error } = await supabase.from("jobs").insert({
         posted_by: user!.id,
         ...cleanedPayload,
-        status: "pending",
+        status: initialStatus,
         tender_documents: [],
       }).select("id").single();
       if (error) throw error;
@@ -266,7 +294,13 @@ function PostJobForm() {
         await supabase.from("jobs").update({ tender_documents: docs }).eq("id", inserted.id);
       }
 
-      toast.success("Submitted for approval. An admin will review shortly.");
+      toast.success(
+        initialStatus === "approved"
+          ? "Posted and published — your job is now live."
+          : initialStatus === "flagged_fraud"
+          ? "Submitted, but flagged for fraud review. An admin will inspect it shortly."
+          : "Submitted for approval. An admin will review shortly."
+      );
       router.navigate({ to: "/admin/review" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to post");

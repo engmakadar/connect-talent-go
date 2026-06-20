@@ -7,6 +7,8 @@ import {
 import logo from "@/assets/sahan-logo.png";
 import { useAuth } from "@/lib/auth-context";
 import { usePagePermissions } from "@/lib/page-permissions";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CompanyLogo } from "@/components/company-logo";
@@ -32,6 +34,17 @@ export function SiteHeader() {
 
   const canPostJob = perms.can("post_job");
   const canReview = perms.can("job_approval");
+
+  // Jobseekers only see "My Resume" if they have an active subscription.
+  const { data: jobseekerHasSub } = useQuery({
+    enabled: !!user && isJobseeker && !isAdmin && !isEmployer,
+    queryKey: ["jobseeker-sub", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("has_active_subscription", { _user_id: user!.id });
+      return data === true;
+    },
+  });
+  const canSeeResume = isJobseeker && jobseekerHasSub === true;
 
   return (
     <nav className="bg-hero-band">
@@ -126,9 +139,11 @@ export function SiteHeader() {
                       <DropdownMenuItem onClick={() => router.navigate({ to: "/matches" })}>
                         <LayoutDashboard className="mr-2 h-4 w-4" /> Matched Jobs
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => router.navigate({ to: "/resume" })}>
-                        <FileText className="mr-2 h-4 w-4" /> My Resume
-                      </DropdownMenuItem>
+                      {canSeeResume && (
+                        <DropdownMenuItem onClick={() => router.navigate({ to: "/resume" })}>
+                          <FileText className="mr-2 h-4 w-4" /> My Resume
+                        </DropdownMenuItem>
+                      )}
                     </>
                   )}
                   {isEmployer && !isAdmin && (

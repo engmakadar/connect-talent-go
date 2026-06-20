@@ -71,6 +71,23 @@ function ResumePage() {
     if (!loading && !user) router.navigate({ to: "/auth" });
   }, [loading, user, router]);
 
+  // Subscription gate: hide My Resume unless the user has an active subscription.
+  const { data: subActive, isLoading: subLoading } = useQuery({
+    enabled: !!user,
+    queryKey: ["my-active-sub", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("has_active_subscription", { _user_id: user!.id });
+      return data === true;
+    },
+  });
+
+  useEffect(() => {
+    if (!loading && user && !subLoading && subActive === false) {
+      router.navigate({ to: "/plans" });
+    }
+  }, [loading, user, subLoading, subActive, router]);
+
+
   const { isLoading } = useQuery({
     enabled: !!user,
     queryKey: ["resume", user?.id],
@@ -136,7 +153,7 @@ function ResumePage() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to save"),
   });
 
-  if (loading || !user) return null;
+  if (loading || !user || subLoading || subActive === false) return null;
 
   const update = <K extends keyof ResumeForm>(key: K, value: ResumeForm[K]) =>
     setForm((f) => ({ ...f, [key]: value }));

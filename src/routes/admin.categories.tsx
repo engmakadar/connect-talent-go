@@ -13,8 +13,29 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/admin/categories")({
   head: () => ({ meta: [{ title: "Job Categories — SahanJobs Admin" }] }),
   component: () => (
-    <AdminShell pageKey="categories" title="Job Categories" subtitle="Categories surface in filters and on each job posting." actions={<CategoryDialog mode="create" />}>
-      <CategoriesTable />
+    <AdminShell pageKey="categories" title="Job Categories" subtitle="Categories and employment types surface in filters and on each job posting.">
+      <div className="space-y-8">
+        <section className="space-y-3">
+          <div className="flex items-end justify-between flex-wrap gap-3">
+            <div>
+              <h2 className="font-display text-xl font-semibold text-ink">Categories</h2>
+              <p className="text-sm text-muted-foreground">Industry / function categories for jobs and tenders.</p>
+            </div>
+            <CategoryDialog mode="create" />
+          </div>
+          <CategoriesTable />
+        </section>
+        <section className="space-y-3">
+          <div className="flex items-end justify-between flex-wrap gap-3">
+            <div>
+              <h2 className="font-display text-xl font-semibold text-ink">Employment Types</h2>
+              <p className="text-sm text-muted-foreground">Enroll the employment types companies can choose when posting a job.</p>
+            </div>
+            <EmploymentTypeDialog mode="create" />
+          </div>
+          <EmploymentTypesTable />
+        </section>
+      </div>
     </AdminShell>
   ),
 });
@@ -133,3 +154,130 @@ function CategoryDialog({ mode, category }: { mode: "create" | "edit"; category?
     </Dialog>
   );
 }
+
+/* ---------------------------- Employment Types ---------------------------- */
+
+type EmploymentType = { id: string; name: string; slug: string; active: boolean; created_at: string };
+
+function EmploymentTypesTable() {
+  const qc = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-employment-types"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("employment_types").select("*").order("name");
+      if (error) throw error;
+      return data as EmploymentType[];
+    },
+  });
+
+  const remove = async (id: string) => {
+    if (!confirm("Delete this employment type?")) return;
+    const { error } = await supabase.from("employment_types").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Employment type removed.");
+    qc.invalidateQueries({ queryKey: ["admin-employment-types"] });
+  };
+
+  const toggleActive = async (t: EmploymentType) => {
+    const { error } = await supabase.from("employment_types").update({ active: !t.active }).eq("id", t.id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["admin-employment-types"] });
+  };
+
+  if (isLoading) return <div className="h-32 rounded-2xl bg-white animate-pulse ring-1 ring-black/5" />;
+  if (!data?.length) return (
+    <div className="rounded-2xl bg-white p-12 text-center ring-1 ring-black/5">
+      <Tags className="h-8 w-8 mx-auto text-muted-foreground/50 mb-3" />
+      <p className="text-muted-foreground mb-4 text-sm">No employment types yet.</p>
+      <EmploymentTypeDialog mode="create" />
+    </div>
+  );
+
+  return (
+    <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm overflow-hidden">
+      <table className="w-full text-sm">
+        <thead className="border-b border-border bg-secondary/50">
+          <tr className="text-left">
+            <th className="px-5 py-3 font-semibold">Name</th>
+            <th className="px-5 py-3 font-semibold">Slug</th>
+            <th className="px-5 py-3 font-semibold">Active</th>
+            <th className="px-5 py-3" />
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((t) => (
+            <tr key={t.id} className="border-b border-border/60 last:border-0 hover:bg-secondary/30">
+              <td className="px-5 py-4 font-semibold text-ink">{t.name}</td>
+              <td className="px-5 py-4 text-muted-foreground font-mono text-xs">{t.slug}</td>
+              <td className="px-5 py-4">
+                <button
+                  onClick={() => toggleActive(t)}
+                  className={`text-xs font-semibold px-2.5 py-1 rounded-full ${t.active ? "bg-emerald-100 text-emerald-800" : "bg-secondary text-muted-foreground"}`}
+                >
+                  {t.active ? "Active" : "Hidden"}
+                </button>
+              </td>
+              <td className="px-5 py-4 text-right">
+                <div className="inline-flex gap-1">
+                  <EmploymentTypeDialog mode="edit" item={t} />
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => remove(t.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function EmploymentTypeDialog({ mode, item }: { mode: "create" | "edit"; item?: EmploymentType }) {
+  const [open, setOpen] = useState(false);
+  const qc = useQueryClient();
+  const [name, setName] = useState(item?.name ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    if (!name.trim()) return toast.error("Name required.");
+    setSaving(true);
+    try {
+      const payload = { name: name.trim(), slug: slugify(name) };
+      if (mode === "create") {
+        const { error } = await supabase.from("employment_types").insert(payload);
+        if (error) throw error;
+        toast.success("Employment type added.");
+      } else if (item) {
+        const { error } = await supabase.from("employment_types").update(payload).eq("id", item.id);
+        if (error) throw error;
+        toast.success("Employment type updated.");
+      }
+      setOpen(false);
+      qc.invalidateQueries({ queryKey: ["admin-employment-types"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Save failed");
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {mode === "create" ? (
+          <Button className="rounded-full bg-primary hover:bg-primary/90"><Plus className="h-4 w-4" /> Add type</Button>
+        ) : (
+          <Button variant="ghost" size="icon" className="h-8 w-8"><Pencil className="h-4 w-4" /></Button>
+        )}
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader><DialogTitle>{mode === "create" ? "New employment type" : "Edit employment type"}</DialogTitle></DialogHeader>
+        <div><Label>Name</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Freelance" /></div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
