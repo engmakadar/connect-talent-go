@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-/** Super Admin activates a user account: confirms email + clears suspension. */
+/** Super Admin activates a user account: confirms email in auth + clears suspension. Bypasses email confirmation. */
 export const activateUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ userId: z.string().uuid() }).parse(d))
@@ -11,6 +11,15 @@ export const activateUser = createServerFn({ method: "POST" })
     const { data: _adminRow } = await supabase.from("user_roles").select("user_id").eq("user_id", actorId).eq("role", "admin").maybeSingle();
     const isAdmin = !!_adminRow;
     if (!isAdmin) throw new Error("Only Super Admin can activate users.");
+
+    // Confirm the auth user's email so they can sign in without verification.
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.auth.admin.updateUserById(data.userId, { email_confirm: true });
+    } catch (err) {
+      // Surface but don't block the profile update — the profile flags still flip the visible status.
+      console.warn("activateUser: email_confirm failed", err);
+    }
 
     const { error: e2 } = await supabase.from("profiles")
       .update({ email_verified: true, suspended: false, deactivated: false, pending_approval: false })
