@@ -504,6 +504,63 @@ function KpiTileRich({ label, value, icon: Icon, color, sub, trend, trendLabel }
   );
 }
 
+type KpiSide = { label: string; value: number | string; icon: typeof Briefcase; sub: string; trend: number; trendLabel: string };
+type KpiPairProps = { a: KpiSide; b: KpiSide };
+
+function KpiPairCard({ a, b }: KpiPairProps) {
+  const [side, setSide] = useState<"a" | "b">("a");
+  const active = side === "a" ? a : b;
+  const Icon = active.icon;
+  const up = active.trend > 0;
+  const down = active.trend < 0;
+  // Light-green accent for side A, light-blue for side B per dashboard theme.
+  const accent = side === "a"
+    ? "from-primary/15 to-primary/5 text-primary"
+    : "from-sky-100 to-sky-50 text-sky-700";
+  return (
+    <div className="rounded-2xl bg-white p-4 ring-1 ring-black/5 shadow-sm">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground leading-tight">{active.label}</p>
+        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-br ${accent}`}><Icon className="h-3.5 w-3.5" /></span>
+      </div>
+      <p className="mt-2 font-display text-2xl font-bold text-ink leading-none">{active.value}</p>
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <p className="text-[10px] text-muted-foreground truncate">{active.sub}</p>
+        {active.trend !== 0 ? (
+          <span className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
+            up ? "bg-emerald-100 text-emerald-700" : down ? "bg-rose-100 text-rose-700" : "bg-secondary/60 text-muted-foreground"
+          }`}>
+            {up && <TrendingUp className="h-2.5 w-2.5" />}{down && <TrendingDown className="h-2.5 w-2.5" />}
+            {up ? "+" : ""}{active.trend}% {active.trendLabel}
+          </span>
+        ) : (
+          <span className="inline-flex shrink-0 items-center rounded-full bg-secondary/60 px-1.5 py-0.5 text-[9px] font-bold uppercase text-muted-foreground">{active.trendLabel}</span>
+        )}
+      </div>
+
+      {/* Toggle between the two related KPIs */}
+      <div className="mt-3 flex items-center justify-between gap-2 rounded-full bg-secondary/50 p-0.5">
+        <button
+          type="button"
+          onClick={() => setSide("a")}
+          className={`flex-1 truncate rounded-full px-2 py-1 text-[10px] font-semibold transition ${
+            side === "a" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-ink"
+          }`}
+          title={a.label}
+        >{a.label}</button>
+        <button
+          type="button"
+          onClick={() => setSide("b")}
+          className={`flex-1 truncate rounded-full px-2 py-1 text-[10px] font-semibold transition ${
+            side === "b" ? "bg-sky-500 text-white shadow-sm" : "text-muted-foreground hover:text-ink"
+          }`}
+          title={b.label}
+        >{b.label}</button>
+      </div>
+    </div>
+  );
+}
+
 function TabBtn({ active, onClick, icon: Icon, label, count }: { active: boolean; onClick: () => void; icon: typeof Briefcase; label: string; count: number }) {
   return (
     <button
