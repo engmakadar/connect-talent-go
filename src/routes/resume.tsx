@@ -68,6 +68,9 @@ function ResumePage() {
   const router = useRouter();
   const qc = useQueryClient();
   const [form, setForm] = useState<ResumeForm>(EMPTY);
+  const [parsing, setParsing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const parseFn = useServerFn(parseResume);
 
   useEffect(() => {
     if (!loading && !user) router.navigate({ to: "/auth" });
