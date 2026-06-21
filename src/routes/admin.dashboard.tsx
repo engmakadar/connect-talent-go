@@ -58,7 +58,7 @@ function PlatformStats() {
     queryKey: ["admin-overview-stats"],
     queryFn: async () => {
       const nowIso = new Date().toISOString();
-      const [pending, approved, users, perms, companiesCount, subsCount, txns, companies, jobs, subs] = await Promise.all([
+      const [pending, approved, users, perms, companiesCount, subsCount, txns, companies, jobs, subs, profiles] = await Promise.all([
         supabase.from("jobs").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("jobs").select("id", { count: "exact", head: true }).eq("status", "approved"),
         supabase.from("profiles").select("id", { count: "exact", head: true }),
@@ -66,9 +66,10 @@ function PlatformStats() {
         supabase.from("companies").select("id", { count: "exact", head: true }),
         supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("active", true),
         supabase.from("payment_transactions").select("amount, status, created_at, method, company_id"),
-        supabase.from("companies").select("id, name, created_at").order("created_at", { ascending: false }),
+        supabase.from("companies").select("id, name, created_at, verification_status, suspended").order("created_at", { ascending: false }),
         supabase.from("jobs").select("id, status, company_id, created_at, expires_at, category, posting_type"),
         supabase.from("subscriptions").select("id, company_id, plan, active, valid_until, created_at"),
+        supabase.from("profiles").select("id, company_id"),
       ]);
 
       return {
@@ -82,6 +83,7 @@ function PlatformStats() {
         allCompanies: companies.data ?? [],
         allJobs: jobs.data ?? [],
         allSubs: subs.data ?? [],
+        allProfiles: profiles.data ?? [],
         nowIso,
       };
     },
