@@ -54,7 +54,12 @@ function AuthPage() {
           email, password,
           options: {
             emailRedirectTo: `${window.location.origin}${redirectAfter}`,
-            data: { full_name: fullName, requested_role: role },
+            data: {
+              full_name: fullName,
+              requested_role: role,
+              // Auto-classify on signup: Job Seeker → jobseeker, Employer → employer.
+              role: role === "employer" ? "employer" : "jobseeker",
+            },
           },
         });
         if (error) throw error;

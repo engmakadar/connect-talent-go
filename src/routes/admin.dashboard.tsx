@@ -209,17 +209,27 @@ function PlatformStats() {
 
   if (!data || !view) return <div className="h-64 rounded-2xl bg-white ring-1 ring-black/5 animate-pulse" />;
 
-  const tiles = [
-    { label: "Registered companies", value: data.companies, icon: Building2, color: "from-primary/15 to-primary/5 text-primary", sub: "Participating agencies", trend: view.trends.companies, trendLabel: scope === "all" ? "this period" : "vs prev" },
-    { label: "Active jobs", value: view.activeJobs, icon: ClipboardCheck, color: "from-emerald-100 to-emerald-50 text-emerald-700", sub: "Currently hiring positions", trend: view.trends.jobs, trendLabel: "vs prev" },
-    { label: "Expired jobs", value: view.expiredJobs, icon: CircleAlert, color: "from-amber-100 to-amber-50 text-amber-700", sub: "Archived applications", trend: 0, trendLabel: "rate" },
-    { label: "Registered users", value: data.users, icon: Users, color: "from-blue-100 to-blue-50 text-blue-700", sub: "Candidate signups", trend: view.trends.users, trendLabel: "MoM" },
-    { label: "Pending review", value: data.pending, icon: ClipboardCheck, color: "from-warning/15 to-warning/5 text-warning-foreground", sub: "Requires evaluation", trend: 0, trendLabel: "pending" },
-    { label: "Approved jobs", value: data.approved, icon: BadgeCheck, color: "from-primary/15 to-primary/5 text-primary", sub: "Live platform matches", trend: view.trends.jobs, trendLabel: "expansion" },
-    { label: "Active subscriptions", value: view.activeSubsScoped || data.activeSubs, icon: CalendarClock, color: "from-gold/20 to-gold/5 text-gold-foreground", sub: "Locked member access", trend: 0, trendLabel: "Steady stream" },
-    { label: "Page grants", value: data.perms, icon: ShieldCheck, color: "from-gold/20 to-gold/5 text-gold-foreground", sub: "Visual authorizations", trend: 15, trendLabel: "scope" },
-    { label: "Platform revenue", value: `$${view.totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, icon: Wallet, color: "from-primary/15 to-primary/5 text-primary", sub: "Confirmed payments", trend: view.trends.revenue, trendLabel: "vs prev" },
-    { label: "Active partners", value: view.activePartners, icon: Crown, color: "from-gold/20 to-gold/5 text-gold-foreground", sub: "Gold premium rosters", trend: 0, trendLabel: "High Engage" },
+  const pairs: KpiPairProps[] = [
+    {
+      a: { label: "Registered companies", value: data.companies, icon: Building2, sub: "Organizational signups", trend: view.trends.companies, trendLabel: "vs prev" },
+      b: { label: "Registered users", value: data.users, icon: Users, sub: "Candidate signups", trend: view.trends.users, trendLabel: "MoM" },
+    },
+    {
+      a: { label: "Active jobs", value: view.activeJobs, icon: ClipboardCheck, sub: "Currently hiring positions", trend: view.trends.jobs, trendLabel: "vs prev" },
+      b: { label: "Expired jobs", value: view.expiredJobs, icon: CircleAlert, sub: "Archived listings", trend: 0, trendLabel: "rate" },
+    },
+    {
+      a: { label: "Approved jobs", value: data.approved, icon: BadgeCheck, sub: "Live platform matches", trend: view.trends.jobs, trendLabel: "expansion" },
+      b: { label: "Pending review", value: data.pending, icon: ClipboardCheck, sub: "Awaiting evaluation", trend: 0, trendLabel: "pending" },
+    },
+    {
+      a: { label: "Active subscriptions", value: view.activeSubsScoped || data.activeSubs, icon: CalendarClock, sub: "Locked member access", trend: 0, trendLabel: "Steady" },
+      b: { label: "Platform revenue", value: `$${view.totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, icon: Wallet, sub: "Confirmed payments", trend: view.trends.revenue, trendLabel: "vs prev" },
+    },
+    {
+      a: { label: "Page grants", value: data.perms, icon: ShieldCheck, sub: "External authorizations", trend: 15, trendLabel: "scope" },
+      b: { label: "Active partners", value: view.activePartners, icon: Crown, sub: "Premium partnerships", trend: 0, trendLabel: "High engage" },
+    },
   ];
 
   const filteredRows = view.compRows.filter((r) => !search.trim() || r.name.toLowerCase().includes(search.toLowerCase()));
@@ -265,10 +275,11 @@ function PlatformStats() {
         </div>
       </div>
 
-      {/* KPI tiles 5x2 */}
+      {/* 5 KPI cards, each with a toggle between two related metrics */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {tiles.map((t) => <KpiTileRich key={t.label} {...t} />)}
+        {pairs.map((p, i) => <KpiPairCard key={i} {...p} />)}
       </div>
+
 
       {/* Bar chart: companies + jobs by month */}
       <div className="grid gap-4 lg:grid-cols-2">
@@ -488,6 +499,63 @@ function KpiTileRich({ label, value, icon: Icon, color, sub, trend, trendLabel }
         ) : (
           <span className="inline-flex shrink-0 items-center rounded-full bg-secondary/60 px-1.5 py-0.5 text-[9px] font-bold uppercase text-muted-foreground">{trendLabel}</span>
         )}
+      </div>
+    </div>
+  );
+}
+
+type KpiSide = { label: string; value: number | string; icon: typeof Briefcase; sub: string; trend: number; trendLabel: string };
+type KpiPairProps = { a: KpiSide; b: KpiSide };
+
+function KpiPairCard({ a, b }: KpiPairProps) {
+  const [side, setSide] = useState<"a" | "b">("a");
+  const active = side === "a" ? a : b;
+  const Icon = active.icon;
+  const up = active.trend > 0;
+  const down = active.trend < 0;
+  // Light-green accent for side A, light-blue for side B per dashboard theme.
+  const accent = side === "a"
+    ? "from-primary/15 to-primary/5 text-primary"
+    : "from-sky-100 to-sky-50 text-sky-700";
+  return (
+    <div className="rounded-2xl bg-white p-4 ring-1 ring-black/5 shadow-sm">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground leading-tight">{active.label}</p>
+        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-br ${accent}`}><Icon className="h-3.5 w-3.5" /></span>
+      </div>
+      <p className="mt-2 font-display text-2xl font-bold text-ink leading-none">{active.value}</p>
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <p className="text-[10px] text-muted-foreground truncate">{active.sub}</p>
+        {active.trend !== 0 ? (
+          <span className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
+            up ? "bg-emerald-100 text-emerald-700" : down ? "bg-rose-100 text-rose-700" : "bg-secondary/60 text-muted-foreground"
+          }`}>
+            {up && <TrendingUp className="h-2.5 w-2.5" />}{down && <TrendingDown className="h-2.5 w-2.5" />}
+            {up ? "+" : ""}{active.trend}% {active.trendLabel}
+          </span>
+        ) : (
+          <span className="inline-flex shrink-0 items-center rounded-full bg-secondary/60 px-1.5 py-0.5 text-[9px] font-bold uppercase text-muted-foreground">{active.trendLabel}</span>
+        )}
+      </div>
+
+      {/* Toggle between the two related KPIs */}
+      <div className="mt-3 flex items-center justify-between gap-2 rounded-full bg-secondary/50 p-0.5">
+        <button
+          type="button"
+          onClick={() => setSide("a")}
+          className={`flex-1 truncate rounded-full px-2 py-1 text-[10px] font-semibold transition ${
+            side === "a" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-ink"
+          }`}
+          title={a.label}
+        >{a.label}</button>
+        <button
+          type="button"
+          onClick={() => setSide("b")}
+          className={`flex-1 truncate rounded-full px-2 py-1 text-[10px] font-semibold transition ${
+            side === "b" ? "bg-sky-500 text-white shadow-sm" : "text-muted-foreground hover:text-ink"
+          }`}
+          title={b.label}
+        >{b.label}</button>
       </div>
     </div>
   );
