@@ -577,7 +577,15 @@ function TabBtn({ active, onClick, icon: Icon, label, count }: { active: boolean
 
 /* --------------------------------- COMPANY ------------------------------ */
 
-const PIE_COLORS = ["hsl(var(--primary))", "#f59e0b", "#10b981", "#6366f1", "#ec4899", "#06b6d4", "#84cc16", "#f97316"];
+const CHART_GREEN = "#6CC24A";
+const CHART_ORANGE = "#F57C00";
+const CHART_BLUE = "#42A5F5";
+const CHART_PURPLE = "#AB47BC";
+const CHART_RED = "#EF5350";
+const CHART_CYAN = "#26C6DA";
+const CHART_AMBER = "#FFCA28";
+const CHART_BROWN = "#8D6E63";
+const PIE_COLORS = [CHART_GREEN, CHART_ORANGE, CHART_BLUE, CHART_PURPLE, CHART_RED, CHART_CYAN, CHART_AMBER, CHART_BROWN];
 
 function CompanyDashboard() {
   const { user } = useAuth();
