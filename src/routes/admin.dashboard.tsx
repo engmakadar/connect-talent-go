@@ -272,9 +272,13 @@ function PlatformStats() {
   const filteredRows = view.compRows.filter((r) => !search.trim() || r.name.toLowerCase().includes(search.toLowerCase()));
 
   function exportCSV() {
-    const header = ["Company name", "Jobs posted", "Response rate %", "Premium access", "Registered"].join(",");
+    const header = ["Company name", "Jobs posted", "Expired positions", "Rejected positions", "Subscriptions", "Recent sub date", "Recent sub expires", "Users", "Premium access", "Status", "Registered"].join(",");
     const lines = filteredRows.map((r) => [
-      JSON.stringify(r.name), r.jobs, r.rate, r.premium ? "PREMIUM" : "FREE", new Date(r.registered).toISOString().slice(0, 10),
+      JSON.stringify(r.name), r.jobs, r.expiredPositions, r.rejectedPositions, r.subsCount,
+      r.recentSubDate ? new Date(r.recentSubDate).toISOString().slice(0, 10) : "",
+      r.recentSubExpires ? new Date(r.recentSubExpires).toISOString().slice(0, 10) : "",
+      r.userCount, r.premium ? "PREMIUM" : "FREE", r.status.toUpperCase(),
+      new Date(r.registered).toISOString().slice(0, 10),
     ].join(","));
     const csv = [header, ...lines].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
