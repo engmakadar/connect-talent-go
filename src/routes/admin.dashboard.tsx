@@ -291,8 +291,8 @@ function PlatformStats() {
               <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
               <Tooltip />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="companies" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="jobs" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="companies" fill={CHART_GREEN} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="jobs" fill={CHART_ORANGE} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -307,7 +307,7 @@ function PlatformStats() {
                 <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
                 <Tooltip />
-                <Bar dataKey="jobs" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="jobs" fill={CHART_GREEN} radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -324,9 +324,9 @@ function PlatformStats() {
             <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
             <Tooltip />
             <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Line yAxisId="left" type="monotone" dataKey="companies" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} />
-            <Line yAxisId="left" type="monotone" dataKey="jobs" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 3 }} />
-            <Line yAxisId="right" type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={2.5} dot={{ r: 3 }} />
+            <Line yAxisId="left" type="monotone" dataKey="companies" stroke={CHART_GREEN} strokeWidth={2.5} dot={{ r: 3 }} />
+            <Line yAxisId="left" type="monotone" dataKey="jobs" stroke={CHART_ORANGE} strokeWidth={2.5} dot={{ r: 3 }} />
+            <Line yAxisId="right" type="monotone" dataKey="revenue" stroke={CHART_BLUE} strokeWidth={2.5} dot={{ r: 3 }} />
           </LineChart>
         </ResponsiveContainer>
       </ChartCard>
@@ -340,8 +340,8 @@ function PlatformStats() {
               <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
               <Tooltip />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Line type="monotone" dataKey="jobPost" name="Jobs" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="tender" name="Tenders" stroke="#f59e0b" strokeWidth={2.5} strokeDasharray="5 5" dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="jobPost" name="Jobs" stroke={CHART_GREEN} strokeWidth={2.5} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="tender" name="Tenders" stroke={CHART_ORANGE} strokeWidth={2.5} strokeDasharray="5 5" dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -356,7 +356,7 @@ function PlatformStats() {
                 <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={130} />
                 <Tooltip />
-                <Bar dataKey="value" name="Positions" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="value" name="Positions" fill={CHART_GREEN} radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -577,7 +577,15 @@ function TabBtn({ active, onClick, icon: Icon, label, count }: { active: boolean
 
 /* --------------------------------- COMPANY ------------------------------ */
 
-const PIE_COLORS = ["hsl(var(--primary))", "#f59e0b", "#10b981", "#6366f1", "#ec4899", "#06b6d4", "#84cc16", "#f97316"];
+const CHART_GREEN = "#6CC24A";
+const CHART_ORANGE = "#F57C00";
+const CHART_BLUE = "#42A5F5";
+const CHART_PURPLE = "#AB47BC";
+const CHART_RED = "#EF5350";
+const CHART_CYAN = "#26C6DA";
+const CHART_AMBER = "#FFCA28";
+const CHART_BROWN = "#8D6E63";
+const PIE_COLORS = [CHART_GREEN, CHART_ORANGE, CHART_BLUE, CHART_PURPLE, CHART_RED, CHART_CYAN, CHART_AMBER, CHART_BROWN];
 
 function CompanyDashboard() {
   const { user } = useAuth();
@@ -726,7 +734,7 @@ function CompanyDashboard() {
               <XAxis dataKey="label" tick={{ fontSize: 12 }} />
               <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
               <Tooltip />
-              <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+              <Line type="monotone" dataKey="count" stroke={CHART_GREEN} strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
