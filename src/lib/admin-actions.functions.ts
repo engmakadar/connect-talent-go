@@ -13,12 +13,13 @@ export const activateUser = createServerFn({ method: "POST" })
     if (!isAdmin) throw new Error("Only Super Admin can activate users.");
 
     // Confirm the auth user's email so they can sign in without verification.
-    try {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      await supabaseAdmin.auth.admin.updateUserById(data.userId, { email_confirm: true });
-    } catch (err) {
-      // Surface but don't block the profile update — the profile flags still flip the visible status.
-      console.warn("activateUser: email_confirm failed", err);
+    // Must succeed — otherwise the user hits "Email not confirmed" at sign-in.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: confirmErr } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      email_confirm: true,
+    });
+    if (confirmErr) {
+      throw new Error(`Failed to confirm email: ${confirmErr.message}`);
     }
 
     const { error: e2 } = await supabase.from("profiles")
