@@ -88,11 +88,11 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.02 250);
 
-  /* Sahan brand green */
-  --primary: oklch(0.62 0.17 145);
+  /* Sahan brand green — #6CC24A */
+  --primary: oklch(0.72 0.16 145);
   --primary-foreground: oklch(0.985 0.003 95);
-  --primary-soft: oklch(0.62 0.17 145 / 0.1);
-  --primary-glow: oklch(0.72 0.17 145);
+  --primary-soft: oklch(0.72 0.16 145 / 0.1);
+  --primary-glow: oklch(0.82 0.16 145);
 
   --secondary: oklch(0.96 0.005 95);
   --secondary-foreground: oklch(0.18 0.02 250);
