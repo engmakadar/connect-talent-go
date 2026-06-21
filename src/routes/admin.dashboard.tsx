@@ -437,15 +437,21 @@ function PlatformStats() {
             {filteredRows.length === 0 ? (
               <p className="text-sm text-muted-foreground py-10 text-center">No companies yet.</p>
             ) : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[1100px]">
                 <thead className="border-b border-black/5 bg-secondary/30">
                   <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground">
                     <th className="px-4 py-2.5 font-semibold">Company name</th>
-                    <th className="px-4 py-2.5 font-semibold">Jobs posted</th>
-                    <th className="px-4 py-2.5 font-semibold">Response rate</th>
-                    <th className="px-4 py-2.5 font-semibold">Premium access</th>
+                    <th className="px-4 py-2.5 font-semibold">Jobs</th>
+                    <th className="px-4 py-2.5 font-semibold">Expired positions</th>
+                    <th className="px-4 py-2.5 font-semibold">Rejected positions</th>
+                    <th className="px-4 py-2.5 font-semibold">Subscriptions</th>
+                    <th className="px-4 py-2.5 font-semibold">Recent sub</th>
+                    <th className="px-4 py-2.5 font-semibold">Sub expires</th>
+                    <th className="px-4 py-2.5 font-semibold">Users</th>
+                    <th className="px-4 py-2.5 font-semibold">Premium</th>
+                    <th className="px-4 py-2.5 font-semibold">Status</th>
                     <th className="px-4 py-2.5 font-semibold">Registered</th>
-                    <th className="px-4 py-2.5 font-semibold text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -459,15 +465,17 @@ function PlatformStats() {
                           <span className="font-medium text-ink">{r.name}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 font-semibold text-ink">{r.jobs}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2 max-w-[180px]">
-                          <div className="h-1.5 flex-1 rounded-full bg-secondary/60 overflow-hidden">
-                            <div className="h-full rounded-full bg-emerald-500" style={{ width: `${r.rate}%` }} />
-                          </div>
-                          <span className="text-xs font-semibold text-ink tabular-nums">{r.rate}%</span>
-                        </div>
+                      <td className="px-4 py-3 font-semibold text-ink tabular-nums">{r.jobs}</td>
+                      <td className="px-4 py-3 tabular-nums text-ink">{r.expiredPositions}</td>
+                      <td className="px-4 py-3 tabular-nums text-ink">{r.rejectedPositions}</td>
+                      <td className="px-4 py-3 tabular-nums text-ink">{r.subsCount}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground tabular-nums">
+                        {r.recentSubDate ? new Date(r.recentSubDate).toISOString().slice(0, 10) : "—"}
                       </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground tabular-nums">
+                        {r.recentSubExpires ? new Date(r.recentSubExpires).toISOString().slice(0, 10) : "—"}
+                      </td>
+                      <td className="px-4 py-3 tabular-nums text-ink">{r.userCount}</td>
                       <td className="px-4 py-3">
                         {r.premium ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-gold/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold-foreground">
@@ -477,16 +485,21 @@ function PlatformStats() {
                           <span className="inline-flex items-center rounded-full bg-secondary/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Free</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground tabular-nums">{new Date(r.registered).toISOString().slice(0, 10)}</td>
-                      <td className="px-4 py-3 text-right">
-                        <button className="inline-grid h-7 w-7 place-items-center rounded-md text-muted-foreground hover:bg-secondary/60 hover:text-ink" title="Archive">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                      <td className="px-4 py-3">
+                        {r.status === "active" ? (
+                          <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">Active</span>
+                        ) : r.status === "rejected" ? (
+                          <span className="inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-700">Rejected</span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">Pending</span>
+                        )}
                       </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground tabular-nums">{new Date(r.registered).toISOString().slice(0, 10)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         ) : (
