@@ -163,6 +163,72 @@ function ResumePage() {
   const update = <K extends keyof ResumeForm>(key: K, value: ResumeForm[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
 
+  const handleCvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { toast.error("File must be under 10MB."); return; }
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+    const isDocx = file.name.toLowerCase().endsWith(".docx") ||
+      file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    if (!isPdf && !isDocx) { toast.error("Please upload a PDF or DOCX resume."); return; }
+
+    setParsing(true);
+    try {
+      let parsed: Awaited<ReturnType<typeof parseFn>>;
+      if (isPdf) {
+        const arrayBuf = await file.arrayBuffer();
+        const bytes = new Uint8Array(arrayBuf);
+        let binary = "";
+        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        const base64 = btoa(binary);
+        parsed = await parseFn({ data: { filename: file.name, mimeType: "application/pdf", base64 } });
+      } else {
+        const mammoth = await import("mammoth/mammoth.browser");
+        const arrayBuffer = await file.arrayBuffer();
+        const { value: text } = await mammoth.extractRawText({ arrayBuffer });
+        parsed = await parseFn({ data: { filename: file.name, mimeType: file.type || "application/vnd.openxmlformats-officedocument.wordprocessingml.document", text } });
+      }
+      setForm((f) => ({
+        ...f,
+        // Keep locked full_name & email from profile; fill the rest.
+        location: parsed.location || f.location,
+        date_of_birth: parsed.date_of_birth || f.date_of_birth,
+        nationality: parsed.nationality || f.nationality,
+        phone: parsed.phone || f.phone,
+        summary: parsed.summary || parsed.bio || f.summary,
+        education: parsed.education?.length
+          ? parsed.education.map((x) => ({
+              school: x.school ?? "", school_type: x.school_type ?? "", major: x.major ?? "",
+              start_date: x.start_date ?? "", end_date: x.end_date ?? "",
+            }))
+          : f.education,
+        experience: parsed.experience?.length
+          ? parsed.experience.map((x) => ({
+              company: x.company ?? "", position: x.position ?? "", location: x.location ?? "",
+              start_date: x.start_date ?? "", end_date: x.end_date ?? "",
+              current: !!x.current, duties: x.duties ?? "",
+            }))
+          : f.experience,
+        certificates: parsed.certificates?.length
+          ? parsed.certificates.map((x) => ({
+              name: x.name ?? "", date: x.date ?? "", skills_learned: x.skills_learned ?? "",
+            }))
+          : f.certificates,
+        skills: parsed.skills_detailed?.length
+          ? parsed.skills_detailed.map((x) => ({ name: x.name ?? "", level: x.level ?? "Intermediate" }))
+          : parsed.skills?.length
+            ? parsed.skills.map((s) => ({ name: s, level: "Intermediate" }))
+            : f.skills,
+      }));
+      toast.success("CV parsed — review the fields below and click Save resume.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to parse CV");
+    } finally {
+      setParsing(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
@@ -177,6 +243,32 @@ function ResumePage() {
             <Save className="h-4 w-4" /> {save.isPending ? "Saving…" : "Save resume"}
           </Button>
         </header>
+
+        {/* CV Upload & Auto-fill */}
+        <div className="rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="font-semibold text-ink">Upload your CV to auto-fill</p>
+              <p className="text-sm text-muted-foreground">PDF or DOCX (≤10MB). We'll extract your info and pre-fill every section below — review then Save.</p>
+            </div>
+          </div>
+          <div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              className="hidden"
+              onChange={handleCvUpload}
+            />
+            <Button type="button" disabled={parsing} onClick={() => fileInputRef.current?.click()}>
+              <Upload className="h-4 w-4" /> {parsing ? "Parsing…" : "Upload CV"}
+            </Button>
+          </div>
+        </div>
+
 
         {/* Personal Information */}
         <SectionCard icon={User} title="Personal information" description="The basics employers see first.">
