@@ -111,28 +111,63 @@ function PlatformStats() {
     // Top companies by jobs posted (scoped)
     const jobsByCompany = new Map<string, number>();
     const approvedByCompany = new Map<string, number>();
+    const expiredByCompany = new Map<string, number>();
+    const rejectedByCompany = new Map<string, number>();
     jobs.forEach((j) => {
       if (!j.company_id) return;
       jobsByCompany.set(j.company_id, (jobsByCompany.get(j.company_id) ?? 0) + 1);
       if (j.status === "approved") approvedByCompany.set(j.company_id, (approvedByCompany.get(j.company_id) ?? 0) + 1);
+      if (j.status === "rejected") rejectedByCompany.set(j.company_id, (rejectedByCompany.get(j.company_id) ?? 0) + 1);
+      if (j.expires_at && j.expires_at < data.nowIso) {
+        expiredByCompany.set(j.company_id, (expiredByCompany.get(j.company_id) ?? 0) + 1);
+      }
     });
     const companyJobs = data.allCompanies
       .map((c) => ({ name: c.name, jobs: jobsByCompany.get(c.id) ?? 0 }))
       .sort((a, b) => b.jobs - a.jobs)
       .slice(0, 8);
 
+    // Subscriptions per company (all-time, not scoped — these summarize the company itself)
+    const subsByCompany = new Map<string, typeof data.allSubs>();
+    data.allSubs.forEach((s) => {
+      if (!s.company_id) return;
+      const arr = subsByCompany.get(s.company_id) ?? [];
+      arr.push(s);
+      subsByCompany.set(s.company_id, arr);
+    });
+    // Users per company
+    const usersByCompany = new Map<string, number>();
+    data.allProfiles.forEach((p) => {
+      if (!p.company_id) return;
+      usersByCompany.set(p.company_id, (usersByCompany.get(p.company_id) ?? 0) + 1);
+    });
+
     // Companies comparison rows
     const compRows = data.allCompanies.map((c) => {
       const total = jobsByCompany.get(c.id) ?? 0;
-      const ok = approvedByCompany.get(c.id) ?? 0;
-      const rate = total > 0 ? Math.round((ok / total) * 100) : 0;
+      const companySubs = (subsByCompany.get(c.id) ?? []).slice().sort((a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      const recent = companySubs[0];
+      const vstatus = (c as { verification_status?: string | null; suspended?: boolean }).verification_status ?? "pending";
+      const suspended = (c as { suspended?: boolean }).suspended === true;
+      const status: "active" | "pending" | "rejected" =
+        suspended || vstatus === "rejected" ? "rejected"
+        : vstatus === "verified" || vstatus === "approved" || vstatus === "active" ? "active"
+        : "pending";
       return {
         id: c.id,
         name: c.name,
         jobs: total,
-        rate,
         premium: premiumCompanyIds.has(c.id),
         registered: c.created_at,
+        expiredPositions: expiredByCompany.get(c.id) ?? 0,
+        rejectedPositions: rejectedByCompany.get(c.id) ?? 0,
+        subsCount: companySubs.length,
+        recentSubDate: recent?.created_at ?? null,
+        recentSubExpires: recent?.valid_until ?? null,
+        userCount: usersByCompany.get(c.id) ?? 0,
+        status,
       };
     }).sort((a, b) => b.jobs - a.jobs);
 
