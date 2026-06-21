@@ -7,7 +7,7 @@ import { AdminShell } from "@/components/admin-shell";
 import {
   Briefcase, Users, ClipboardCheck, ShieldCheck, Wallet, CalendarClock,
   CircleAlert, ChartPie, LineChart as LineIcon, Filter, Crown, FileDown,
-  FileJson, Search, Trash2, TrendingUp, TrendingDown, Building2, BadgeCheck,
+  FileJson, Search, TrendingUp, TrendingDown, Building2, BadgeCheck,
 } from "lucide-react";
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
@@ -58,7 +58,7 @@ function PlatformStats() {
     queryKey: ["admin-overview-stats"],
     queryFn: async () => {
       const nowIso = new Date().toISOString();
-      const [pending, approved, users, perms, companiesCount, subsCount, txns, companies, jobs, subs] = await Promise.all([
+      const [pending, approved, users, perms, companiesCount, subsCount, txns, companies, jobs, subs, profiles] = await Promise.all([
         supabase.from("jobs").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("jobs").select("id", { count: "exact", head: true }).eq("status", "approved"),
         supabase.from("profiles").select("id", { count: "exact", head: true }),
@@ -66,9 +66,10 @@ function PlatformStats() {
         supabase.from("companies").select("id", { count: "exact", head: true }),
         supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("active", true),
         supabase.from("payment_transactions").select("amount, status, created_at, method, company_id"),
-        supabase.from("companies").select("id, name, created_at").order("created_at", { ascending: false }),
+        supabase.from("companies").select("id, name, created_at, verification_status, suspended").order("created_at", { ascending: false }),
         supabase.from("jobs").select("id, status, company_id, created_at, expires_at, category, posting_type"),
         supabase.from("subscriptions").select("id, company_id, plan, active, valid_until, created_at"),
+        supabase.from("profiles").select("id, company_id"),
       ]);
 
       return {
@@ -82,6 +83,7 @@ function PlatformStats() {
         allCompanies: companies.data ?? [],
         allJobs: jobs.data ?? [],
         allSubs: subs.data ?? [],
+        allProfiles: profiles.data ?? [],
         nowIso,
       };
     },
@@ -109,28 +111,63 @@ function PlatformStats() {
     // Top companies by jobs posted (scoped)
     const jobsByCompany = new Map<string, number>();
     const approvedByCompany = new Map<string, number>();
+    const expiredByCompany = new Map<string, number>();
+    const rejectedByCompany = new Map<string, number>();
     jobs.forEach((j) => {
       if (!j.company_id) return;
       jobsByCompany.set(j.company_id, (jobsByCompany.get(j.company_id) ?? 0) + 1);
       if (j.status === "approved") approvedByCompany.set(j.company_id, (approvedByCompany.get(j.company_id) ?? 0) + 1);
+      if (j.status === "rejected") rejectedByCompany.set(j.company_id, (rejectedByCompany.get(j.company_id) ?? 0) + 1);
+      if (j.expires_at && j.expires_at < data.nowIso) {
+        expiredByCompany.set(j.company_id, (expiredByCompany.get(j.company_id) ?? 0) + 1);
+      }
     });
     const companyJobs = data.allCompanies
       .map((c) => ({ name: c.name, jobs: jobsByCompany.get(c.id) ?? 0 }))
       .sort((a, b) => b.jobs - a.jobs)
       .slice(0, 8);
 
+    // Subscriptions per company (all-time, not scoped — these summarize the company itself)
+    const subsByCompany = new Map<string, typeof data.allSubs>();
+    data.allSubs.forEach((s) => {
+      if (!s.company_id) return;
+      const arr = subsByCompany.get(s.company_id) ?? [];
+      arr.push(s);
+      subsByCompany.set(s.company_id, arr);
+    });
+    // Users per company
+    const usersByCompany = new Map<string, number>();
+    data.allProfiles.forEach((p) => {
+      if (!p.company_id) return;
+      usersByCompany.set(p.company_id, (usersByCompany.get(p.company_id) ?? 0) + 1);
+    });
+
     // Companies comparison rows
     const compRows = data.allCompanies.map((c) => {
       const total = jobsByCompany.get(c.id) ?? 0;
-      const ok = approvedByCompany.get(c.id) ?? 0;
-      const rate = total > 0 ? Math.round((ok / total) * 100) : 0;
+      const companySubs = (subsByCompany.get(c.id) ?? []).slice().sort((a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      const recent = companySubs[0];
+      const vstatus = (c as { verification_status?: string | null; suspended?: boolean }).verification_status ?? "pending";
+      const suspended = (c as { suspended?: boolean }).suspended === true;
+      const status: "active" | "pending" | "rejected" =
+        suspended || vstatus === "rejected" ? "rejected"
+        : vstatus === "verified" || vstatus === "approved" || vstatus === "active" ? "active"
+        : "pending";
       return {
         id: c.id,
         name: c.name,
         jobs: total,
-        rate,
         premium: premiumCompanyIds.has(c.id),
         registered: c.created_at,
+        expiredPositions: expiredByCompany.get(c.id) ?? 0,
+        rejectedPositions: rejectedByCompany.get(c.id) ?? 0,
+        subsCount: companySubs.length,
+        recentSubDate: recent?.created_at ?? null,
+        recentSubExpires: recent?.valid_until ?? null,
+        userCount: usersByCompany.get(c.id) ?? 0,
+        status,
       };
     }).sort((a, b) => b.jobs - a.jobs);
 
@@ -235,9 +272,13 @@ function PlatformStats() {
   const filteredRows = view.compRows.filter((r) => !search.trim() || r.name.toLowerCase().includes(search.toLowerCase()));
 
   function exportCSV() {
-    const header = ["Company name", "Jobs posted", "Response rate %", "Premium access", "Registered"].join(",");
+    const header = ["Company name", "Jobs posted", "Expired positions", "Rejected positions", "Subscriptions", "Recent sub date", "Recent sub expires", "Users", "Premium access", "Status", "Registered"].join(",");
     const lines = filteredRows.map((r) => [
-      JSON.stringify(r.name), r.jobs, r.rate, r.premium ? "PREMIUM" : "FREE", new Date(r.registered).toISOString().slice(0, 10),
+      JSON.stringify(r.name), r.jobs, r.expiredPositions, r.rejectedPositions, r.subsCount,
+      r.recentSubDate ? new Date(r.recentSubDate).toISOString().slice(0, 10) : "",
+      r.recentSubExpires ? new Date(r.recentSubExpires).toISOString().slice(0, 10) : "",
+      r.userCount, r.premium ? "PREMIUM" : "FREE", r.status.toUpperCase(),
+      new Date(r.registered).toISOString().slice(0, 10),
     ].join(","));
     const csv = [header, ...lines].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -396,15 +437,21 @@ function PlatformStats() {
             {filteredRows.length === 0 ? (
               <p className="text-sm text-muted-foreground py-10 text-center">No companies yet.</p>
             ) : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[1100px]">
                 <thead className="border-b border-black/5 bg-secondary/30">
                   <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground">
                     <th className="px-4 py-2.5 font-semibold">Company name</th>
-                    <th className="px-4 py-2.5 font-semibold">Jobs posted</th>
-                    <th className="px-4 py-2.5 font-semibold">Response rate</th>
-                    <th className="px-4 py-2.5 font-semibold">Premium access</th>
+                    <th className="px-4 py-2.5 font-semibold">Jobs</th>
+                    <th className="px-4 py-2.5 font-semibold">Expired positions</th>
+                    <th className="px-4 py-2.5 font-semibold">Rejected positions</th>
+                    <th className="px-4 py-2.5 font-semibold">Subscriptions</th>
+                    <th className="px-4 py-2.5 font-semibold">Recent sub</th>
+                    <th className="px-4 py-2.5 font-semibold">Sub expires</th>
+                    <th className="px-4 py-2.5 font-semibold">Users</th>
+                    <th className="px-4 py-2.5 font-semibold">Premium</th>
+                    <th className="px-4 py-2.5 font-semibold">Status</th>
                     <th className="px-4 py-2.5 font-semibold">Registered</th>
-                    <th className="px-4 py-2.5 font-semibold text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -418,15 +465,17 @@ function PlatformStats() {
                           <span className="font-medium text-ink">{r.name}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 font-semibold text-ink">{r.jobs}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2 max-w-[180px]">
-                          <div className="h-1.5 flex-1 rounded-full bg-secondary/60 overflow-hidden">
-                            <div className="h-full rounded-full bg-emerald-500" style={{ width: `${r.rate}%` }} />
-                          </div>
-                          <span className="text-xs font-semibold text-ink tabular-nums">{r.rate}%</span>
-                        </div>
+                      <td className="px-4 py-3 font-semibold text-ink tabular-nums">{r.jobs}</td>
+                      <td className="px-4 py-3 tabular-nums text-ink">{r.expiredPositions}</td>
+                      <td className="px-4 py-3 tabular-nums text-ink">{r.rejectedPositions}</td>
+                      <td className="px-4 py-3 tabular-nums text-ink">{r.subsCount}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground tabular-nums">
+                        {r.recentSubDate ? new Date(r.recentSubDate).toISOString().slice(0, 10) : "—"}
                       </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground tabular-nums">
+                        {r.recentSubExpires ? new Date(r.recentSubExpires).toISOString().slice(0, 10) : "—"}
+                      </td>
+                      <td className="px-4 py-3 tabular-nums text-ink">{r.userCount}</td>
                       <td className="px-4 py-3">
                         {r.premium ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-gold/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold-foreground">
@@ -436,16 +485,21 @@ function PlatformStats() {
                           <span className="inline-flex items-center rounded-full bg-secondary/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Free</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground tabular-nums">{new Date(r.registered).toISOString().slice(0, 10)}</td>
-                      <td className="px-4 py-3 text-right">
-                        <button className="inline-grid h-7 w-7 place-items-center rounded-md text-muted-foreground hover:bg-secondary/60 hover:text-ink" title="Archive">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                      <td className="px-4 py-3">
+                        {r.status === "active" ? (
+                          <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">Active</span>
+                        ) : r.status === "rejected" ? (
+                          <span className="inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-700">Rejected</span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">Pending</span>
+                        )}
                       </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground tabular-nums">{new Date(r.registered).toISOString().slice(0, 10)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         ) : (
