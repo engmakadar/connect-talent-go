@@ -1,6 +1,7 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
@@ -11,9 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import {
   User, GraduationCap, Briefcase, Award, Sparkles, Users as UsersIcon,
-  Plus, Trash2, Save,
+  Plus, Trash2, Save, Upload,
 } from "lucide-react";
 import { toast } from "sonner";
+import { parseResume } from "@/lib/cv-parser.functions";
 
 export const Route = createFileRoute("/resume")({
   head: () => ({
