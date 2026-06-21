@@ -7,7 +7,7 @@ import { AdminShell } from "@/components/admin-shell";
 import {
   Briefcase, Users, ClipboardCheck, ShieldCheck, Wallet, CalendarClock,
   CircleAlert, ChartPie, LineChart as LineIcon, Filter, Crown, FileDown,
-  FileJson, Search, Trash2, TrendingUp, TrendingDown, Building2, BadgeCheck,
+  FileJson, Search, TrendingUp, TrendingDown, Building2, BadgeCheck,
 } from "lucide-react";
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
