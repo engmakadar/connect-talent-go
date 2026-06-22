@@ -13,11 +13,8 @@ export const activateUser = createServerFn({ method: "POST" })
     if (!isAdmin) throw new Error("Only Super Admin can activate users.");
 
     // Confirm the auth user's email so they can sign in without verification.
-    // Must succeed — otherwise the user hits "Email not confirmed" at sign-in.
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error: confirmErr } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
-      email_confirm: true,
-    });
+    // Uses a SECURITY DEFINER RPC (admin-only) — no service role key required.
+    const { error: confirmErr } = await supabase.rpc("admin_confirm_user_email", { _user_id: data.userId });
     if (confirmErr) {
       throw new Error(`Failed to confirm email: ${confirmErr.message}`);
     }
