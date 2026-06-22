@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SavedJobsRouteImport } from './routes/saved-jobs'
 import { Route as ResumeRouteImport } from './routes/resume'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PostJobRouteImport } from './routes/post-job'
@@ -50,6 +51,11 @@ const TrustRoute = TrustRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SavedJobsRoute = SavedJobsRouteImport.update({
+  id: '/saved-jobs',
+  path: '/saved-jobs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResumeRoute = ResumeRouteImport.update({
@@ -213,6 +219,7 @@ export interface FileRoutesByFullPath {
   '/post-job': typeof PostJobRoute
   '/profile': typeof ProfileRoute
   '/resume': typeof ResumeRoute
+  '/saved-jobs': typeof SavedJobsRoute
   '/settings': typeof SettingsRoute
   '/trust': typeof TrustRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
@@ -247,6 +254,7 @@ export interface FileRoutesByTo {
   '/post-job': typeof PostJobRoute
   '/profile': typeof ProfileRoute
   '/resume': typeof ResumeRoute
+  '/saved-jobs': typeof SavedJobsRoute
   '/settings': typeof SettingsRoute
   '/trust': typeof TrustRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
@@ -282,6 +290,7 @@ export interface FileRoutesById {
   '/post-job': typeof PostJobRoute
   '/profile': typeof ProfileRoute
   '/resume': typeof ResumeRoute
+  '/saved-jobs': typeof SavedJobsRoute
   '/settings': typeof SettingsRoute
   '/trust': typeof TrustRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
@@ -318,6 +327,7 @@ export interface FileRouteTypes {
     | '/post-job'
     | '/profile'
     | '/resume'
+    | '/saved-jobs'
     | '/settings'
     | '/trust'
     | '/admin/announcements'
@@ -352,6 +362,7 @@ export interface FileRouteTypes {
     | '/post-job'
     | '/profile'
     | '/resume'
+    | '/saved-jobs'
     | '/settings'
     | '/trust'
     | '/admin/announcements'
@@ -386,6 +397,7 @@ export interface FileRouteTypes {
     | '/post-job'
     | '/profile'
     | '/resume'
+    | '/saved-jobs'
     | '/settings'
     | '/trust'
     | '/admin/announcements'
@@ -421,6 +433,7 @@ export interface RootRouteChildren {
   PostJobRoute: typeof PostJobRoute
   ProfileRoute: typeof ProfileRoute
   ResumeRoute: typeof ResumeRoute
+  SavedJobsRoute: typeof SavedJobsRoute
   SettingsRoute: typeof SettingsRoute
   TrustRoute: typeof TrustRoute
   AdminAnnouncementsRoute: typeof AdminAnnouncementsRoute
@@ -459,6 +472,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/saved-jobs': {
+      id: '/saved-jobs'
+      path: '/saved-jobs'
+      fullPath: '/saved-jobs'
+      preLoaderRoute: typeof SavedJobsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/resume': {
@@ -696,6 +716,7 @@ const rootRouteChildren: RootRouteChildren = {
   PostJobRoute: PostJobRoute,
   ProfileRoute: ProfileRoute,
   ResumeRoute: ResumeRoute,
+  SavedJobsRoute: SavedJobsRoute,
   SettingsRoute: SettingsRoute,
   TrustRoute: TrustRoute,
   AdminAnnouncementsRoute: AdminAnnouncementsRoute,
