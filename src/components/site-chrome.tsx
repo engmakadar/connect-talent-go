@@ -2,7 +2,7 @@ import { Link, useRouter } from "@tanstack/react-router";
 import {
   LogOut, User as UserIcon, Shield, Plus, LayoutDashboard, Users,
   Facebook, Linkedin, Twitter, Instagram, Mail, Phone, MapPin,
-  Building2, Receipt, ChevronDown, ClipboardCheck, FileText,
+  Building2, Receipt, ChevronDown, ClipboardCheck, FileText, Bookmark,
 } from "lucide-react";
 import logo from "@/assets/sahan-logo.png";
 import { useAuth } from "@/lib/auth-context";
@@ -138,6 +138,9 @@ export function SiteHeader() {
                     <>
                       <DropdownMenuItem onClick={() => router.navigate({ to: "/matches" })}>
                         <LayoutDashboard className="mr-2 h-4 w-4" /> Matched Jobs
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.navigate({ to: "/saved-jobs" })}>
+                        <Bookmark className="mr-2 h-4 w-4" /> Saved Jobs
                       </DropdownMenuItem>
                       {canSeeResume && (
                         <DropdownMenuItem onClick={() => router.navigate({ to: "/resume" })}>

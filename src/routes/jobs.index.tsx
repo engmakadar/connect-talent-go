@@ -11,6 +11,7 @@ import { CompanyLogo } from "@/components/company-logo";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatEmploymentType } from "@/lib/format";
+import { SaveJobButton } from "@/components/save-job-button";
 import type { Database } from "@/integrations/supabase/types";
 
 type Job = Database["public"]["Tables"]["jobs"]["Row"];
@@ -216,11 +217,11 @@ function JobRow({ job, logoUrl }: { job: Job; logoUrl: string | null }) {
   const isTender = job.posting_type === "tender";
 
   return (
-    <li>
+    <li className="relative">
       <Link to="/jobs/$jobId" params={{ jobId: job.id }} className="group block px-5 py-4 hover:bg-hero-band/40 transition-colors">
         <div className="flex gap-4">
           <CompanyLogo company={job.company} logoUrl={logoUrl} size={48} className="h-12 w-12 shrink-0" />
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 pr-10">
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1.5">
               <span className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-ink-soft">{cityChip}</span>
               {isTender && (
@@ -248,6 +249,9 @@ function JobRow({ job, logoUrl }: { job: Job; logoUrl: string | null }) {
           </div>
         </div>
       </Link>
+      <div className="absolute right-3 top-3">
+        <SaveJobButton jobId={job.id} />
+      </div>
     </li>
   );
 }
