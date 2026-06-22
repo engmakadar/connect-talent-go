@@ -11,6 +11,7 @@ import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { CompanyLogo } from "@/components/company-logo";
 import { RichTextView } from "@/components/rich-text-editor";
 import { formatEmploymentType, formatSalary, timeAgo } from "@/lib/format";
+import { SaveJobButton } from "@/components/save-job-button";
 
 export const Route = createFileRoute("/jobs/$jobId")({
   component: JobDetail,
@@ -270,6 +271,7 @@ function JobDetail() {
                 Apply via email <Mail className="h-4 w-4" />
               </a>
             ) : null}
+            <SaveJobButton jobId={job.id} variant="button" className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-ink ring-1 ring-black/10 hover:bg-secondary" />
             <button onClick={handleShare} className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-ink ring-1 ring-black/10 hover:bg-secondary">
               {copied ? <><Check className="h-4 w-4" /> Copied</> : <><Share2 className="h-4 w-4" /> Share job link</>}
             </button>
