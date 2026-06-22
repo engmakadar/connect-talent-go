@@ -1174,6 +1174,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_confirm_user_email: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       company_has_active_subscription: {
         Args: { _company_id: string }
         Returns: boolean
