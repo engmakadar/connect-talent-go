@@ -121,10 +121,12 @@ function RootComponent() {
 
 function AuthInvalidator({ onChange }: { onChange: () => void }) {
   useEffect(() => {
-    // QueryClient invalidation handled by AuthProvider via supabase listener;
-    // ensure router refreshes loaders on auth changes.
+    // Only invalidate router loaders on real sign-in / sign-out — not on
+    // every token refresh, which was causing every page to re-fetch silently.
     import("@/integrations/supabase/client").then(({ supabase }) => {
-      supabase.auth.onAuthStateChange(() => onChange());
+      supabase.auth.onAuthStateChange((event) => {
+        if (event === "SIGNED_IN" || event === "SIGNED_OUT") onChange();
+      });
     });
   }, [onChange]);
   return null;

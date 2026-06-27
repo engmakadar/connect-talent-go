@@ -49,11 +49,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
   useEffect(() => {
+    let lastCheckedUid: string | null = null;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
         const uid = s.user.id;
+        // Skip expensive profile/role re-fetch on token refresh & metadata
+        // updates — only run on real sign-in or when the user actually changed.
+        const shouldRevalidate =
+          event === "SIGNED_IN" || event === "INITIAL_SESSION" || uid !== lastCheckedUid;
+        if (!shouldRevalidate) return;
+        lastCheckedUid = uid;
         setTimeout(async () => {
           const ok = await enforceAccountStatus(uid);
           if (ok) {
@@ -70,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }, 0);
       } else {
+        lastCheckedUid = null;
         setRoles([]);
       }
     });
