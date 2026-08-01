@@ -314,28 +314,40 @@ export type Database = {
         Row: {
           cover_letter: string | null
           created_at: string
+          employer_note: string | null
           id: string
           job_id: string
           match_score: number | null
+          score_breakdown: Json
+          shortlisted: boolean
           status: string
+          updated_at: string
           user_id: string
         }
         Insert: {
           cover_letter?: string | null
           created_at?: string
+          employer_note?: string | null
           id?: string
           job_id: string
           match_score?: number | null
+          score_breakdown?: Json
+          shortlisted?: boolean
           status?: string
+          updated_at?: string
           user_id: string
         }
         Update: {
           cover_letter?: string | null
           created_at?: string
+          employer_note?: string | null
           id?: string
           job_id?: string
           match_score?: number | null
+          score_breakdown?: Json
+          shortlisted?: boolean
           status?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -407,6 +419,7 @@ export type Database = {
           pending_changes: Json | null
           posted_by: string
           posting_type: Database["public"]["Enums"]["posting_type"]
+          preferred_skills: string[]
           requirements: string
           responsibilities: string
           review_notes: string | null
@@ -441,6 +454,7 @@ export type Database = {
           pending_changes?: Json | null
           posted_by: string
           posting_type?: Database["public"]["Enums"]["posting_type"]
+          preferred_skills?: string[]
           requirements: string
           responsibilities: string
           review_notes?: string | null
@@ -475,6 +489,7 @@ export type Database = {
           pending_changes?: Json | null
           posted_by?: string
           posting_type?: Database["public"]["Enums"]["posting_type"]
+          preferred_skills?: string[]
           requirements?: string
           responsibilities?: string
           review_notes?: string | null
@@ -886,6 +901,173 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      service_bookings: {
+        Row: {
+          address: string
+          created_at: string
+          customer_id: string
+          customer_name: string
+          customer_phone: string | null
+          description: string
+          id: string
+          scheduled_for: string | null
+          status: string
+          updated_at: string
+          worker_id: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          customer_id: string
+          customer_name: string
+          customer_phone?: string | null
+          description: string
+          id?: string
+          scheduled_for?: string | null
+          status?: string
+          updated_at?: string
+          worker_id: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          customer_id?: string
+          customer_name?: string
+          customer_phone?: string | null
+          description?: string
+          id?: string
+          scheduled_for?: string | null
+          status?: string
+          updated_at?: string
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_bookings_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "skill_workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_reviews: {
+        Row: {
+          behaviour_rating: number
+          booking_id: string
+          comment: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          performance_rating: number
+          worker_id: string
+        }
+        Insert: {
+          behaviour_rating: number
+          booking_id: string
+          comment?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          performance_rating: number
+          worker_id: string
+        }
+        Update: {
+          behaviour_rating?: number
+          booking_id?: string
+          comment?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          performance_rating?: number
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "service_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_reviews_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "skill_workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skill_workers: {
+        Row: {
+          approved: boolean
+          available: boolean
+          bio: string | null
+          created_at: string
+          currency: string
+          daily_rate: number | null
+          full_name: string
+          hourly_rate: number | null
+          id: string
+          jobs_completed: number
+          latitude: number | null
+          location: string
+          longitude: number | null
+          phone: string | null
+          photo_url: string | null
+          rating_avg: number
+          rating_count: number
+          trades: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved?: boolean
+          available?: boolean
+          bio?: string | null
+          created_at?: string
+          currency?: string
+          daily_rate?: number | null
+          full_name: string
+          hourly_rate?: number | null
+          id?: string
+          jobs_completed?: number
+          latitude?: number | null
+          location: string
+          longitude?: number | null
+          phone?: string | null
+          photo_url?: string | null
+          rating_avg?: number
+          rating_count?: number
+          trades?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved?: boolean
+          available?: boolean
+          bio?: string | null
+          created_at?: string
+          currency?: string
+          daily_rate?: number | null
+          full_name?: string
+          hourly_rate?: number | null
+          id?: string
+          jobs_completed?: number
+          latitude?: number | null
+          location?: string
+          longitude?: number | null
+          phone?: string | null
+          photo_url?: string | null
+          rating_avg?: number
+          rating_count?: number
+          trades?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       subscription_plans: {
         Row: {
