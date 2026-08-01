@@ -124,29 +124,6 @@ export const updateApplication = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!app) throw new Error("You do not have permission to update this application.");
 
-    if (data.status) {
-      const { data: job } = await supabase.from("jobs").select("title").eq("id", app.job_id).maybeSingle();
-      const label = data.status === "rejected"
-        ? "Application update"
-        : data.status.startsWith("interview")
-        ? "Interview invitation"
-        : "Application update";
-      const body = data.status === "rejected"
-        ? `Thank you for applying to "${job?.title ?? "the role"}". The employer has decided to move forward with other candidates.`
-        : data.status === "interview_written"
-        ? `You've been invited to a written interview for "${job?.title ?? "the role"}".`
-        : data.status === "interview_oral"
-        ? `You've been invited to an oral interview for "${job?.title ?? "the role"}".`
-        : `Your application for "${job?.title ?? "the role"}" is now "${data.status}".`;
-
-      await supabase.from("notifications").insert({
-        user_id: app.user_id,
-        title: label,
-        body,
-        link: "/applications",
-        category: "application",
-      });
-    }
-
+    // The candidate notification is emitted by a database trigger on status change.
     return { ok: true };
   });
