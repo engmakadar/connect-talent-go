@@ -137,7 +137,7 @@ function ApplicantsPage() {
 
   const mutate = async (id: string, patch: { status?: string; shortlisted?: boolean }) => {
     try {
-      await update({ data: { applicationId: id, ...(patch as never) } });
+      await update({ data: { applicationId: id, ...patch } as never });
       qc.invalidateQueries({ queryKey: ["ats-applications"] });
       toast.success("Applicant updated.");
     } catch (e) {

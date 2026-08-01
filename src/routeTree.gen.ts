@@ -26,6 +26,7 @@ import { Route as JobsIndexRouteImport } from './routes/jobs.index'
 import { Route as OnboardingCompanyRouteImport } from './routes/onboarding.company'
 import { Route as JobsJobIdRouteImport } from './routes/jobs.$jobId'
 import { Route as CompanyUsersRouteImport } from './routes/company.users'
+import { Route as CompanyApplicantsRouteImport } from './routes/company.applicants'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminTransactionsRouteImport } from './routes/admin.transactions'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
@@ -126,6 +127,11 @@ const JobsJobIdRoute = JobsJobIdRouteImport.update({
 const CompanyUsersRoute = CompanyUsersRouteImport.update({
   id: '/company/users',
   path: '/company/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompanyApplicantsRoute = CompanyApplicantsRouteImport.update({
+  id: '/company/applicants',
+  path: '/company/applicants',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
@@ -237,6 +243,7 @@ export interface FileRoutesByFullPath {
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
@@ -272,6 +279,7 @@ export interface FileRoutesByTo {
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
@@ -308,6 +316,7 @@ export interface FileRoutesById {
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
@@ -345,6 +354,7 @@ export interface FileRouteTypes {
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
+    | '/company/applicants'
     | '/company/users'
     | '/jobs/$jobId'
     | '/onboarding/company'
@@ -380,6 +390,7 @@ export interface FileRouteTypes {
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
+    | '/company/applicants'
     | '/company/users'
     | '/jobs/$jobId'
     | '/onboarding/company'
@@ -415,6 +426,7 @@ export interface FileRouteTypes {
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
+    | '/company/applicants'
     | '/company/users'
     | '/jobs/$jobId'
     | '/onboarding/company'
@@ -451,6 +463,7 @@ export interface RootRouteChildren {
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminTransactionsRoute: typeof AdminTransactionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
+  CompanyApplicantsRoute: typeof CompanyApplicantsRoute
   CompanyUsersRoute: typeof CompanyUsersRoute
   JobsJobIdRoute: typeof JobsJobIdRoute
   OnboardingCompanyRoute: typeof OnboardingCompanyRoute
@@ -577,6 +590,13 @@ declare module '@tanstack/react-router' {
       path: '/company/users'
       fullPath: '/company/users'
       preLoaderRoute: typeof CompanyUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/company/applicants': {
+      id: '/company/applicants'
+      path: '/company/applicants'
+      fullPath: '/company/applicants'
+      preLoaderRoute: typeof CompanyApplicantsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/users': {
@@ -734,6 +754,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminTransactionsRoute: AdminTransactionsRoute,
   AdminUsersRoute: AdminUsersRoute,
+  CompanyApplicantsRoute: CompanyApplicantsRoute,
   CompanyUsersRoute: CompanyUsersRoute,
   JobsJobIdRoute: JobsJobIdRoute,
   OnboardingCompanyRoute: OnboardingCompanyRoute,
