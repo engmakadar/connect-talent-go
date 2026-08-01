@@ -22,10 +22,14 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ApplicationsRouteImport } from './routes/applications'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TenderIndexRouteImport } from './routes/tender.index'
+import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as JobsIndexRouteImport } from './routes/jobs.index'
+import { Route as ServicesRegisterRouteImport } from './routes/services.register'
+import { Route as ServicesBookingsRouteImport } from './routes/services.bookings'
 import { Route as OnboardingCompanyRouteImport } from './routes/onboarding.company'
 import { Route as JobsJobIdRouteImport } from './routes/jobs.$jobId'
 import { Route as CompanyUsersRouteImport } from './routes/company.users'
+import { Route as CompanyApplicantsRouteImport } from './routes/company.applicants'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminTransactionsRouteImport } from './routes/admin.transactions'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
@@ -108,9 +112,24 @@ const TenderIndexRoute = TenderIndexRouteImport.update({
   path: '/tender/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ServicesIndexRoute = ServicesIndexRouteImport.update({
+  id: '/services/',
+  path: '/services/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JobsIndexRoute = JobsIndexRouteImport.update({
   id: '/jobs/',
   path: '/jobs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesRegisterRoute = ServicesRegisterRouteImport.update({
+  id: '/services/register',
+  path: '/services/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesBookingsRoute = ServicesBookingsRouteImport.update({
+  id: '/services/bookings',
+  path: '/services/bookings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingCompanyRoute = OnboardingCompanyRouteImport.update({
@@ -126,6 +145,11 @@ const JobsJobIdRoute = JobsJobIdRouteImport.update({
 const CompanyUsersRoute = CompanyUsersRouteImport.update({
   id: '/company/users',
   path: '/company/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompanyApplicantsRoute = CompanyApplicantsRouteImport.update({
+  id: '/company/applicants',
+  path: '/company/applicants',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
@@ -237,10 +261,14 @@ export interface FileRoutesByFullPath {
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
+  '/services/bookings': typeof ServicesBookingsRoute
+  '/services/register': typeof ServicesRegisterRoute
   '/jobs/': typeof JobsIndexRoute
+  '/services/': typeof ServicesIndexRoute
   '/tender/': typeof TenderIndexRoute
   '/admin/companies/$companyId': typeof AdminCompaniesCompanyIdRoute
 }
@@ -272,10 +300,14 @@ export interface FileRoutesByTo {
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
+  '/services/bookings': typeof ServicesBookingsRoute
+  '/services/register': typeof ServicesRegisterRoute
   '/jobs': typeof JobsIndexRoute
+  '/services': typeof ServicesIndexRoute
   '/tender': typeof TenderIndexRoute
   '/admin/companies/$companyId': typeof AdminCompaniesCompanyIdRoute
 }
@@ -308,10 +340,14 @@ export interface FileRoutesById {
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
+  '/services/bookings': typeof ServicesBookingsRoute
+  '/services/register': typeof ServicesRegisterRoute
   '/jobs/': typeof JobsIndexRoute
+  '/services/': typeof ServicesIndexRoute
   '/tender/': typeof TenderIndexRoute
   '/admin/companies/$companyId': typeof AdminCompaniesCompanyIdRoute
 }
@@ -345,10 +381,14 @@ export interface FileRouteTypes {
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
+    | '/company/applicants'
     | '/company/users'
     | '/jobs/$jobId'
     | '/onboarding/company'
+    | '/services/bookings'
+    | '/services/register'
     | '/jobs/'
+    | '/services/'
     | '/tender/'
     | '/admin/companies/$companyId'
   fileRoutesByTo: FileRoutesByTo
@@ -380,10 +420,14 @@ export interface FileRouteTypes {
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
+    | '/company/applicants'
     | '/company/users'
     | '/jobs/$jobId'
     | '/onboarding/company'
+    | '/services/bookings'
+    | '/services/register'
     | '/jobs'
+    | '/services'
     | '/tender'
     | '/admin/companies/$companyId'
   id:
@@ -415,10 +459,14 @@ export interface FileRouteTypes {
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
+    | '/company/applicants'
     | '/company/users'
     | '/jobs/$jobId'
     | '/onboarding/company'
+    | '/services/bookings'
+    | '/services/register'
     | '/jobs/'
+    | '/services/'
     | '/tender/'
     | '/admin/companies/$companyId'
   fileRoutesById: FileRoutesById
@@ -451,10 +499,14 @@ export interface RootRouteChildren {
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminTransactionsRoute: typeof AdminTransactionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
+  CompanyApplicantsRoute: typeof CompanyApplicantsRoute
   CompanyUsersRoute: typeof CompanyUsersRoute
   JobsJobIdRoute: typeof JobsJobIdRoute
   OnboardingCompanyRoute: typeof OnboardingCompanyRoute
+  ServicesBookingsRoute: typeof ServicesBookingsRoute
+  ServicesRegisterRoute: typeof ServicesRegisterRoute
   JobsIndexRoute: typeof JobsIndexRoute
+  ServicesIndexRoute: typeof ServicesIndexRoute
   TenderIndexRoute: typeof TenderIndexRoute
 }
 
@@ -551,11 +603,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TenderIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/services/': {
+      id: '/services/'
+      path: '/services'
+      fullPath: '/services/'
+      preLoaderRoute: typeof ServicesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/jobs/': {
       id: '/jobs/'
       path: '/jobs'
       fullPath: '/jobs/'
       preLoaderRoute: typeof JobsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services/register': {
+      id: '/services/register'
+      path: '/services/register'
+      fullPath: '/services/register'
+      preLoaderRoute: typeof ServicesRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services/bookings': {
+      id: '/services/bookings'
+      path: '/services/bookings'
+      fullPath: '/services/bookings'
+      preLoaderRoute: typeof ServicesBookingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding/company': {
@@ -577,6 +650,13 @@ declare module '@tanstack/react-router' {
       path: '/company/users'
       fullPath: '/company/users'
       preLoaderRoute: typeof CompanyUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/company/applicants': {
+      id: '/company/applicants'
+      path: '/company/applicants'
+      fullPath: '/company/applicants'
+      preLoaderRoute: typeof CompanyApplicantsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/users': {
@@ -734,22 +814,16 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminTransactionsRoute: AdminTransactionsRoute,
   AdminUsersRoute: AdminUsersRoute,
+  CompanyApplicantsRoute: CompanyApplicantsRoute,
   CompanyUsersRoute: CompanyUsersRoute,
   JobsJobIdRoute: JobsJobIdRoute,
   OnboardingCompanyRoute: OnboardingCompanyRoute,
+  ServicesBookingsRoute: ServicesBookingsRoute,
+  ServicesRegisterRoute: ServicesRegisterRoute,
   JobsIndexRoute: JobsIndexRoute,
+  ServicesIndexRoute: ServicesIndexRoute,
   TenderIndexRoute: TenderIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

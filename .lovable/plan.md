@@ -1,57 +1,47 @@
-# Implementation Plan
+## 1. ATS Integration (employer dashboard)
 
-This is a sizable change touching auth flow, admin nav, super-admin tools, schema, and a new CV parser. I'll group it into 5 work areas. Please confirm or adjust before I start.
+**Data**
+- Add `jobs.preferred_skills text[]` (weighted skill list per posting) — the job form gets a "Preferred skills" input.
+- Reuse `job_applications.match_score`; add `shortlisted boolean`, `employer_note text`, and allow employers to update status (currently UPDATE is denied on that table).
 
-## 1. Company Registration & Approval Workflow
+**Matching logic** (server function `scoreApplication`)
+- Score 0–100 from: skills overlap (applicant `jobseeker_preferences.skills` + resume skills vs job `skills`/`preferred_skills`) 55%, experience years vs `jobs.experience_years` 25%, category/location/employment-type preference match 20%.
+- Computed at apply time and stored on the application row.
 
-- Add `companies.approval_status` (`pending` | `approved` | `rejected` | `flagged_fraud`) and `flagged_reason` text.
-- On company signup → status = `pending`. Super-admin gets it in a new **Company Approvals** queue (reuse `/admin/review` pattern, new tab "Companies").
-- **Default company admin nav** (gated by status & subscription):
-  - Always: Dashboard, Job Management, Billing & Revenue (Subscriptions List hidden), Audit Log (scoped to own company), Brand Settings.
-  - Hide "Admin Console" / advanced sections until an active subscription exists (`has_active_subscription`).
-- **Job publishing rule**:
-  - Active subscription + approved company → new jobs auto-`approved`.
-  - Otherwise → `pending` (existing flow).
-- **Fraud detection**: simple heuristic on job create (suspicious URL regex, or company `flagged_fraud`) → status = `flagged_fraud`, surfaced in a new **Fraud Detection** tab on `/admin/review`.
+**UI** — new `/company/applicants` page (and an applicants count column on Job Management)
+- Per vacancy: applicant count, list of applicants with match %, sortable.
+- "Shortlisted" section auto-populated at score ≥ 70 (threshold shown, employer can add/remove manually).
 
-## 2. Super Admin — Subscriptions / Trial Controls
+## 2. One-Click Apply
 
-Extend `/admin/subscriptions`:
-- New tab **"No Subscription"** listing companies with no subscription row.
-- "Grant Trial" action → inserts subscription row (plan = free trial, `trial_ends_at = now + 14d`, `active = true`).
-- "Extend / Override" action on existing rows → editable `valid_until` and `active`.
+- `applyToJob` server function: takes `job_id`, pulls the signed-in user's profile + resume, computes match score, inserts into `job_applications` (blocks duplicates), notifies the employer.
+- Job detail page gets an **Apply with my profile** button (falls back to the existing external URL/email links when the job has no in-platform apply).
+- Employer actions on each applicant: **Send regret** and **Invite to interview** (written / oral) — mailto-style composer prefilled with templated copy, application status updated to `rejected` / `interview`, plus an in-app notification to the candidate.
 
-## 3. Category Page — Employment Types
+## 3. Hand-Skill Portal
 
-- New table `employment_types` (name, slug, active).
-- Admin Category page (`/admin/categories`) gets a second section "Employment Types" with table + add/edit/delete.
-- Job form's employment type field switches from enum/free-text to lookup from this table (kept backward-compatible).
+New section at `/services`:
+- Tables: `skill_workers` (user, trades, hourly/daily rate, location w/ lat-lng, bio, availability, avg rating), `service_bookings` (customer, worker, description, scheduled date, address, status), `service_reviews` (performance + behaviour ratings, comment).
+- Worker onboarding form (`/services/register`), public browse/search by trade + proximity + rating, booking form, worker dashboard with incoming bookings, notification on booking, and a rate-the-worker flow once a booking is marked complete.
+- Full RLS: workers manage own profile/bookings, customers manage own bookings/reviews, public read of approved worker profiles and ratings.
 
-## 4. Jobseeker — My Resume Gating
+## 4. Employer Profile Picture RLS Fix
 
-- In jobseeker nav/sidebar, hide "My Resume" route unless `has_active_subscription(auth.uid())`.
-- Route-level guard redirects to pricing if accessed directly.
+Cause: the `company-logos` upload policy only allows the company's `created_by` user or an `owner`/`manager` in `company_member_roles`. Employers linked only via `profiles.company_id` are rejected.
+- Rewrite the INSERT/UPDATE/DELETE policies to allow: admins, or any user where `user_in_company(auth.uid(), <folder uuid>)`, or the uploader's own uid folder.
+- Add a SELECT policy so logos stay readable.
+- Super Admin can change any company's logo; each change writes a `company.update` audit log entry.
 
-## 5. Profile Builder — CV Parsing
+## 5. User Activation
 
-- "Upload Resume (PDF/DOCX)" button on profile builder.
-- File uploaded to `resumes` bucket (private), then sent to a `createServerFn` that:
-  - Extracts text (pdf → `pdf-parse` style; docx → `mammoth`).
-  - Calls Lovable AI Gateway (`google/gemini-2.5-flash`) with structured-output schema: `{full_name, headline, email, phone, skills[], experience[], education[]}`.
-  - Returns parsed JSON; client pre-fills profile fields (user reviews before save).
+Already implemented via the admin-only `admin_confirm_user_email` RPC (sets `email_confirmed_at`, clears suspension/pending). I'll re-verify end-to-end and fix anything still blocking, rather than rebuilding it.
 
-## Technical Notes
+## Technical notes
 
-- Migrations needed for: `companies.approval_status`, `employment_types` table (+ GRANTs + RLS), optional `jobs.fraud_flag` (or reuse status enum value).
-- New server fns: `submitCompanyApproval`, `approveCompany`, `rejectCompany`, `grantTrial`, `parseResume`.
-- RLS: company users see only own audit logs (already enforced via `user_in_company`); verify policies.
-- No new external API keys — CV parsing uses existing `LOVABLE_API_KEY`.
+- Migrations: job/application columns, three new hand-skill tables (with GRANTs + RLS), storage policy rewrite.
+- New server functions: `applyToJob`, `scoreApplication`, `bookService`, `submitServiceReview`.
+- Emails to candidates use in-app notifications + mailto composer (no external mail provider is configured yet — say the word if you want real outbound email via a provider).
 
-## Open Questions
+## Question
 
-1. **Free trial length** when super-admin grants one — 14 days OK, or different?
-2. **Suspicious link heuristic** — start with simple blocklist (bit.ly, tinyurl, non-https, IP URLs), or do you have a specific list?
-3. **CV parser** — pre-fill and let user save, or auto-save and let them edit after?
-4. **Employment Type migration** — keep existing string values on jobs, or migrate to FK?
-
-Reply with answers (or "go with defaults") and I'll implement.
+Item 3 is effectively a second marketplace product and is the bulk of this work. Do you want it built in this same pass, or should I ship 1, 2, 4, 5 first and do the hand-skill portal next?

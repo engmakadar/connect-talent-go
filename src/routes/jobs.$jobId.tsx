@@ -12,6 +12,7 @@ import { CompanyLogo } from "@/components/company-logo";
 import { RichTextView } from "@/components/rich-text-editor";
 import { formatEmploymentType, formatSalary, timeAgo } from "@/lib/format";
 import { SaveJobButton } from "@/components/save-job-button";
+import { ApplyButton } from "@/components/apply-button";
 
 export const Route = createFileRoute("/jobs/$jobId")({
   component: JobDetail,
@@ -262,12 +263,13 @@ function JobDetail() {
           </div>
 
           <div className="rounded-2xl bg-card p-5 ring-1 ring-black/5 space-y-2">
+            {!isTender && <ApplyButton jobId={job.id} />}
             {job.application_url ? (
-              <a href={job.application_url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90">
-                Apply now <ExternalLink className="h-4 w-4" />
+              <a href={job.application_url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-ink ring-1 ring-black/10 hover:bg-secondary">
+                Apply on company site <ExternalLink className="h-4 w-4" />
               </a>
             ) : applyEmail ? (
-              <a href={`mailto:${applyEmail}`} className="flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90">
+              <a href={`mailto:${applyEmail}`} className="flex items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-ink ring-1 ring-black/10 hover:bg-secondary">
                 Apply via email <Mail className="h-4 w-4" />
               </a>
             ) : null}
