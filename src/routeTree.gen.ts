@@ -24,6 +24,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TenderIndexRouteImport } from './routes/tender.index'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as JobsIndexRouteImport } from './routes/jobs.index'
+import { Route as ServicesRegisterRouteImport } from './routes/services.register'
 import { Route as OnboardingCompanyRouteImport } from './routes/onboarding.company'
 import { Route as JobsJobIdRouteImport } from './routes/jobs.$jobId'
 import { Route as CompanyUsersRouteImport } from './routes/company.users'
@@ -118,6 +119,11 @@ const ServicesIndexRoute = ServicesIndexRouteImport.update({
 const JobsIndexRoute = JobsIndexRouteImport.update({
   id: '/jobs/',
   path: '/jobs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesRegisterRoute = ServicesRegisterRouteImport.update({
+  id: '/services/register',
+  path: '/services/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingCompanyRoute = OnboardingCompanyRouteImport.update({
@@ -253,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/company/users': typeof CompanyUsersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
+  '/services/register': typeof ServicesRegisterRoute
   '/jobs/': typeof JobsIndexRoute
   '/services/': typeof ServicesIndexRoute
   '/tender/': typeof TenderIndexRoute
@@ -290,6 +297,7 @@ export interface FileRoutesByTo {
   '/company/users': typeof CompanyUsersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
+  '/services/register': typeof ServicesRegisterRoute
   '/jobs': typeof JobsIndexRoute
   '/services': typeof ServicesIndexRoute
   '/tender': typeof TenderIndexRoute
@@ -328,6 +336,7 @@ export interface FileRoutesById {
   '/company/users': typeof CompanyUsersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
+  '/services/register': typeof ServicesRegisterRoute
   '/jobs/': typeof JobsIndexRoute
   '/services/': typeof ServicesIndexRoute
   '/tender/': typeof TenderIndexRoute
@@ -367,6 +376,7 @@ export interface FileRouteTypes {
     | '/company/users'
     | '/jobs/$jobId'
     | '/onboarding/company'
+    | '/services/register'
     | '/jobs/'
     | '/services/'
     | '/tender/'
@@ -404,6 +414,7 @@ export interface FileRouteTypes {
     | '/company/users'
     | '/jobs/$jobId'
     | '/onboarding/company'
+    | '/services/register'
     | '/jobs'
     | '/services'
     | '/tender'
@@ -441,6 +452,7 @@ export interface FileRouteTypes {
     | '/company/users'
     | '/jobs/$jobId'
     | '/onboarding/company'
+    | '/services/register'
     | '/jobs/'
     | '/services/'
     | '/tender/'
@@ -479,6 +491,7 @@ export interface RootRouteChildren {
   CompanyUsersRoute: typeof CompanyUsersRoute
   JobsJobIdRoute: typeof JobsJobIdRoute
   OnboardingCompanyRoute: typeof OnboardingCompanyRoute
+  ServicesRegisterRoute: typeof ServicesRegisterRoute
   JobsIndexRoute: typeof JobsIndexRoute
   ServicesIndexRoute: typeof ServicesIndexRoute
   TenderIndexRoute: typeof TenderIndexRoute
@@ -589,6 +602,13 @@ declare module '@tanstack/react-router' {
       path: '/jobs'
       fullPath: '/jobs/'
       preLoaderRoute: typeof JobsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services/register': {
+      id: '/services/register'
+      path: '/services/register'
+      fullPath: '/services/register'
+      preLoaderRoute: typeof ServicesRegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding/company': {
@@ -778,6 +798,7 @@ const rootRouteChildren: RootRouteChildren = {
   CompanyUsersRoute: CompanyUsersRoute,
   JobsJobIdRoute: JobsJobIdRoute,
   OnboardingCompanyRoute: OnboardingCompanyRoute,
+  ServicesRegisterRoute: ServicesRegisterRoute,
   JobsIndexRoute: JobsIndexRoute,
   ServicesIndexRoute: ServicesIndexRoute,
   TenderIndexRoute: TenderIndexRoute,
