@@ -8,6 +8,7 @@ const EMPLOYER_DEFAULT_KEYS: AdminPageKey[] = [
   "branding_settings",
   "dashboard",
   "job_approval",
+  "applicants",
   "job_moderation",
 ];
 
