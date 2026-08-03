@@ -9,7 +9,7 @@ import {
 export type AdminPageKey =
   | "dashboard" | "reports"
   | "all_users" | "employers" | "candidates" | "user_verification"
-  | "job_approval" | "job_moderation" | "post_job" | "fraud_detection" | "categories"
+  | "job_approval" | "job_moderation" | "post_job" | "applicants" | "fraud_detection" | "categories"
   | "ai_matching" | "recommendations" | "cv_parsing"
   | "subscription_plans" | "subscriptions_list" | "transactions" | "revenue_analytics"
   | "announcements" | "notifications" | "messaging_center"
@@ -51,6 +51,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
     title: "Job Management",
     items: [
       { key: "post_job", label: "Post a Job / Tender", to: "/admin/post-job", icon: Plus },
+      { key: "applicants", label: "Applicants & ATS", to: "/company/applicants", icon: UserCheck },
       { key: "job_approval", label: "Job Approval", to: "/admin/review", icon: ClipboardCheck },
       { key: "job_moderation", label: "Job Moderation", to: "/admin/jobs", icon: FileText },
       { key: "categories", label: "Categories", to: "/admin/categories", icon: Tags },
