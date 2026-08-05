@@ -1,10 +1,10 @@
 import {
-  LayoutDashboard, BarChart3, Users, Building2, UserCheck,
-  ClipboardCheck, FileText, AlertTriangle, Tags, Sparkles, BookOpen,
-  FileCode2, CreditCard, Receipt, FileBarChart, Megaphone, Bell,
-  MessageSquare, History, KeyRound, Lock, Settings, Plug, Mail, Palette,
-  Plus,
+  LayoutDashboard, Users, Building2, UserCheck,
+  ClipboardCheck, FileText, AlertTriangle, Tags, Sparkles,
+  FileCode2, CreditCard, Receipt, Megaphone,
+  History, Lock, Palette, Plus,
 } from "lucide-react";
+
 
 export type AdminPageKey =
   | "dashboard" | "reports"
