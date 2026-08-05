@@ -214,16 +214,7 @@ function JobDetail() {
               </div>
             )}
 
-            {job.skills && job.skills.length > 0 && (
-              <div className="rounded-2xl bg-card p-6 ring-1 ring-black/5">
-                <h2 className="font-serif text-lg font-semibold tracking-tight mb-4 text-ink">Skills</h2>
-                <div className="flex flex-wrap gap-2">
-                  {job.skills.map((s) => <span key={s} className="rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-ink">{s}</span>)}
-                </div>
-              </div>
-            )}
-
-            {/* Requirements is always the last section on the job posting. */}
+            {/* Requirements first, Skills immediately below it. */}
             {sections.filter((s) => s.title === "Requirements").map((s) => (
               <div key={s.title} className="rounded-2xl bg-card p-6 ring-1 ring-black/5">
                 <h2 className="font-serif text-lg font-semibold tracking-tight mb-4 flex items-center gap-3 text-ink">
@@ -233,6 +224,16 @@ function JobDetail() {
                 <RichTextView html={s.body} />
               </div>
             ))}
+
+            {job.skills && job.skills.length > 0 && (
+              <div className="rounded-2xl bg-card p-6 ring-1 ring-black/5">
+                <h2 className="font-serif text-lg font-semibold tracking-tight mb-4 text-ink">Skills</h2>
+                <div className="flex flex-wrap gap-2">
+                  {job.skills.map((s) => <span key={s} className="rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-ink">{s}</span>)}
+                </div>
+              </div>
+            )}
+
           </article>
         </div>
 
