@@ -310,6 +310,155 @@ export type Database = {
         }
         Relationships: []
       }
+      freelance_gigs: {
+        Row: {
+          active: boolean
+          category: string
+          cover_url: string | null
+          created_at: string
+          currency: string
+          delivery_days: number
+          description: string
+          freelancer_id: string
+          id: string
+          orders_count: number
+          price: number
+          rating_avg: number
+          rating_count: number
+          tags: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string
+          cover_url?: string | null
+          created_at?: string
+          currency?: string
+          delivery_days?: number
+          description?: string
+          freelancer_id: string
+          id?: string
+          orders_count?: number
+          price?: number
+          rating_avg?: number
+          rating_count?: number
+          tags?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          cover_url?: string | null
+          created_at?: string
+          currency?: string
+          delivery_days?: number
+          description?: string
+          freelancer_id?: string
+          id?: string
+          orders_count?: number
+          price?: number
+          rating_avg?: number
+          rating_count?: number
+          tags?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      freelance_orders: {
+        Row: {
+          client_id: string
+          created_at: string
+          currency: string
+          freelancer_id: string
+          gig_id: string
+          id: string
+          price: number
+          requirements: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          currency?: string
+          freelancer_id: string
+          gig_id: string
+          id?: string
+          price?: number
+          requirements?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          currency?: string
+          freelancer_id?: string
+          gig_id?: string
+          id?: string
+          price?: number
+          requirements?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "freelance_orders_gig_id_fkey"
+            columns: ["gig_id"]
+            isOneToOne: false
+            referencedRelation: "freelance_gigs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      freelance_reviews: {
+        Row: {
+          client_id: string
+          comment: string | null
+          created_at: string
+          gig_id: string
+          id: string
+          order_id: string
+          rating: number
+        }
+        Insert: {
+          client_id: string
+          comment?: string | null
+          created_at?: string
+          gig_id: string
+          id?: string
+          order_id: string
+          rating: number
+        }
+        Update: {
+          client_id?: string
+          comment?: string | null
+          created_at?: string
+          gig_id?: string
+          id?: string
+          order_id?: string
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "freelance_reviews_gig_id_fkey"
+            columns: ["gig_id"]
+            isOneToOne: false
+            referencedRelation: "freelance_gigs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "freelance_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "freelance_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_applications: {
         Row: {
           cover_letter: string | null

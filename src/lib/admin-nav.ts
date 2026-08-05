@@ -1,10 +1,10 @@
 import {
-  LayoutDashboard, BarChart3, Users, Building2, UserCheck,
-  ClipboardCheck, FileText, AlertTriangle, Tags, Sparkles, BookOpen,
-  FileCode2, CreditCard, Receipt, FileBarChart, Megaphone, Bell,
-  MessageSquare, History, KeyRound, Lock, Settings, Plug, Mail, Palette,
-  Plus,
+  LayoutDashboard, Users, Building2, UserCheck,
+  ClipboardCheck, FileText, AlertTriangle, Tags, Sparkles,
+  FileCode2, CreditCard, Receipt, Megaphone,
+  History, Lock, Palette, Plus,
 } from "lucide-react";
+
 
 export type AdminPageKey =
   | "dashboard" | "reports"
@@ -35,7 +35,6 @@ export const ADMIN_NAV: AdminNavSection[] = [
     title: "Main",
     items: [
       { key: "dashboard", label: "Dashboard & Analytics", to: "/admin/dashboard", icon: LayoutDashboard },
-      { key: "reports", label: "Reports & Analytics", icon: BarChart3, soon: true },
     ],
   },
   {
@@ -44,7 +43,6 @@ export const ADMIN_NAV: AdminNavSection[] = [
       { key: "all_users", label: "All Users", to: "/admin/users", icon: Users },
       { key: "employers", label: "Employers (Companies)", to: "/admin/companies", icon: Building2 },
       { key: "candidates", label: "Candidates", to: "/admin/candidates", icon: Users },
-      { key: "user_verification", label: "User Verification", icon: UserCheck, soon: true },
     ],
   },
   {
@@ -61,9 +59,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
   {
     title: "AI Management",
     items: [
-      { key: "ai_matching", label: "AI Matching Rules", icon: Sparkles, soon: true },
-      { key: "recommendations", label: "Recommendations", icon: BookOpen, soon: true },
-      { key: "cv_parsing", label: "CV Parsing Models", icon: FileCode2, soon: true },
+      { key: "cv_parsing", label: "CV Parsing Models", to: "/resume", icon: FileCode2 },
     ],
   },
   {
@@ -72,31 +68,24 @@ export const ADMIN_NAV: AdminNavSection[] = [
       { key: "subscription_plans", label: "Subscription Plans", to: "/admin/plans", icon: CreditCard },
       { key: "subscriptions_list", label: "Subscriptions List", to: "/admin/subscriptions", icon: Receipt },
       { key: "transactions", label: "Transactions & Invoices", to: "/admin/transactions", icon: Receipt },
-      { key: "revenue_analytics", label: "Revenue Analytics", icon: FileBarChart, soon: true },
     ],
   },
   {
     title: "Communication",
     items: [
       { key: "announcements", label: "Announcements", to: "/admin/announcements", icon: Megaphone },
-      { key: "notifications", label: "Notifications", icon: Bell, soon: true },
-      { key: "messaging_center", label: "Messaging Center", icon: MessageSquare, soon: true },
     ],
   },
   {
     title: "Security",
     items: [
       { key: "audit_logs", label: "Audit Logs", to: "/admin/audit-logs", icon: History },
-      { key: "permissions", label: "Permissions", icon: KeyRound, soon: true },
       { key: "roles_rbac", label: "Roles & RBAC", to: "/admin/roles", icon: Lock },
-      { key: "security_settings", label: "Security Settings", icon: Settings, soon: true },
     ],
   },
   {
     title: "System Settings",
     items: [
-      { key: "apis_integrations", label: "APIs & Integrations", icon: Plug, soon: true },
-      { key: "email_sms", label: "Email/SMS Settings", icon: Mail, soon: true },
       { key: "branding_settings", label: "Brand Settings", to: "/admin/branding", icon: Palette },
     ],
   },
@@ -109,6 +98,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
     ],
   },
 ];
+
 
 export const ALL_PAGE_KEYS: AdminPageKey[] = ADMIN_NAV.flatMap((s) => s.items.map((i) => i.key));
 

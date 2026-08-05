@@ -24,10 +24,14 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TenderIndexRouteImport } from './routes/tender.index'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as JobsIndexRouteImport } from './routes/jobs.index'
+import { Route as FreelanceIndexRouteImport } from './routes/freelance.index'
 import { Route as ServicesRegisterRouteImport } from './routes/services.register'
 import { Route as ServicesBookingsRouteImport } from './routes/services.bookings'
 import { Route as OnboardingCompanyRouteImport } from './routes/onboarding.company'
 import { Route as JobsJobIdRouteImport } from './routes/jobs.$jobId'
+import { Route as FreelanceOrdersRouteImport } from './routes/freelance.orders'
+import { Route as FreelanceNewRouteImport } from './routes/freelance.new'
+import { Route as FreelanceGigIdRouteImport } from './routes/freelance.$gigId'
 import { Route as CompanyUsersRouteImport } from './routes/company.users'
 import { Route as CompanyApplicantsRouteImport } from './routes/company.applicants'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
@@ -122,6 +126,11 @@ const JobsIndexRoute = JobsIndexRouteImport.update({
   path: '/jobs/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FreelanceIndexRoute = FreelanceIndexRouteImport.update({
+  id: '/freelance/',
+  path: '/freelance/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ServicesRegisterRoute = ServicesRegisterRouteImport.update({
   id: '/services/register',
   path: '/services/register',
@@ -140,6 +149,21 @@ const OnboardingCompanyRoute = OnboardingCompanyRouteImport.update({
 const JobsJobIdRoute = JobsJobIdRouteImport.update({
   id: '/jobs/$jobId',
   path: '/jobs/$jobId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FreelanceOrdersRoute = FreelanceOrdersRouteImport.update({
+  id: '/freelance/orders',
+  path: '/freelance/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FreelanceNewRoute = FreelanceNewRouteImport.update({
+  id: '/freelance/new',
+  path: '/freelance/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FreelanceGigIdRoute = FreelanceGigIdRouteImport.update({
+  id: '/freelance/$gigId',
+  path: '/freelance/$gigId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompanyUsersRoute = CompanyUsersRouteImport.update({
@@ -263,10 +287,14 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
+  '/freelance/$gigId': typeof FreelanceGigIdRoute
+  '/freelance/new': typeof FreelanceNewRoute
+  '/freelance/orders': typeof FreelanceOrdersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
   '/services/register': typeof ServicesRegisterRoute
+  '/freelance/': typeof FreelanceIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/services/': typeof ServicesIndexRoute
   '/tender/': typeof TenderIndexRoute
@@ -302,10 +330,14 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
+  '/freelance/$gigId': typeof FreelanceGigIdRoute
+  '/freelance/new': typeof FreelanceNewRoute
+  '/freelance/orders': typeof FreelanceOrdersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
   '/services/register': typeof ServicesRegisterRoute
+  '/freelance': typeof FreelanceIndexRoute
   '/jobs': typeof JobsIndexRoute
   '/services': typeof ServicesIndexRoute
   '/tender': typeof TenderIndexRoute
@@ -342,10 +374,14 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
+  '/freelance/$gigId': typeof FreelanceGigIdRoute
+  '/freelance/new': typeof FreelanceNewRoute
+  '/freelance/orders': typeof FreelanceOrdersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
   '/services/register': typeof ServicesRegisterRoute
+  '/freelance/': typeof FreelanceIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/services/': typeof ServicesIndexRoute
   '/tender/': typeof TenderIndexRoute
@@ -383,10 +419,14 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/company/applicants'
     | '/company/users'
+    | '/freelance/$gigId'
+    | '/freelance/new'
+    | '/freelance/orders'
     | '/jobs/$jobId'
     | '/onboarding/company'
     | '/services/bookings'
     | '/services/register'
+    | '/freelance/'
     | '/jobs/'
     | '/services/'
     | '/tender/'
@@ -422,10 +462,14 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/company/applicants'
     | '/company/users'
+    | '/freelance/$gigId'
+    | '/freelance/new'
+    | '/freelance/orders'
     | '/jobs/$jobId'
     | '/onboarding/company'
     | '/services/bookings'
     | '/services/register'
+    | '/freelance'
     | '/jobs'
     | '/services'
     | '/tender'
@@ -461,10 +505,14 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/company/applicants'
     | '/company/users'
+    | '/freelance/$gigId'
+    | '/freelance/new'
+    | '/freelance/orders'
     | '/jobs/$jobId'
     | '/onboarding/company'
     | '/services/bookings'
     | '/services/register'
+    | '/freelance/'
     | '/jobs/'
     | '/services/'
     | '/tender/'
@@ -501,10 +549,14 @@ export interface RootRouteChildren {
   AdminUsersRoute: typeof AdminUsersRoute
   CompanyApplicantsRoute: typeof CompanyApplicantsRoute
   CompanyUsersRoute: typeof CompanyUsersRoute
+  FreelanceGigIdRoute: typeof FreelanceGigIdRoute
+  FreelanceNewRoute: typeof FreelanceNewRoute
+  FreelanceOrdersRoute: typeof FreelanceOrdersRoute
   JobsJobIdRoute: typeof JobsJobIdRoute
   OnboardingCompanyRoute: typeof OnboardingCompanyRoute
   ServicesBookingsRoute: typeof ServicesBookingsRoute
   ServicesRegisterRoute: typeof ServicesRegisterRoute
+  FreelanceIndexRoute: typeof FreelanceIndexRoute
   JobsIndexRoute: typeof JobsIndexRoute
   ServicesIndexRoute: typeof ServicesIndexRoute
   TenderIndexRoute: typeof TenderIndexRoute
@@ -617,6 +669,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JobsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/freelance/': {
+      id: '/freelance/'
+      path: '/freelance'
+      fullPath: '/freelance/'
+      preLoaderRoute: typeof FreelanceIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/services/register': {
       id: '/services/register'
       path: '/services/register'
@@ -643,6 +702,27 @@ declare module '@tanstack/react-router' {
       path: '/jobs/$jobId'
       fullPath: '/jobs/$jobId'
       preLoaderRoute: typeof JobsJobIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/freelance/orders': {
+      id: '/freelance/orders'
+      path: '/freelance/orders'
+      fullPath: '/freelance/orders'
+      preLoaderRoute: typeof FreelanceOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/freelance/new': {
+      id: '/freelance/new'
+      path: '/freelance/new'
+      fullPath: '/freelance/new'
+      preLoaderRoute: typeof FreelanceNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/freelance/$gigId': {
+      id: '/freelance/$gigId'
+      path: '/freelance/$gigId'
+      fullPath: '/freelance/$gigId'
+      preLoaderRoute: typeof FreelanceGigIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/company/users': {
@@ -816,10 +896,14 @@ const rootRouteChildren: RootRouteChildren = {
   AdminUsersRoute: AdminUsersRoute,
   CompanyApplicantsRoute: CompanyApplicantsRoute,
   CompanyUsersRoute: CompanyUsersRoute,
+  FreelanceGigIdRoute: FreelanceGigIdRoute,
+  FreelanceNewRoute: FreelanceNewRoute,
+  FreelanceOrdersRoute: FreelanceOrdersRoute,
   JobsJobIdRoute: JobsJobIdRoute,
   OnboardingCompanyRoute: OnboardingCompanyRoute,
   ServicesBookingsRoute: ServicesBookingsRoute,
   ServicesRegisterRoute: ServicesRegisterRoute,
+  FreelanceIndexRoute: FreelanceIndexRoute,
   JobsIndexRoute: JobsIndexRoute,
   ServicesIndexRoute: ServicesIndexRoute,
   TenderIndexRoute: TenderIndexRoute,
@@ -827,13 +911,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
