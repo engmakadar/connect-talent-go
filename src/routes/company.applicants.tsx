@@ -289,6 +289,11 @@ function ApplicantsPage() {
                   {new Date(a.created_at).toLocaleDateString()}
                 </Td>
                 <Td>
+                  {isAdmin ? (
+                    <p className="text-right text-[11px] text-muted-foreground">
+                      View only — only the posting company can shortlist or regret
+                    </p>
+                  ) : (
                   <div className="flex flex-wrap justify-end gap-1.5">
                     <Button
                       size="sm"
@@ -332,6 +337,7 @@ function ApplicantsPage() {
                       <Ban className="h-3.5 w-3.5 mr-1" /> Regret
                     </Button>
                   </div>
+                  )}
                 </Td>
               </tr>
             ))}
