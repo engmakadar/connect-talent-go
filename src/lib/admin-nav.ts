@@ -66,7 +66,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
   {
     title: "Services",
     items: [
-      { key: "skill_workers", label: "Skill Worker Registration", to: "/services/register", icon: Wrench },
+      { key: "skill_workers", label: "Skill Worker Registration", to: "/admin/skill-workers", icon: Wrench },
     ],
   },
   {

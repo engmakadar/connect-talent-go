@@ -2,7 +2,7 @@ import { Link, useRouter } from "@tanstack/react-router";
 import {
   LogOut, User as UserIcon, Shield, Plus, LayoutDashboard, Users,
   Facebook, Linkedin, Twitter, Instagram, Mail, Phone, MapPin,
-  Building2, Receipt, ChevronDown, ClipboardCheck, FileText, Bookmark,
+  Building2, Receipt, ChevronDown, ClipboardCheck, FileText, Bookmark, Wrench,
 } from "lucide-react";
 import logo from "@/assets/sahan-logo.png";
 import { useAuth } from "@/lib/auth-context";
@@ -160,6 +160,9 @@ export function SiteHeader() {
                   )}
                   <DropdownMenuItem onClick={() => router.navigate({ to: "/applications" })}>
                     <LayoutDashboard className="mr-2 h-4 w-4" /> My Applications
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.navigate({ to: "/services/orders" })}>
+                    <Wrench className="mr-2 h-4 w-4" /> Service Orders
                   </DropdownMenuItem>
                   {(isEmployer || isAdmin) && (
                     <DropdownMenuItem onClick={() => router.navigate({ to: "/billing" })}>

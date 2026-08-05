@@ -26,6 +26,7 @@ import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as JobsIndexRouteImport } from './routes/jobs.index'
 import { Route as FreelanceIndexRouteImport } from './routes/freelance.index'
 import { Route as ServicesRegisterRouteImport } from './routes/services.register'
+import { Route as ServicesOrdersRouteImport } from './routes/services.orders'
 import { Route as ServicesBookingsRouteImport } from './routes/services.bookings'
 import { Route as OnboardingCompanyRouteImport } from './routes/onboarding.company'
 import { Route as JobsJobIdRouteImport } from './routes/jobs.$jobId'
@@ -39,6 +40,7 @@ import { Route as CompanyApplicantsRouteImport } from './routes/company.applican
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminTransactionsRouteImport } from './routes/admin.transactions'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
+import { Route as AdminSkillWorkersRouteImport } from './routes/admin.skill-workers'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
 import { Route as AdminReviewRouteImport } from './routes/admin.review'
 import { Route as AdminPostJobRouteImport } from './routes/admin.post-job'
@@ -138,6 +140,11 @@ const ServicesRegisterRoute = ServicesRegisterRouteImport.update({
   path: '/services/register',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ServicesOrdersRoute = ServicesOrdersRouteImport.update({
+  id: '/services/orders',
+  path: '/services/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ServicesBookingsRoute = ServicesBookingsRouteImport.update({
   id: '/services/bookings',
   path: '/services/bookings',
@@ -201,6 +208,11 @@ const AdminTransactionsRoute = AdminTransactionsRouteImport.update({
 const AdminSubscriptionsRoute = AdminSubscriptionsRouteImport.update({
   id: '/admin/subscriptions',
   path: '/admin/subscriptions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSkillWorkersRoute = AdminSkillWorkersRouteImport.update({
+  id: '/admin/skill-workers',
+  path: '/admin/skill-workers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRolesRoute = AdminRolesRouteImport.update({
@@ -294,6 +306,7 @@ export interface FileRoutesByFullPath {
   '/admin/post-job': typeof AdminPostJobRoute
   '/admin/review': typeof AdminReviewRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/skill-workers': typeof AdminSkillWorkersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -307,6 +320,7 @@ export interface FileRoutesByFullPath {
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
+  '/services/orders': typeof ServicesOrdersRoute
   '/services/register': typeof ServicesRegisterRoute
   '/freelance/': typeof FreelanceIndexRoute
   '/jobs/': typeof JobsIndexRoute
@@ -339,6 +353,7 @@ export interface FileRoutesByTo {
   '/admin/post-job': typeof AdminPostJobRoute
   '/admin/review': typeof AdminReviewRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/skill-workers': typeof AdminSkillWorkersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -352,6 +367,7 @@ export interface FileRoutesByTo {
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
+  '/services/orders': typeof ServicesOrdersRoute
   '/services/register': typeof ServicesRegisterRoute
   '/freelance': typeof FreelanceIndexRoute
   '/jobs': typeof JobsIndexRoute
@@ -385,6 +401,7 @@ export interface FileRoutesById {
   '/admin/post-job': typeof AdminPostJobRoute
   '/admin/review': typeof AdminReviewRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/skill-workers': typeof AdminSkillWorkersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -398,6 +415,7 @@ export interface FileRoutesById {
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
+  '/services/orders': typeof ServicesOrdersRoute
   '/services/register': typeof ServicesRegisterRoute
   '/freelance/': typeof FreelanceIndexRoute
   '/jobs/': typeof JobsIndexRoute
@@ -432,6 +450,7 @@ export interface FileRouteTypes {
     | '/admin/post-job'
     | '/admin/review'
     | '/admin/roles'
+    | '/admin/skill-workers'
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
@@ -445,6 +464,7 @@ export interface FileRouteTypes {
     | '/jobs/$jobId'
     | '/onboarding/company'
     | '/services/bookings'
+    | '/services/orders'
     | '/services/register'
     | '/freelance/'
     | '/jobs/'
@@ -477,6 +497,7 @@ export interface FileRouteTypes {
     | '/admin/post-job'
     | '/admin/review'
     | '/admin/roles'
+    | '/admin/skill-workers'
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
@@ -490,6 +511,7 @@ export interface FileRouteTypes {
     | '/jobs/$jobId'
     | '/onboarding/company'
     | '/services/bookings'
+    | '/services/orders'
     | '/services/register'
     | '/freelance'
     | '/jobs'
@@ -522,6 +544,7 @@ export interface FileRouteTypes {
     | '/admin/post-job'
     | '/admin/review'
     | '/admin/roles'
+    | '/admin/skill-workers'
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
@@ -535,6 +558,7 @@ export interface FileRouteTypes {
     | '/jobs/$jobId'
     | '/onboarding/company'
     | '/services/bookings'
+    | '/services/orders'
     | '/services/register'
     | '/freelance/'
     | '/jobs/'
@@ -568,6 +592,7 @@ export interface RootRouteChildren {
   AdminPostJobRoute: typeof AdminPostJobRoute
   AdminReviewRoute: typeof AdminReviewRoute
   AdminRolesRoute: typeof AdminRolesRoute
+  AdminSkillWorkersRoute: typeof AdminSkillWorkersRoute
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminTransactionsRoute: typeof AdminTransactionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -581,6 +606,7 @@ export interface RootRouteChildren {
   JobsJobIdRoute: typeof JobsJobIdRoute
   OnboardingCompanyRoute: typeof OnboardingCompanyRoute
   ServicesBookingsRoute: typeof ServicesBookingsRoute
+  ServicesOrdersRoute: typeof ServicesOrdersRoute
   ServicesRegisterRoute: typeof ServicesRegisterRoute
   FreelanceIndexRoute: typeof FreelanceIndexRoute
   JobsIndexRoute: typeof JobsIndexRoute
@@ -709,6 +735,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesRegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/services/orders': {
+      id: '/services/orders'
+      path: '/services/orders'
+      fullPath: '/services/orders'
+      preLoaderRoute: typeof ServicesOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/services/bookings': {
       id: '/services/bookings'
       path: '/services/bookings'
@@ -798,6 +831,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/subscriptions'
       fullPath: '/admin/subscriptions'
       preLoaderRoute: typeof AdminSubscriptionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/skill-workers': {
+      id: '/admin/skill-workers'
+      path: '/admin/skill-workers'
+      fullPath: '/admin/skill-workers'
+      preLoaderRoute: typeof AdminSkillWorkersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/roles': {
@@ -931,6 +971,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminPostJobRoute: AdminPostJobRoute,
   AdminReviewRoute: AdminReviewRoute,
   AdminRolesRoute: AdminRolesRoute,
+  AdminSkillWorkersRoute: AdminSkillWorkersRoute,
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminTransactionsRoute: AdminTransactionsRoute,
   AdminUsersRoute: AdminUsersRoute,
@@ -944,6 +985,7 @@ const rootRouteChildren: RootRouteChildren = {
   JobsJobIdRoute: JobsJobIdRoute,
   OnboardingCompanyRoute: OnboardingCompanyRoute,
   ServicesBookingsRoute: ServicesBookingsRoute,
+  ServicesOrdersRoute: ServicesOrdersRoute,
   ServicesRegisterRoute: ServicesRegisterRoute,
   FreelanceIndexRoute: FreelanceIndexRoute,
   JobsIndexRoute: JobsIndexRoute,
