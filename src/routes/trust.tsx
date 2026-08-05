@@ -52,7 +52,7 @@ function TrustPage() {
 
           <Card icon={<Database className="h-5 w-5" />} title="Data protection">
             <p>
-              Data is stored on our managed Lovable Cloud backend with row-level security enforced on every table.
+              Data is stored on the managed SahanJob backend with row-level security enforced on every table.
               Tender documents are kept in a private storage bucket and served only via short-lived signed links to the
               owning company and administrators. Company logos are public assets served via direct URLs.
             </p>
@@ -76,7 +76,7 @@ function TrustPage() {
           </Card>
 
           <div className="rounded-2xl bg-secondary/40 p-6 ring-1 ring-black/5 text-sm text-ink-soft">
-            This page is editable content maintained by SahanJob and is not a Lovable-issued certification.
+            This page is editable content maintained by SahanJob and is not an independent certification.
             See our <Link to="/" className="text-primary underline">homepage</Link> for the latest product information.
           </div>
         </section>
