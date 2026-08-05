@@ -29,6 +29,7 @@ import { Route as ServicesRegisterRouteImport } from './routes/services.register
 import { Route as ServicesBookingsRouteImport } from './routes/services.bookings'
 import { Route as OnboardingCompanyRouteImport } from './routes/onboarding.company'
 import { Route as JobsJobIdRouteImport } from './routes/jobs.$jobId'
+import { Route as FreelanceOrdersRouteImport } from './routes/freelance.orders'
 import { Route as FreelanceNewRouteImport } from './routes/freelance.new'
 import { Route as FreelanceGigIdRouteImport } from './routes/freelance.$gigId'
 import { Route as CompanyUsersRouteImport } from './routes/company.users'
@@ -148,6 +149,11 @@ const OnboardingCompanyRoute = OnboardingCompanyRouteImport.update({
 const JobsJobIdRoute = JobsJobIdRouteImport.update({
   id: '/jobs/$jobId',
   path: '/jobs/$jobId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FreelanceOrdersRoute = FreelanceOrdersRouteImport.update({
+  id: '/freelance/orders',
+  path: '/freelance/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FreelanceNewRoute = FreelanceNewRouteImport.update({
@@ -283,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/company/users': typeof CompanyUsersRoute
   '/freelance/$gigId': typeof FreelanceGigIdRoute
   '/freelance/new': typeof FreelanceNewRoute
+  '/freelance/orders': typeof FreelanceOrdersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
@@ -325,6 +332,7 @@ export interface FileRoutesByTo {
   '/company/users': typeof CompanyUsersRoute
   '/freelance/$gigId': typeof FreelanceGigIdRoute
   '/freelance/new': typeof FreelanceNewRoute
+  '/freelance/orders': typeof FreelanceOrdersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
@@ -368,6 +376,7 @@ export interface FileRoutesById {
   '/company/users': typeof CompanyUsersRoute
   '/freelance/$gigId': typeof FreelanceGigIdRoute
   '/freelance/new': typeof FreelanceNewRoute
+  '/freelance/orders': typeof FreelanceOrdersRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
@@ -412,6 +421,7 @@ export interface FileRouteTypes {
     | '/company/users'
     | '/freelance/$gigId'
     | '/freelance/new'
+    | '/freelance/orders'
     | '/jobs/$jobId'
     | '/onboarding/company'
     | '/services/bookings'
@@ -454,6 +464,7 @@ export interface FileRouteTypes {
     | '/company/users'
     | '/freelance/$gigId'
     | '/freelance/new'
+    | '/freelance/orders'
     | '/jobs/$jobId'
     | '/onboarding/company'
     | '/services/bookings'
@@ -496,6 +507,7 @@ export interface FileRouteTypes {
     | '/company/users'
     | '/freelance/$gigId'
     | '/freelance/new'
+    | '/freelance/orders'
     | '/jobs/$jobId'
     | '/onboarding/company'
     | '/services/bookings'
@@ -539,6 +551,7 @@ export interface RootRouteChildren {
   CompanyUsersRoute: typeof CompanyUsersRoute
   FreelanceGigIdRoute: typeof FreelanceGigIdRoute
   FreelanceNewRoute: typeof FreelanceNewRoute
+  FreelanceOrdersRoute: typeof FreelanceOrdersRoute
   JobsJobIdRoute: typeof JobsJobIdRoute
   OnboardingCompanyRoute: typeof OnboardingCompanyRoute
   ServicesBookingsRoute: typeof ServicesBookingsRoute
@@ -689,6 +702,13 @@ declare module '@tanstack/react-router' {
       path: '/jobs/$jobId'
       fullPath: '/jobs/$jobId'
       preLoaderRoute: typeof JobsJobIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/freelance/orders': {
+      id: '/freelance/orders'
+      path: '/freelance/orders'
+      fullPath: '/freelance/orders'
+      preLoaderRoute: typeof FreelanceOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/freelance/new': {
@@ -878,6 +898,7 @@ const rootRouteChildren: RootRouteChildren = {
   CompanyUsersRoute: CompanyUsersRoute,
   FreelanceGigIdRoute: FreelanceGigIdRoute,
   FreelanceNewRoute: FreelanceNewRoute,
+  FreelanceOrdersRoute: FreelanceOrdersRoute,
   JobsJobIdRoute: JobsJobIdRoute,
   OnboardingCompanyRoute: OnboardingCompanyRoute,
   ServicesBookingsRoute: ServicesBookingsRoute,
