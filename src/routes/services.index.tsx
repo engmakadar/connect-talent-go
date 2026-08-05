@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
-import { Search, Star, MapPin, Phone, Wrench, Hammer, CalendarPlus, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  Search, Star, MapPin, Phone, Wrench, Hammer, CalendarPlus, ArrowLeft, CheckCircle2,
+  Zap, Ruler, Blocks, PaintRoller, Flame, Cog, Grid3x3, AirVent, Fuel, SprayCan, Car,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
@@ -18,6 +21,23 @@ export const TRADES = [
   "Plumber", "Electrician", "Carpenter", "Mason", "Painter", "Welder",
   "Mechanic", "Tiler", "AC technician", "Generator technician", "Cleaner", "Driver",
 ];
+
+/** Dedicated icon per skill category. */
+export const TRADE_ICONS: Record<string, ReactNode> = {
+  "Plumber": <Wrench className="h-6 w-6" />,
+  "Electrician": <Zap className="h-6 w-6" />,
+  "Carpenter": <Ruler className="h-6 w-6" />,
+  "Mason": <Blocks className="h-6 w-6" />,
+  "Painter": <PaintRoller className="h-6 w-6" />,
+  "Welder": <Flame className="h-6 w-6" />,
+  "Mechanic": <Cog className="h-6 w-6" />,
+  "Tiler": <Grid3x3 className="h-6 w-6" />,
+  "AC technician": <AirVent className="h-6 w-6" />,
+  "Generator technician": <Fuel className="h-6 w-6" />,
+  "Cleaner": <SprayCan className="h-6 w-6" />,
+  "Driver": <Car className="h-6 w-6" />,
+};
+
 
 export const Route = createFileRoute("/services/")({
   head: () => ({
@@ -37,6 +57,7 @@ type Worker = {
   id: string; full_name: string; trades: string[]; bio: string | null; phone: string | null;
   location: string; hourly_rate: number | null; daily_rate: number | null; currency: string;
   available: boolean; photo_url: string | null; rating_avg: number; rating_count: number; jobs_completed: number;
+  bookings_count: number; years_experience: number | null; gender: string | null;
 };
 
 function Stars({ value }: { value: number }) {
@@ -52,7 +73,7 @@ function Stars({ value }: { value: number }) {
 const rateOf = (w: Worker) => w.hourly_rate ?? w.daily_rate ?? Number.POSITIVE_INFINITY;
 
 function ServicesPage() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const qc = useQueryClient();
   const [trade, setTrade] = useState<string | null>(null);
   const [q, setQ] = useState("");
@@ -63,19 +84,42 @@ function ServicesPage() {
   const [form, setForm] = useState({ description: "", address: "", scheduled_for: "", phone: "", name: "" });
   const [saving, setSaving] = useState(false);
 
+  /** Booking details are pre-filled from the signed-in customer's stored profile. */
+  const { data: me } = useQuery({
+    enabled: !!user,
+    queryKey: ["booking-identity", user?.id],
+    staleTime: 300_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles").select("full_name, phone, location").eq("id", user!.id).maybeSingle();
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    if (!me) return;
+    setForm((f) => ({
+      ...f,
+      name: f.name || me.full_name || "",
+      phone: f.phone || me.phone || "",
+      address: f.address || me.location || "",
+    }));
+  }, [me]);
+
   const { data: workers, isLoading } = useQuery({
     queryKey: ["skill-workers"],
     staleTime: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("skill_workers")
-        .select("id, full_name, trades, bio, phone, location, hourly_rate, daily_rate, currency, available, photo_url, rating_avg, rating_count, jobs_completed")
+        .select("id, full_name, trades, bio, phone, location, hourly_rate, daily_rate, currency, available, photo_url, rating_avg, rating_count, jobs_completed, bookings_count, years_experience, gender")
         .eq("approved", true)
         .order("rating_avg", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Worker[];
     },
   });
+
 
   const counts = useMemo(() => {
     const m = new Map<string, number>();
@@ -123,7 +167,7 @@ function ServicesPage() {
     if (error) return toast.error(error.message);
     toast.success("Booking request sent. Rate the work once it's completed.");
     setBooking(null);
-    setForm({ description: "", address: "", scheduled_for: "", phone: "", name: "" });
+    setForm((f) => ({ ...f, description: "", scheduled_for: "" }));
     qc.invalidateQueries({ queryKey: ["my-bookings"] });
   };
 
@@ -181,9 +225,12 @@ function ServicesPage() {
                   />
                 </>
               )}
-              <Link to="/services/register" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
-                <Wrench className="h-4 w-4" /> Offer your skills
-              </Link>
+              {isAdmin && (
+                <Link to="/services/register" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
+                  <Wrench className="h-4 w-4" /> Register a skilled worker
+                </Link>
+              )}
+
             </div>
           </div>
         </section>
@@ -198,7 +245,7 @@ function ServicesPage() {
                   className="text-left rounded-2xl bg-card p-6 ring-1 ring-black/5 hover:ring-primary/40 hover:shadow-sm transition"
                 >
                   <span className="inline-grid h-12 w-12 place-items-center rounded-xl bg-primary-soft text-primary">
-                    <Wrench className="h-6 w-6" />
+                    {TRADE_ICONS[t] ?? <Wrench className="h-6 w-6" />}
                   </span>
                   <h2 className="mt-4 font-semibold text-ink">{t}</h2>
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -246,9 +293,16 @@ function ServicesPage() {
                   {w.bio && <p className="mt-3 text-sm text-muted-foreground line-clamp-3">{w.bio}</p>}
 
                   <div className="mt-3 flex items-center justify-between text-sm">
-                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> {w.jobs_completed} work done
+                    <span className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> {w.jobs_completed} work done
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <CalendarPlus className="h-3.5 w-3.5" /> booked {w.bookings_count}×
+                        {w.years_experience ? ` · ${w.years_experience} yrs exp` : ""}
+                      </span>
                     </span>
+
                     <span className="font-semibold text-ink">
                       {w.hourly_rate ? `${w.currency} ${w.hourly_rate}/hr` : w.daily_rate ? `${w.currency} ${w.daily_rate}/day` : "Rate on request"}
                     </span>

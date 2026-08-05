@@ -29,8 +29,10 @@ import { Route as ServicesRegisterRouteImport } from './routes/services.register
 import { Route as ServicesBookingsRouteImport } from './routes/services.bookings'
 import { Route as OnboardingCompanyRouteImport } from './routes/onboarding.company'
 import { Route as JobsJobIdRouteImport } from './routes/jobs.$jobId'
+import { Route as FreelanceProfileRouteImport } from './routes/freelance.profile'
 import { Route as FreelanceOrdersRouteImport } from './routes/freelance.orders'
 import { Route as FreelanceNewRouteImport } from './routes/freelance.new'
+import { Route as FreelanceDashboardRouteImport } from './routes/freelance.dashboard'
 import { Route as FreelanceGigIdRouteImport } from './routes/freelance.$gigId'
 import { Route as CompanyUsersRouteImport } from './routes/company.users'
 import { Route as CompanyApplicantsRouteImport } from './routes/company.applicants'
@@ -151,6 +153,11 @@ const JobsJobIdRoute = JobsJobIdRouteImport.update({
   path: '/jobs/$jobId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FreelanceProfileRoute = FreelanceProfileRouteImport.update({
+  id: '/freelance/profile',
+  path: '/freelance/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FreelanceOrdersRoute = FreelanceOrdersRouteImport.update({
   id: '/freelance/orders',
   path: '/freelance/orders',
@@ -159,6 +166,11 @@ const FreelanceOrdersRoute = FreelanceOrdersRouteImport.update({
 const FreelanceNewRoute = FreelanceNewRouteImport.update({
   id: '/freelance/new',
   path: '/freelance/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FreelanceDashboardRoute = FreelanceDashboardRouteImport.update({
+  id: '/freelance/dashboard',
+  path: '/freelance/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FreelanceGigIdRoute = FreelanceGigIdRouteImport.update({
@@ -288,8 +300,10 @@ export interface FileRoutesByFullPath {
   '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
   '/freelance/$gigId': typeof FreelanceGigIdRoute
+  '/freelance/dashboard': typeof FreelanceDashboardRoute
   '/freelance/new': typeof FreelanceNewRoute
   '/freelance/orders': typeof FreelanceOrdersRoute
+  '/freelance/profile': typeof FreelanceProfileRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
@@ -331,8 +345,10 @@ export interface FileRoutesByTo {
   '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
   '/freelance/$gigId': typeof FreelanceGigIdRoute
+  '/freelance/dashboard': typeof FreelanceDashboardRoute
   '/freelance/new': typeof FreelanceNewRoute
   '/freelance/orders': typeof FreelanceOrdersRoute
+  '/freelance/profile': typeof FreelanceProfileRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
@@ -375,8 +391,10 @@ export interface FileRoutesById {
   '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
   '/freelance/$gigId': typeof FreelanceGigIdRoute
+  '/freelance/dashboard': typeof FreelanceDashboardRoute
   '/freelance/new': typeof FreelanceNewRoute
   '/freelance/orders': typeof FreelanceOrdersRoute
+  '/freelance/profile': typeof FreelanceProfileRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
@@ -420,8 +438,10 @@ export interface FileRouteTypes {
     | '/company/applicants'
     | '/company/users'
     | '/freelance/$gigId'
+    | '/freelance/dashboard'
     | '/freelance/new'
     | '/freelance/orders'
+    | '/freelance/profile'
     | '/jobs/$jobId'
     | '/onboarding/company'
     | '/services/bookings'
@@ -463,8 +483,10 @@ export interface FileRouteTypes {
     | '/company/applicants'
     | '/company/users'
     | '/freelance/$gigId'
+    | '/freelance/dashboard'
     | '/freelance/new'
     | '/freelance/orders'
+    | '/freelance/profile'
     | '/jobs/$jobId'
     | '/onboarding/company'
     | '/services/bookings'
@@ -506,8 +528,10 @@ export interface FileRouteTypes {
     | '/company/applicants'
     | '/company/users'
     | '/freelance/$gigId'
+    | '/freelance/dashboard'
     | '/freelance/new'
     | '/freelance/orders'
+    | '/freelance/profile'
     | '/jobs/$jobId'
     | '/onboarding/company'
     | '/services/bookings'
@@ -550,8 +574,10 @@ export interface RootRouteChildren {
   CompanyApplicantsRoute: typeof CompanyApplicantsRoute
   CompanyUsersRoute: typeof CompanyUsersRoute
   FreelanceGigIdRoute: typeof FreelanceGigIdRoute
+  FreelanceDashboardRoute: typeof FreelanceDashboardRoute
   FreelanceNewRoute: typeof FreelanceNewRoute
   FreelanceOrdersRoute: typeof FreelanceOrdersRoute
+  FreelanceProfileRoute: typeof FreelanceProfileRoute
   JobsJobIdRoute: typeof JobsJobIdRoute
   OnboardingCompanyRoute: typeof OnboardingCompanyRoute
   ServicesBookingsRoute: typeof ServicesBookingsRoute
@@ -704,6 +730,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JobsJobIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/freelance/profile': {
+      id: '/freelance/profile'
+      path: '/freelance/profile'
+      fullPath: '/freelance/profile'
+      preLoaderRoute: typeof FreelanceProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/freelance/orders': {
       id: '/freelance/orders'
       path: '/freelance/orders'
@@ -716,6 +749,13 @@ declare module '@tanstack/react-router' {
       path: '/freelance/new'
       fullPath: '/freelance/new'
       preLoaderRoute: typeof FreelanceNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/freelance/dashboard': {
+      id: '/freelance/dashboard'
+      path: '/freelance/dashboard'
+      fullPath: '/freelance/dashboard'
+      preLoaderRoute: typeof FreelanceDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/freelance/$gigId': {
@@ -897,8 +937,10 @@ const rootRouteChildren: RootRouteChildren = {
   CompanyApplicantsRoute: CompanyApplicantsRoute,
   CompanyUsersRoute: CompanyUsersRoute,
   FreelanceGigIdRoute: FreelanceGigIdRoute,
+  FreelanceDashboardRoute: FreelanceDashboardRoute,
   FreelanceNewRoute: FreelanceNewRoute,
   FreelanceOrdersRoute: FreelanceOrdersRoute,
+  FreelanceProfileRoute: FreelanceProfileRoute,
   JobsJobIdRoute: JobsJobIdRoute,
   OnboardingCompanyRoute: OnboardingCompanyRoute,
   ServicesBookingsRoute: ServicesBookingsRoute,

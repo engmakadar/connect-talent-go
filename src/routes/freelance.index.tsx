@@ -122,10 +122,12 @@ function FreelanceIndex() {
                     : "Pick a category to see the services on offer and the freelancers behind them."}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button asChild variant="outline"><Link to="/freelance/orders"><Package className="h-4 w-4 mr-2" /> My orders</Link></Button>
-                <Button asChild><Link to="/freelance/new"><Plus className="h-4 w-4 mr-2" /> Create freelancer profile</Link></Button>
+                <Button asChild variant="outline"><Link to="/freelance/dashboard">Freelancer dashboard</Link></Button>
+                <Button asChild><Link to="/freelance/profile"><Plus className="h-4 w-4 mr-2" /> Create freelancer profile</Link></Button>
               </div>
+
             </div>
 
             {cat && (
