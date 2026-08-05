@@ -24,6 +24,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TenderIndexRouteImport } from './routes/tender.index'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as JobsIndexRouteImport } from './routes/jobs.index'
+import { Route as FreelanceIndexRouteImport } from './routes/freelance.index'
 import { Route as ServicesRegisterRouteImport } from './routes/services.register'
 import { Route as ServicesBookingsRouteImport } from './routes/services.bookings'
 import { Route as OnboardingCompanyRouteImport } from './routes/onboarding.company'
@@ -120,6 +121,11 @@ const ServicesIndexRoute = ServicesIndexRouteImport.update({
 const JobsIndexRoute = JobsIndexRouteImport.update({
   id: '/jobs/',
   path: '/jobs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FreelanceIndexRoute = FreelanceIndexRouteImport.update({
+  id: '/freelance/',
+  path: '/freelance/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServicesRegisterRoute = ServicesRegisterRouteImport.update({
@@ -267,6 +273,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
   '/services/register': typeof ServicesRegisterRoute
+  '/freelance/': typeof FreelanceIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/services/': typeof ServicesIndexRoute
   '/tender/': typeof TenderIndexRoute
@@ -306,6 +313,7 @@ export interface FileRoutesByTo {
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
   '/services/register': typeof ServicesRegisterRoute
+  '/freelance': typeof FreelanceIndexRoute
   '/jobs': typeof JobsIndexRoute
   '/services': typeof ServicesIndexRoute
   '/tender': typeof TenderIndexRoute
@@ -346,6 +354,7 @@ export interface FileRoutesById {
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
   '/services/register': typeof ServicesRegisterRoute
+  '/freelance/': typeof FreelanceIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/services/': typeof ServicesIndexRoute
   '/tender/': typeof TenderIndexRoute
@@ -387,6 +396,7 @@ export interface FileRouteTypes {
     | '/onboarding/company'
     | '/services/bookings'
     | '/services/register'
+    | '/freelance/'
     | '/jobs/'
     | '/services/'
     | '/tender/'
@@ -426,6 +436,7 @@ export interface FileRouteTypes {
     | '/onboarding/company'
     | '/services/bookings'
     | '/services/register'
+    | '/freelance'
     | '/jobs'
     | '/services'
     | '/tender'
@@ -465,6 +476,7 @@ export interface FileRouteTypes {
     | '/onboarding/company'
     | '/services/bookings'
     | '/services/register'
+    | '/freelance/'
     | '/jobs/'
     | '/services/'
     | '/tender/'
@@ -505,6 +517,7 @@ export interface RootRouteChildren {
   OnboardingCompanyRoute: typeof OnboardingCompanyRoute
   ServicesBookingsRoute: typeof ServicesBookingsRoute
   ServicesRegisterRoute: typeof ServicesRegisterRoute
+  FreelanceIndexRoute: typeof FreelanceIndexRoute
   JobsIndexRoute: typeof JobsIndexRoute
   ServicesIndexRoute: typeof ServicesIndexRoute
   TenderIndexRoute: typeof TenderIndexRoute
@@ -615,6 +628,13 @@ declare module '@tanstack/react-router' {
       path: '/jobs'
       fullPath: '/jobs/'
       preLoaderRoute: typeof JobsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/freelance/': {
+      id: '/freelance/'
+      path: '/freelance'
+      fullPath: '/freelance/'
+      preLoaderRoute: typeof FreelanceIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/services/register': {
@@ -820,6 +840,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingCompanyRoute: OnboardingCompanyRoute,
   ServicesBookingsRoute: ServicesBookingsRoute,
   ServicesRegisterRoute: ServicesRegisterRoute,
+  FreelanceIndexRoute: FreelanceIndexRoute,
   JobsIndexRoute: JobsIndexRoute,
   ServicesIndexRoute: ServicesIndexRoute,
   TenderIndexRoute: TenderIndexRoute,
