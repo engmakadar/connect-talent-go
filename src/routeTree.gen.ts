@@ -26,6 +26,7 @@ import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as JobsIndexRouteImport } from './routes/jobs.index'
 import { Route as FreelanceIndexRouteImport } from './routes/freelance.index'
 import { Route as ServicesRegisterRouteImport } from './routes/services.register'
+import { Route as ServicesOrdersRouteImport } from './routes/services.orders'
 import { Route as ServicesBookingsRouteImport } from './routes/services.bookings'
 import { Route as OnboardingCompanyRouteImport } from './routes/onboarding.company'
 import { Route as JobsJobIdRouteImport } from './routes/jobs.$jobId'
@@ -137,6 +138,11 @@ const FreelanceIndexRoute = FreelanceIndexRouteImport.update({
 const ServicesRegisterRoute = ServicesRegisterRouteImport.update({
   id: '/services/register',
   path: '/services/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesOrdersRoute = ServicesOrdersRouteImport.update({
+  id: '/services/orders',
+  path: '/services/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServicesBookingsRoute = ServicesBookingsRouteImport.update({
@@ -314,6 +320,7 @@ export interface FileRoutesByFullPath {
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
+  '/services/orders': typeof ServicesOrdersRoute
   '/services/register': typeof ServicesRegisterRoute
   '/freelance/': typeof FreelanceIndexRoute
   '/jobs/': typeof JobsIndexRoute
@@ -360,6 +367,7 @@ export interface FileRoutesByTo {
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
+  '/services/orders': typeof ServicesOrdersRoute
   '/services/register': typeof ServicesRegisterRoute
   '/freelance': typeof FreelanceIndexRoute
   '/jobs': typeof JobsIndexRoute
@@ -407,6 +415,7 @@ export interface FileRoutesById {
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
   '/services/bookings': typeof ServicesBookingsRoute
+  '/services/orders': typeof ServicesOrdersRoute
   '/services/register': typeof ServicesRegisterRoute
   '/freelance/': typeof FreelanceIndexRoute
   '/jobs/': typeof JobsIndexRoute
@@ -455,6 +464,7 @@ export interface FileRouteTypes {
     | '/jobs/$jobId'
     | '/onboarding/company'
     | '/services/bookings'
+    | '/services/orders'
     | '/services/register'
     | '/freelance/'
     | '/jobs/'
@@ -501,6 +511,7 @@ export interface FileRouteTypes {
     | '/jobs/$jobId'
     | '/onboarding/company'
     | '/services/bookings'
+    | '/services/orders'
     | '/services/register'
     | '/freelance'
     | '/jobs'
@@ -547,6 +558,7 @@ export interface FileRouteTypes {
     | '/jobs/$jobId'
     | '/onboarding/company'
     | '/services/bookings'
+    | '/services/orders'
     | '/services/register'
     | '/freelance/'
     | '/jobs/'
@@ -594,6 +606,7 @@ export interface RootRouteChildren {
   JobsJobIdRoute: typeof JobsJobIdRoute
   OnboardingCompanyRoute: typeof OnboardingCompanyRoute
   ServicesBookingsRoute: typeof ServicesBookingsRoute
+  ServicesOrdersRoute: typeof ServicesOrdersRoute
   ServicesRegisterRoute: typeof ServicesRegisterRoute
   FreelanceIndexRoute: typeof FreelanceIndexRoute
   JobsIndexRoute: typeof JobsIndexRoute
@@ -720,6 +733,13 @@ declare module '@tanstack/react-router' {
       path: '/services/register'
       fullPath: '/services/register'
       preLoaderRoute: typeof ServicesRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services/orders': {
+      id: '/services/orders'
+      path: '/services/orders'
+      fullPath: '/services/orders'
+      preLoaderRoute: typeof ServicesOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/services/bookings': {
@@ -965,6 +985,7 @@ const rootRouteChildren: RootRouteChildren = {
   JobsJobIdRoute: JobsJobIdRoute,
   OnboardingCompanyRoute: OnboardingCompanyRoute,
   ServicesBookingsRoute: ServicesBookingsRoute,
+  ServicesOrdersRoute: ServicesOrdersRoute,
   ServicesRegisterRoute: ServicesRegisterRoute,
   FreelanceIndexRoute: FreelanceIndexRoute,
   JobsIndexRoute: JobsIndexRoute,
