@@ -161,6 +161,9 @@ export function SiteHeader() {
                   <DropdownMenuItem onClick={() => router.navigate({ to: "/applications" })}>
                     <LayoutDashboard className="mr-2 h-4 w-4" /> My Applications
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.navigate({ to: "/services/orders" })}>
+                    <Wrench className="mr-2 h-4 w-4" /> Service Orders
+                  </DropdownMenuItem>
                   {(isEmployer || isAdmin) && (
                     <DropdownMenuItem onClick={() => router.navigate({ to: "/billing" })}>
                       <Receipt className="mr-2 h-4 w-4" /> Billing & Invoices
