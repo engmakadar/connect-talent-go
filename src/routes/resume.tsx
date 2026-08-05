@@ -64,7 +64,7 @@ const emptyReference = (): ReferenceEntry => ({ name: "", position: "", company:
 /* --------------------------------- PAGE ---------------------------------- */
 
 function ResumePage() {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
   const qc = useQueryClient();
   const [form, setForm] = useState<ResumeForm>(EMPTY);
