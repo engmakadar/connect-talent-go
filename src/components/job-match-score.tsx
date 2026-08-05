@@ -51,7 +51,8 @@ export function JobMatchScore({ job }: { job: AtsJob }) {
     },
   });
 
-  if (!user || (!isJobseeker && false) || !candidate) return null;
+  if (!user || !candidate) return null;
+  void isJobseeker;
 
   const { score, breakdown } = scoreCandidate(job, candidate);
 
