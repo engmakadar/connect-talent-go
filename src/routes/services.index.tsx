@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Search, Star, MapPin, Phone, Wrench, Hammer, CalendarPlus, ArrowLeft, CheckCircle2,
-  Zap, Ruler, Brick, PaintRoller, Flame, Cog, Grid3x3, AirVent, Fuel, SprayCan, Car,
+  Zap, Ruler, Blocks, PaintRoller, Flame, Cog, Grid3x3, AirVent, Fuel, SprayCan, Car,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -27,7 +27,7 @@ export const TRADE_ICONS: Record<string, ReactNode> = {
   "Plumber": <Wrench className="h-6 w-6" />,
   "Electrician": <Zap className="h-6 w-6" />,
   "Carpenter": <Ruler className="h-6 w-6" />,
-  "Mason": <Brick className="h-6 w-6" />,
+  "Mason": <Blocks className="h-6 w-6" />,
   "Painter": <PaintRoller className="h-6 w-6" />,
   "Welder": <Flame className="h-6 w-6" />,
   "Mechanic": <Cog className="h-6 w-6" />,
