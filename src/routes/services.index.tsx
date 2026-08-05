@@ -57,6 +57,7 @@ type Worker = {
   id: string; full_name: string; trades: string[]; bio: string | null; phone: string | null;
   location: string; hourly_rate: number | null; daily_rate: number | null; currency: string;
   available: boolean; photo_url: string | null; rating_avg: number; rating_count: number; jobs_completed: number;
+  bookings_count: number; years_experience: number | null; gender: string | null;
 };
 
 function Stars({ value }: { value: number }) {
@@ -72,7 +73,7 @@ function Stars({ value }: { value: number }) {
 const rateOf = (w: Worker) => w.hourly_rate ?? w.daily_rate ?? Number.POSITIVE_INFINITY;
 
 function ServicesPage() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const qc = useQueryClient();
   const [trade, setTrade] = useState<string | null>(null);
   const [q, setQ] = useState("");
@@ -83,19 +84,42 @@ function ServicesPage() {
   const [form, setForm] = useState({ description: "", address: "", scheduled_for: "", phone: "", name: "" });
   const [saving, setSaving] = useState(false);
 
+  /** Booking details are pre-filled from the signed-in customer's stored profile. */
+  const { data: me } = useQuery({
+    enabled: !!user,
+    queryKey: ["booking-identity", user?.id],
+    staleTime: 300_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles").select("full_name, phone, location").eq("id", user!.id).maybeSingle();
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    if (!me) return;
+    setForm((f) => ({
+      ...f,
+      name: f.name || me.full_name || "",
+      phone: f.phone || me.phone || "",
+      address: f.address || me.location || "",
+    }));
+  }, [me]);
+
   const { data: workers, isLoading } = useQuery({
     queryKey: ["skill-workers"],
     staleTime: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("skill_workers")
-        .select("id, full_name, trades, bio, phone, location, hourly_rate, daily_rate, currency, available, photo_url, rating_avg, rating_count, jobs_completed")
+        .select("id, full_name, trades, bio, phone, location, hourly_rate, daily_rate, currency, available, photo_url, rating_avg, rating_count, jobs_completed, bookings_count, years_experience, gender")
         .eq("approved", true)
         .order("rating_avg", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Worker[];
     },
   });
+
 
   const counts = useMemo(() => {
     const m = new Map<string, number>();
