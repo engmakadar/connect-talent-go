@@ -39,6 +39,7 @@ import { Route as CompanyApplicantsRouteImport } from './routes/company.applican
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminTransactionsRouteImport } from './routes/admin.transactions'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
+import { Route as AdminSkillWorkersRouteImport } from './routes/admin.skill-workers'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
 import { Route as AdminReviewRouteImport } from './routes/admin.review'
 import { Route as AdminPostJobRouteImport } from './routes/admin.post-job'
@@ -203,6 +204,11 @@ const AdminSubscriptionsRoute = AdminSubscriptionsRouteImport.update({
   path: '/admin/subscriptions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSkillWorkersRoute = AdminSkillWorkersRouteImport.update({
+  id: '/admin/skill-workers',
+  path: '/admin/skill-workers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRolesRoute = AdminRolesRouteImport.update({
   id: '/admin/roles',
   path: '/admin/roles',
@@ -294,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/admin/post-job': typeof AdminPostJobRoute
   '/admin/review': typeof AdminReviewRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/skill-workers': typeof AdminSkillWorkersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -339,6 +346,7 @@ export interface FileRoutesByTo {
   '/admin/post-job': typeof AdminPostJobRoute
   '/admin/review': typeof AdminReviewRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/skill-workers': typeof AdminSkillWorkersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -385,6 +393,7 @@ export interface FileRoutesById {
   '/admin/post-job': typeof AdminPostJobRoute
   '/admin/review': typeof AdminReviewRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/skill-workers': typeof AdminSkillWorkersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -432,6 +441,7 @@ export interface FileRouteTypes {
     | '/admin/post-job'
     | '/admin/review'
     | '/admin/roles'
+    | '/admin/skill-workers'
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
@@ -477,6 +487,7 @@ export interface FileRouteTypes {
     | '/admin/post-job'
     | '/admin/review'
     | '/admin/roles'
+    | '/admin/skill-workers'
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
@@ -522,6 +533,7 @@ export interface FileRouteTypes {
     | '/admin/post-job'
     | '/admin/review'
     | '/admin/roles'
+    | '/admin/skill-workers'
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
@@ -568,6 +580,7 @@ export interface RootRouteChildren {
   AdminPostJobRoute: typeof AdminPostJobRoute
   AdminReviewRoute: typeof AdminReviewRoute
   AdminRolesRoute: typeof AdminRolesRoute
+  AdminSkillWorkersRoute: typeof AdminSkillWorkersRoute
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminTransactionsRoute: typeof AdminTransactionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -800,6 +813,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSubscriptionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/skill-workers': {
+      id: '/admin/skill-workers'
+      path: '/admin/skill-workers'
+      fullPath: '/admin/skill-workers'
+      preLoaderRoute: typeof AdminSkillWorkersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/roles': {
       id: '/admin/roles'
       path: '/admin/roles'
@@ -931,6 +951,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminPostJobRoute: AdminPostJobRoute,
   AdminReviewRoute: AdminReviewRoute,
   AdminRolesRoute: AdminRolesRoute,
+  AdminSkillWorkersRoute: AdminSkillWorkersRoute,
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminTransactionsRoute: AdminTransactionsRoute,
   AdminUsersRoute: AdminUsersRoute,
