@@ -309,6 +309,13 @@ function ServicesPage() {
                   </div>
 
                   <div className="mt-4 flex gap-2">
+                    {!user ? (
+                      <Button size="sm" className="flex-1" asChild>
+                        <Link to="/auth" search={{ mode: "signin" } as never}>
+                          <CalendarPlus className="h-4 w-4 mr-1" /> Sign in to book
+                        </Link>
+                      </Button>
+                    ) : (
                     <Dialog open={booking?.id === w.id} onOpenChange={(o) => setBooking(o ? w : null)}>
                       <DialogTrigger asChild>
                         <Button size="sm" className="flex-1"><CalendarPlus className="h-4 w-4 mr-1" /> Book</Button>
@@ -327,6 +334,7 @@ function ServicesPage() {
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
+                    )}
                     {w.phone && (
                       <a href={`tel:${w.phone}`} className="inline-flex items-center justify-center rounded-md px-3 ring-1 ring-black/10 hover:bg-secondary">
                         <Phone className="h-4 w-4" />
