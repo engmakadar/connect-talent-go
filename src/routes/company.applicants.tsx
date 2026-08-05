@@ -383,14 +383,55 @@ function ApplicantsPage() {
         </section>
 
         {/* 3 — Applicant table */}
-        <Tabs defaultValue="all">
+        <Tabs defaultValue="vacancies">
           <TabsList>
+            <TabsTrigger value="vacancies">By vacancy ({byVacancy.length})</TabsTrigger>
             <TabsTrigger value="all">All applicants ({filtered.length})</TabsTrigger>
             <TabsTrigger value="shortlist">Shortlisted ({shortlist.length})</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="vacancies" className="mt-4 space-y-5">
+            {byVacancy.length === 0 ? <EmptyState label="No vacancies with applicants for this filter." /> : byVacancy.map((g) => (
+              <section key={g.job.id} className="rounded-2xl bg-card ring-1 ring-black/5 overflow-hidden">
+                <header className="flex flex-wrap items-center justify-between gap-3 border-b border-black/5 bg-secondary/40 px-5 py-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-ink truncate">{g.job.title}</h3>
+                      <Badge variant="outline" className="text-[10px]">
+                        {isActiveJob(g.job) ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {g.job.category} · {g.job.location} · posted {new Date(g.job.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-ink leading-none tabular-nums">{g.rows.length}</p>
+                      <p className="text-[11px] text-muted-foreground">applicants</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-primary leading-none tabular-nums">{g.shortlisted}</p>
+                      <p className="text-[11px] text-muted-foreground">shortlisted</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-ink leading-none tabular-nums">{g.topScore}%</p>
+                      <p className="text-[11px] text-muted-foreground">top match</p>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => exportExcel(g.rows)}>
+                      <Download className="h-3.5 w-3.5 mr-1" /> Export
+                    </Button>
+                  </div>
+                </header>
+                <div className="p-0"><Table rows={g.rows} /></div>
+              </section>
+            ))}
+          </TabsContent>
+
           <TabsContent value="all" className="mt-4"><Table rows={filtered} /></TabsContent>
           <TabsContent value="shortlist" className="mt-4"><Table rows={shortlist} /></TabsContent>
         </Tabs>
+
       </main>
       <SiteFooter />
     </div>
