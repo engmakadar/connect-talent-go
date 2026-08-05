@@ -49,13 +49,19 @@ export const ADMIN_NAV: AdminNavSection[] = [
     title: "Job Management",
     items: [
       { key: "post_job", label: "Post a Job / Tender", to: "/admin/post-job", icon: Plus },
-      { key: "applicants", label: "Applicants & ATS", to: "/company/applicants", icon: UserCheck },
-      { key: "job_approval", label: "Job Approval", to: "/admin/review", icon: ClipboardCheck },
-      { key: "job_moderation", label: "Job Moderation", to: "/admin/jobs", icon: FileText },
       { key: "categories", label: "Categories", to: "/admin/categories", icon: Tags },
+    ],
+  },
+  {
+    title: "Review",
+    items: [
+      { key: "job_approval", label: "Job Approval", to: "/admin/review", icon: ClipboardCheck },
+      { key: "applicants", label: "Applicants & ATS", to: "/company/applicants", icon: UserCheck },
+      { key: "job_moderation", label: "Job Moderation", to: "/admin/jobs", icon: FileText },
       { key: "fraud_detection", label: "Fraud Detection", to: "/admin/review", icon: AlertTriangle },
     ],
   },
+
   {
     title: "AI Management",
     items: [
