@@ -164,6 +164,23 @@ function ApplicantsPage() {
   const jobById = (id: string) => jobs?.find((j) => j.id === id);
   const jobTitle = (id: string) => jobById(id)?.title ?? "—";
 
+  /** Vacancy-first view: every position with its own applicant list. */
+  const byVacancy = useMemo(() => {
+    const groups = positions
+      .map((job) => {
+        const rows = filtered.filter((a) => a.job_id === job.id);
+        return {
+          job,
+          rows,
+          shortlisted: rows.filter((a) => a.shortlisted).length,
+          topScore: rows.reduce((m, a) => Math.max(m, a.match_score ?? 0), 0),
+        };
+      })
+      .filter((g) => g.rows.length > 0);
+    return groups.sort((a, b) => b.rows.length - a.rows.length);
+  }, [positions, filtered]);
+
+
   const mutate = async (id: string, patch: { status?: string; shortlisted?: boolean }) => {
     try {
       await update({ data: { applicationId: id, ...patch } as never });
