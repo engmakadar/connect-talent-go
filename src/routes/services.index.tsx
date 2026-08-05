@@ -167,7 +167,7 @@ function ServicesPage() {
     if (error) return toast.error(error.message);
     toast.success("Booking request sent. Rate the work once it's completed.");
     setBooking(null);
-    setForm({ description: "", address: "", scheduled_for: "", phone: "", name: "" });
+    setForm((f) => ({ ...f, description: "", scheduled_for: "" }));
     qc.invalidateQueries({ queryKey: ["my-bookings"] });
   };
 
@@ -225,9 +225,12 @@ function ServicesPage() {
                   />
                 </>
               )}
-              <Link to="/services/register" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
-                <Wrench className="h-4 w-4" /> Offer your skills
-              </Link>
+              {isAdmin && (
+                <Link to="/services/register" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
+                  <Wrench className="h-4 w-4" /> Register a skilled worker
+                </Link>
+              )}
+
             </div>
           </div>
         </section>
