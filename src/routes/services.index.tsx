@@ -245,7 +245,7 @@ function ServicesPage() {
                   className="text-left rounded-2xl bg-card p-6 ring-1 ring-black/5 hover:ring-primary/40 hover:shadow-sm transition"
                 >
                   <span className="inline-grid h-12 w-12 place-items-center rounded-xl bg-primary-soft text-primary">
-                    <Wrench className="h-6 w-6" />
+                    {TRADE_ICONS[t] ?? <Wrench className="h-6 w-6" />}
                   </span>
                   <h2 className="mt-4 font-semibold text-ink">{t}</h2>
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -293,9 +293,16 @@ function ServicesPage() {
                   {w.bio && <p className="mt-3 text-sm text-muted-foreground line-clamp-3">{w.bio}</p>}
 
                   <div className="mt-3 flex items-center justify-between text-sm">
-                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> {w.jobs_completed} work done
+                    <span className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> {w.jobs_completed} work done
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <CalendarPlus className="h-3.5 w-3.5" /> booked {w.bookings_count}×
+                        {w.years_experience ? ` · ${w.years_experience} yrs exp` : ""}
+                      </span>
                     </span>
+
                     <span className="font-semibold text-ink">
                       {w.hourly_rate ? `${w.currency} ${w.hourly_rate}/hr` : w.daily_rate ? `${w.currency} ${w.daily_rate}/day` : "Rate on request"}
                     </span>
