@@ -1,7 +1,7 @@
 import { createFileRoute, useRouter, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { Mail, Lock, User as UserIcon, Search, Briefcase } from "lucide-react";
+import { Mail, Lock, User as UserIcon, Search, Briefcase, Palette } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
@@ -25,7 +25,7 @@ function AuthPage() {
   const router = useRouter();
   const isSignup = mode === "signup";
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState<"jobseeker" | "employer">("jobseeker");
+  const [role, setRole] = useState<"jobseeker" | "employer" | "freelancer">("jobseeker");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -49,7 +49,10 @@ function AuthPage() {
       if (!parsed.success) return toast.error(parsed.error.issues[0].message);
 
       if (isSignup) {
-        const redirectAfter = role === "employer" ? "/onboarding/company" : "/admin/review";
+        const redirectAfter =
+          role === "employer" ? "/onboarding/company"
+          : role === "freelancer" ? "/freelance/profile"
+          : "/admin/review";
         const { error } = await supabase.auth.signUp({
           email, password,
           options: {
@@ -57,7 +60,8 @@ function AuthPage() {
             data: {
               full_name: fullName,
               requested_role: role,
-              // Auto-classify on signup: Job Seeker → jobseeker, Employer → employer.
+              // Auto-classify on signup: Employer → employer; Job Seeker and
+              // Freelance both start as jobseeker and build their profile after sign-in.
               role: role === "employer" ? "employer" : "jobseeker",
             },
           },
@@ -65,6 +69,8 @@ function AuthPage() {
         if (error) throw error;
         if (role === "employer") {
           toast.success("Account created. Sign in to complete company registration.");
+        } else if (role === "freelancer") {
+          toast.success("Account created. Sign in and build your freelance profile.");
         } else {
           toast.success("Account created. Check your email to verify, then sign in.");
         }
@@ -112,7 +118,7 @@ function AuthPage() {
           </p>
 
           {isSignup && (
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               <RoleCard
                 active={role === "jobseeker"}
                 onClick={() => setRole("jobseeker")}
@@ -126,6 +132,13 @@ function AuthPage() {
                 icon={<Briefcase className="h-4 w-4" />}
                 title="Employer"
                 desc="Post jobs & tenders, manage applicants with the ATS."
+              />
+              <RoleCard
+                active={role === "freelancer"}
+                onClick={() => setRole("freelancer")}
+                icon={<Palette className="h-4 w-4" />}
+                title="Freelance"
+                desc="Publish services, win contracts and get paid."
               />
             </div>
           )}

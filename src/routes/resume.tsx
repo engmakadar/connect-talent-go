@@ -64,7 +64,7 @@ const emptyReference = (): ReferenceEntry => ({ name: "", position: "", company:
 /* --------------------------------- PAGE ---------------------------------- */
 
 function ResumePage() {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
   const qc = useQueryClient();
   const [form, setForm] = useState<ResumeForm>(EMPTY);
@@ -77,8 +77,9 @@ function ResumePage() {
   }, [loading, user, router]);
 
   // Subscription gate: hide My Resume unless the user has an active subscription.
+  // Super Admins have full, unrestricted access to resumes across the system.
   const { data: subActive, isLoading: subLoading } = useQuery({
-    enabled: !!user,
+    enabled: !!user && !isAdmin,
     queryKey: ["my-active-sub", user?.id],
     queryFn: async () => {
       const { data } = await supabase.rpc("has_active_subscription", { _user_id: user!.id });
@@ -87,10 +88,10 @@ function ResumePage() {
   });
 
   useEffect(() => {
-    if (!loading && user && !subLoading && subActive === false) {
+    if (!isAdmin && !loading && user && !subLoading && subActive === false) {
       router.navigate({ to: "/plans" });
     }
-  }, [loading, user, subLoading, subActive, router]);
+  }, [isAdmin, loading, user, subLoading, subActive, router]);
 
 
   const { isLoading } = useQuery({

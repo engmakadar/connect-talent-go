@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Sparkles } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { parseResume } from "@/lib/cv-parser.functions";
@@ -27,6 +28,7 @@ function Profile() {
   const [prefs, setPrefs] = useState({
     preferred_categories: "", preferred_locations: "", preferred_types: "",
     min_salary: "", skills: "", notify_email: true, resume_url: "",
+    education_level: "", years_experience: "",
   });
   const [saving, setSaving] = useState(false);
   const [parsing, setParsing] = useState(false);
@@ -52,6 +54,8 @@ function Profile() {
         skills: (pr.skills ?? []).join(", "),
         notify_email: pr.notify_email ?? true,
         resume_url: pr.resume_url ?? "",
+        education_level: pr.education_level ?? "",
+        years_experience: pr.years_experience?.toString() ?? "",
       });
       return true;
     },
@@ -74,6 +78,8 @@ function Profile() {
         skills: prefs.skills.split(",").map((s) => s.trim()).filter(Boolean),
         notify_email: prefs.notify_email,
         resume_url: prefs.resume_url || null,
+        education_level: prefs.education_level || null,
+        years_experience: prefs.years_experience ? Number(prefs.years_experience) : null,
       });
       if (re) throw re;
       toast.success("Saved.");
@@ -181,7 +187,7 @@ function Profile() {
 
         <div>
           <h2 className="font-display text-2xl font-bold tracking-tight mb-2">Job preferences</h2>
-          <p className="text-muted-foreground mb-4">We'll match new vacancies against these and notify you.</p>
+          <p className="text-muted-foreground mb-4">We'll match new vacancies against these and send you an in-app notification the moment one is published.</p>
           <Badge variant="outline" className="mb-4 border-gold/40 bg-gold/10 text-gold-foreground">Smart matching</Badge>
 
           <div className="space-y-4 rounded-xl border border-border bg-card p-6">
@@ -191,6 +197,20 @@ function Profile() {
             <div className="grid sm:grid-cols-2 gap-4">
               <div><Label>Min salary (USD/year)</Label><Input type="number" min={0} value={prefs.min_salary} onChange={(e) => setPrefs({ ...prefs, min_salary: e.target.value })} /></div>
               <div><Label>Resume URL</Label><Input type="url" value={prefs.resume_url} onChange={(e) => setPrefs({ ...prefs, resume_url: e.target.value })} placeholder="https://..." /></div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <Label>Education level</Label>
+                <Select value={prefs.education_level} onValueChange={(v) => setPrefs({ ...prefs, education_level: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select education level" /></SelectTrigger>
+                  <SelectContent>
+                    {["High school", "Diploma", "Bachelor's degree", "Master's degree", "PhD"].map((e) => (
+                      <SelectItem key={e} value={e}>{e}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Years of experience</Label><Input type="number" min={0} max={60} value={prefs.years_experience} onChange={(e) => setPrefs({ ...prefs, years_experience: e.target.value })} placeholder="5" /></div>
             </div>
             <div><Label>Skills</Label><Input value={prefs.skills} onChange={(e) => setPrefs({ ...prefs, skills: e.target.value })} placeholder="React, TypeScript, Figma" /></div>
             <div className="flex items-center justify-between rounded-lg border border-border bg-background p-4">
