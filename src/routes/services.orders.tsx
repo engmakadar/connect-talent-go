@@ -24,7 +24,7 @@ export const Route = createFileRoute("/services/orders")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: ServiceOrdersPortal;
+  component: ServiceOrdersPortal,
 });
 
 const ACTIVE = new Set(["requested", "accepted", "in_progress"]);
