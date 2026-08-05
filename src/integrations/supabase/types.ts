@@ -369,7 +369,9 @@ export type Database = {
       }
       freelance_orders: {
         Row: {
+          amount_paid: number
           client_id: string
+          completed_at: string | null
           created_at: string
           currency: string
           freelancer_id: string
@@ -377,11 +379,14 @@ export type Database = {
           id: string
           price: number
           requirements: string
+          started_at: string | null
           status: string
           updated_at: string
         }
         Insert: {
+          amount_paid?: number
           client_id: string
+          completed_at?: string | null
           created_at?: string
           currency?: string
           freelancer_id: string
@@ -389,11 +394,14 @@ export type Database = {
           id?: string
           price?: number
           requirements?: string
+          started_at?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
+          amount_paid?: number
           client_id?: string
+          completed_at?: string | null
           created_at?: string
           currency?: string
           freelancer_id?: string
@@ -401,6 +409,7 @@ export type Database = {
           id?: string
           price?: number
           requirements?: string
+          started_at?: string | null
           status?: string
           updated_at?: string
         }
@@ -458,6 +467,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      freelancer_profiles: {
+        Row: {
+          available: boolean
+          created_at: string
+          currency: string
+          experience: Json
+          expertise: string | null
+          hourly_rate: number | null
+          location: string | null
+          photo_url: string | null
+          skills: string[]
+          summary: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          available?: boolean
+          created_at?: string
+          currency?: string
+          experience?: Json
+          expertise?: string | null
+          hourly_rate?: number | null
+          location?: string | null
+          photo_url?: string | null
+          skills?: string[]
+          summary?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          available?: boolean
+          created_at?: string
+          currency?: string
+          experience?: Json
+          expertise?: string | null
+          hourly_rate?: number | null
+          location?: string | null
+          photo_url?: string | null
+          skills?: string[]
+          summary?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       job_applications: {
         Row: {
@@ -1154,67 +1211,82 @@ export type Database = {
           approved: boolean
           available: boolean
           bio: string | null
+          bookings_count: number
           created_at: string
           currency: string
           daily_rate: number | null
+          date_of_birth: string | null
           full_name: string
+          gender: string | null
           hourly_rate: number | null
           id: string
           jobs_completed: number
           latitude: number | null
           location: string
           longitude: number | null
+          national_id: string | null
           phone: string | null
           photo_url: string | null
           rating_avg: number
           rating_count: number
           trades: string[]
           updated_at: string
-          user_id: string
+          user_id: string | null
+          years_experience: number | null
         }
         Insert: {
           approved?: boolean
           available?: boolean
           bio?: string | null
+          bookings_count?: number
           created_at?: string
           currency?: string
           daily_rate?: number | null
+          date_of_birth?: string | null
           full_name: string
+          gender?: string | null
           hourly_rate?: number | null
           id?: string
           jobs_completed?: number
           latitude?: number | null
           location: string
           longitude?: number | null
+          national_id?: string | null
           phone?: string | null
           photo_url?: string | null
           rating_avg?: number
           rating_count?: number
           trades?: string[]
           updated_at?: string
-          user_id: string
+          user_id?: string | null
+          years_experience?: number | null
         }
         Update: {
           approved?: boolean
           available?: boolean
           bio?: string | null
+          bookings_count?: number
           created_at?: string
           currency?: string
           daily_rate?: number | null
+          date_of_birth?: string | null
           full_name?: string
+          gender?: string | null
           hourly_rate?: number | null
           id?: string
           jobs_completed?: number
           latitude?: number | null
           location?: string
           longitude?: number | null
+          national_id?: string | null
           phone?: string | null
           photo_url?: string | null
           rating_avg?: number
           rating_count?: number
           trades?: string[]
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
+          years_experience?: number | null
         }
         Relationships: []
       }
