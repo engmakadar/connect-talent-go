@@ -53,11 +53,15 @@ export function SiteHeader() {
           <img src={logo} alt="SahanJobs" className="h-9 w-auto" />
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-6">
           <Link to="/" className={navLink} activeOptions={{ exact: true }} activeProps={{ className: "text-primary" }}>Home</Link>
           <Link to="/jobs" className={navLink} activeProps={{ className: "text-primary" }}>Jobs</Link>
           <Link to="/tender" className={navLink} activeProps={{ className: "text-primary" }}>Tender</Link>
+          <Link to="/services" className={navLink} activeProps={{ className: "text-primary" }}>Services</Link>
+          <Link to="/freelance" className={navLink} activeProps={{ className: "text-primary" }}>Freelance</Link>
+          <Link to="/trust" className={navLink} activeProps={{ className: "text-primary" }}>Trust Center</Link>
           <Link to="/plans" className={navLink} activeProps={{ className: "text-primary" }}>Pricing</Link>
+
           {user && canPostJob && (
             <Link to="/admin/post-job" className={navLink} activeProps={{ className: "text-primary" }}>Post a Job</Link>
           )}
