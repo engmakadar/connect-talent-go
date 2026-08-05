@@ -59,8 +59,8 @@ export function SiteHeader() {
           <Link to="/tender" className={navLink} activeProps={{ className: "text-primary" }}>Tender</Link>
           <Link to="/services" className={navLink} activeProps={{ className: "text-primary" }}>Services</Link>
           <Link to="/freelance" className={navLink} activeProps={{ className: "text-primary" }}>Freelance</Link>
-          <Link to="/trust" className={navLink} activeProps={{ className: "text-primary" }}>Trust Center</Link>
           <Link to="/plans" className={navLink} activeProps={{ className: "text-primary" }}>Pricing</Link>
+          <Link to="/trust" className={navLink} activeProps={{ className: "text-primary" }}>Trust Center</Link>
 
           {user && canPostJob && (
             <Link to="/admin/post-job" className={navLink} activeProps={{ className: "text-primary" }}>Post a Job</Link>
