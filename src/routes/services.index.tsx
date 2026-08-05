@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
-import { Search, Star, MapPin, Phone, Wrench, Hammer, CalendarPlus, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  Search, Star, MapPin, Phone, Wrench, Hammer, CalendarPlus, ArrowLeft, CheckCircle2,
+  Zap, Ruler, Brick, PaintRoller, Flame, Cog, Grid3x3, AirVent, Fuel, SprayCan, Car,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
@@ -18,6 +21,23 @@ export const TRADES = [
   "Plumber", "Electrician", "Carpenter", "Mason", "Painter", "Welder",
   "Mechanic", "Tiler", "AC technician", "Generator technician", "Cleaner", "Driver",
 ];
+
+/** Dedicated icon per skill category. */
+export const TRADE_ICONS: Record<string, ReactNode> = {
+  "Plumber": <Wrench className="h-6 w-6" />,
+  "Electrician": <Zap className="h-6 w-6" />,
+  "Carpenter": <Ruler className="h-6 w-6" />,
+  "Mason": <Brick className="h-6 w-6" />,
+  "Painter": <PaintRoller className="h-6 w-6" />,
+  "Welder": <Flame className="h-6 w-6" />,
+  "Mechanic": <Cog className="h-6 w-6" />,
+  "Tiler": <Grid3x3 className="h-6 w-6" />,
+  "AC technician": <AirVent className="h-6 w-6" />,
+  "Generator technician": <Fuel className="h-6 w-6" />,
+  "Cleaner": <SprayCan className="h-6 w-6" />,
+  "Driver": <Car className="h-6 w-6" />,
+};
+
 
 export const Route = createFileRoute("/services/")({
   head: () => ({
