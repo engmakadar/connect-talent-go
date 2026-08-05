@@ -728,6 +728,7 @@ export type Database = {
       }
       jobseeker_preferences: {
         Row: {
+          education_level: string | null
           min_salary: number | null
           notify_email: boolean
           preferred_categories: string[] | null
@@ -739,8 +740,10 @@ export type Database = {
           skills: string[] | null
           updated_at: string
           user_id: string
+          years_experience: number | null
         }
         Insert: {
+          education_level?: string | null
           min_salary?: number | null
           notify_email?: boolean
           preferred_categories?: string[] | null
@@ -752,8 +755,10 @@ export type Database = {
           skills?: string[] | null
           updated_at?: string
           user_id: string
+          years_experience?: number | null
         }
         Update: {
+          education_level?: string | null
           min_salary?: number | null
           notify_email?: boolean
           preferred_categories?: string[] | null
@@ -765,6 +770,7 @@ export type Database = {
           skills?: string[] | null
           updated_at?: string
           user_id?: string
+          years_experience?: number | null
         }
         Relationships: []
       }
