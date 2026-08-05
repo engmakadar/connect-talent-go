@@ -13,6 +13,7 @@ import { RichTextView } from "@/components/rich-text-editor";
 import { formatEmploymentType, formatSalary, timeAgo } from "@/lib/format";
 import { SaveJobButton } from "@/components/save-job-button";
 import { ApplyButton } from "@/components/apply-button";
+import { JobMatchScore } from "@/components/job-match-score";
 
 export const Route = createFileRoute("/jobs/$jobId")({
   component: JobDetail,
@@ -184,7 +185,26 @@ function JobDetail() {
           </div>
 
           <article className="space-y-6">
-            {/* About + Duties first, then Skills/Tender Docs, then Requirements at the very end. */}
+            {/* Requirements first, Skills directly below, then the rest of the posting. */}
+            {sections.filter((s) => s.title === "Requirements").map((s) => (
+              <div key={s.title} className="rounded-2xl bg-card p-6 ring-1 ring-black/5">
+                <h2 className="font-serif text-lg font-semibold tracking-tight mb-4 flex items-center gap-3 text-ink">
+                  <span className="inline-grid place-items-center h-8 w-8 rounded-full bg-primary-soft text-primary">{s.icon}</span>
+                  {s.title}
+                </h2>
+                <RichTextView html={s.body} />
+              </div>
+            ))}
+
+            {job.skills && job.skills.length > 0 && (
+              <div className="rounded-2xl bg-card p-6 ring-1 ring-black/5">
+                <h2 className="font-serif text-lg font-semibold tracking-tight mb-4 text-ink">Skills</h2>
+                <div className="flex flex-wrap gap-2">
+                  {job.skills.map((s) => <span key={s} className="rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-ink">{s}</span>)}
+                </div>
+              </div>
+            )}
+
             {sections.filter((s) => s.title !== "Requirements").map((s) => (
               <div key={s.title} className="rounded-2xl bg-card p-6 ring-1 ring-black/5">
                 <h2 className="font-serif text-lg font-semibold tracking-tight mb-4 flex items-center gap-3 text-ink">
@@ -213,31 +233,23 @@ function JobDetail() {
                 </ul>
               </div>
             )}
-
-            {/* Requirements first, Skills immediately below it. */}
-            {sections.filter((s) => s.title === "Requirements").map((s) => (
-              <div key={s.title} className="rounded-2xl bg-card p-6 ring-1 ring-black/5">
-                <h2 className="font-serif text-lg font-semibold tracking-tight mb-4 flex items-center gap-3 text-ink">
-                  <span className="inline-grid place-items-center h-8 w-8 rounded-full bg-primary-soft text-primary">{s.icon}</span>
-                  {s.title}
-                </h2>
-                <RichTextView html={s.body} />
-              </div>
-            ))}
-
-            {job.skills && job.skills.length > 0 && (
-              <div className="rounded-2xl bg-card p-6 ring-1 ring-black/5">
-                <h2 className="font-serif text-lg font-semibold tracking-tight mb-4 text-ink">Skills</h2>
-                <div className="flex flex-wrap gap-2">
-                  {job.skills.map((s) => <span key={s} className="rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-ink">{s}</span>)}
-                </div>
-              </div>
-            )}
-
           </article>
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+          {!isTender && (
+            <JobMatchScore
+              job={{
+                skills: job.skills ?? null,
+                preferred_skills: (job as unknown as { preferred_skills?: string[] | null }).preferred_skills ?? null,
+                experience_years: job.experience_years,
+                category: job.category,
+                location: job.location,
+                employment_type: job.employment_type,
+              }}
+            />
+          )}
+
           <div className="rounded-2xl bg-card p-5 ring-1 ring-black/5 space-y-3">
             <div className="flex items-center gap-3">
               <CompanyLogo company={job.company} logoUrl={companyRow?.logo_url ?? null} size={44} className="h-11 w-11 shrink-0" />
