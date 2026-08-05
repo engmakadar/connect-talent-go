@@ -13,6 +13,7 @@ import { RichTextView } from "@/components/rich-text-editor";
 import { formatEmploymentType, formatSalary, timeAgo } from "@/lib/format";
 import { SaveJobButton } from "@/components/save-job-button";
 import { ApplyButton } from "@/components/apply-button";
+import { JobMatchScore } from "@/components/job-match-score";
 
 export const Route = createFileRoute("/jobs/$jobId")({
   component: JobDetail,
