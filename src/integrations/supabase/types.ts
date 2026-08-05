@@ -1382,6 +1382,16 @@ export type Database = {
       }
     }
     Views: {
+      freelancer_public: {
+        Row: {
+          avatar_url: string | null
+          full_name: string | null
+          headline: string | null
+          id: string | null
+          location: string | null
+        }
+        Relationships: []
+      }
       jobs_public: {
         Row: {
           application_url: string | null
