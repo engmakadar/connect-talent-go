@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Search, Star, MapPin, Phone, Wrench, Hammer, CalendarPlus } from "lucide-react";
+import { Search, Star, MapPin, Phone, Wrench, Hammer, CalendarPlus, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
@@ -23,9 +23,9 @@ export const Route = createFileRoute("/services/")({
   head: () => ({
     meta: [
       { title: "Hand-skill services — hire trusted trades | SahanJobs" },
-      { name: "description", content: "Find verified plumbers, electricians, carpenters and other skilled workers near you. Book directly and rate their work." },
+      { name: "description", content: "Pick a trade, compare skilled workers by price, rating and work done, then book and rate the job." },
       { property: "og:title", content: "Hand-skill services — hire trusted trades" },
-      { property: "og:description", content: "Find verified plumbers, electricians, carpenters and other skilled workers near you." },
+      { property: "og:description", content: "Pick a trade, compare skilled workers by price, rating and work done, then book directly." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -49,11 +49,16 @@ function Stars({ value }: { value: number }) {
   );
 }
 
+const rateOf = (w: Worker) => w.hourly_rate ?? w.daily_rate ?? Number.POSITIVE_INFINITY;
+
 function ServicesPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const [trade, setTrade] = useState<string | null>(null);
   const [q, setQ] = useState("");
-  const [trade, setTrade] = useState("all");
+  const [sort, setSort] = useState("rating");
+  const [minRating, setMinRating] = useState("0");
+  const [maxPrice, setMaxPrice] = useState("");
   const [booking, setBooking] = useState<Worker | null>(null);
   const [form, setForm] = useState({ description: "", address: "", scheduled_for: "", phone: "", name: "" });
   const [saving, setSaving] = useState(false);
@@ -72,10 +77,19 @@ function ServicesPage() {
     },
   });
 
+  const counts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const w of workers ?? []) for (const t of w.trades) m.set(t, (m.get(t) ?? 0) + 1);
+    return m;
+  }, [workers]);
+
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
-    return (workers ?? []).filter((w) => {
-      if (trade !== "all" && !w.trades.includes(trade)) return false;
+    const cap = maxPrice.trim() ? Number(maxPrice) : null;
+    const rows = (workers ?? []).filter((w) => {
+      if (trade && !w.trades.includes(trade)) return false;
+      if (Number(w.rating_avg) < Number(minRating)) return false;
+      if (cap !== null && !Number.isNaN(cap) && rateOf(w) > cap) return false;
       if (!term) return true;
       return (
         w.full_name.toLowerCase().includes(term) ||
@@ -83,7 +97,11 @@ function ServicesPage() {
         w.trades.join(" ").toLowerCase().includes(term)
       );
     });
-  }, [workers, q, trade]);
+    return [...rows].sort((a, b) =>
+      sort === "price" ? rateOf(a) - rateOf(b)
+        : sort === "work" ? b.jobs_completed - a.jobs_completed
+          : Number(b.rating_avg) - Number(a.rating_avg));
+  }, [workers, q, trade, sort, minRating, maxPrice]);
 
   const submitBooking = async () => {
     if (!user) return toast.error("Please sign in to book a service.");
@@ -103,7 +121,7 @@ function ServicesPage() {
     });
     setSaving(false);
     if (error) return toast.error(error.message);
-    toast.success("Booking request sent.");
+    toast.success("Booking request sent. Rate the work once it's completed.");
     setBooking(null);
     setForm({ description: "", address: "", scheduled_for: "", phone: "", name: "" });
     qc.invalidateQueries({ queryKey: ["my-bookings"] });
@@ -115,25 +133,54 @@ function ServicesPage() {
       <main className="flex-1">
         <section className="bg-hero-band">
           <div className="mx-auto max-w-6xl px-6 py-12">
+            {trade && (
+              <button onClick={() => setTrade(null)} className="mb-3 inline-flex items-center gap-1.5 text-xs font-semibold text-primary">
+                <ArrowLeft className="h-3.5 w-3.5" /> All service categories
+              </button>
+            )}
             <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
               <Hammer className="h-3.5 w-3.5" /> Hand-skill portal
             </span>
-            <h1 className="mt-3 font-serif text-4xl font-bold text-ink">Hire trusted skilled workers</h1>
+            <h1 className="mt-3 font-serif text-4xl font-bold text-ink">{trade ? `${trade} services` : "Hire trusted skilled workers"}</h1>
             <p className="mt-2 max-w-2xl text-muted-foreground">
-              Plumbers, electricians, carpenters, masons and more — browse profiles, check ratings, and book directly.
+              {trade
+                ? "Compare workers by price, rating and completed jobs, then book the right person."
+                : "Choose a service category to see available workers, their rates and ratings."}
             </p>
+
             <div className="mt-6 flex flex-wrap gap-3">
-              <div className="relative flex-1 min-w-[240px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search trade, name or town…" className="pl-9 bg-white" />
-              </div>
-              <Select value={trade} onValueChange={setTrade}>
-                <SelectTrigger className="w-[220px] bg-white"><SelectValue placeholder="All trades" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All trades</SelectItem>
-                  {TRADES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              {trade && (
+                <>
+                  <div className="relative flex-1 min-w-[220px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name or town…" className="pl-9 bg-white" />
+                  </div>
+                  <Select value={sort} onValueChange={setSort}>
+                    <SelectTrigger className="w-[180px] bg-white"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="rating">Top rated</SelectItem>
+                      <SelectItem value="price">Lowest price</SelectItem>
+                      <SelectItem value="work">Most work done</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={minRating} onValueChange={setMinRating}>
+                    <SelectTrigger className="w-[160px] bg-white"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Any rating</SelectItem>
+                      <SelectItem value="3">3★ and up</SelectItem>
+                      <SelectItem value="4">4★ and up</SelectItem>
+                      <SelectItem value="4.5">4.5★ and up</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    inputMode="numeric"
+                    placeholder="Max rate"
+                    className="w-[130px] bg-white"
+                  />
+                </>
+              )}
               <Link to="/services/register" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
                 <Wrench className="h-4 w-4" /> Offer your skills
               </Link>
@@ -142,21 +189,43 @@ function ServicesPage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-6 py-10">
-          {isLoading ? (
+          {!trade ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {TRADES.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => { setTrade(t); setQ(""); }}
+                  className="text-left rounded-2xl bg-card p-6 ring-1 ring-black/5 hover:ring-primary/40 hover:shadow-sm transition"
+                >
+                  <span className="inline-grid h-12 w-12 place-items-center rounded-xl bg-primary-soft text-primary">
+                    <Wrench className="h-6 w-6" />
+                  </span>
+                  <h2 className="mt-4 font-semibold text-ink">{t}</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {(counts.get(t) ?? 0)} worker{(counts.get(t) ?? 0) === 1 ? "" : "s"} available
+                  </p>
+                </button>
+              ))}
+            </div>
+          ) : isLoading ? (
             <p className="text-muted-foreground">Loading workers…</p>
           ) : filtered.length === 0 ? (
             <div className="rounded-2xl bg-card p-12 ring-1 ring-black/5 text-center">
               <Wrench className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
-              <p className="text-muted-foreground">No skilled workers match your search yet.</p>
+              <p className="text-muted-foreground">No {trade.toLowerCase()}s match your filters yet.</p>
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((w) => (
                 <div key={w.id} className="rounded-2xl bg-card p-5 ring-1 ring-black/5 flex flex-col">
                   <div className="flex items-start gap-3">
-                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary font-bold">
-                      {w.full_name.slice(0, 1).toUpperCase()}
-                    </span>
+                    {w.photo_url ? (
+                      <img src={w.photo_url} alt={w.full_name} loading="lazy" className="h-14 w-14 shrink-0 rounded-xl object-cover ring-1 ring-black/5" />
+                    ) : (
+                      <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary text-lg font-bold">
+                        {w.full_name.slice(0, 1).toUpperCase()}
+                      </span>
+                    )}
                     <div className="min-w-0">
                       <p className="font-semibold text-ink truncate">{w.full_name}</p>
                       <p className="text-xs text-muted-foreground inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {w.location}</p>
@@ -166,16 +235,25 @@ function ServicesPage() {
                       </div>
                     </div>
                   </div>
+
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {w.trades.slice(0, 4).map((t) => (
                       <Badge key={t} variant="outline" className="text-[10px]">{t}</Badge>
                     ))}
                     {!w.available && <Badge className="bg-muted text-muted-foreground border-0 text-[10px]">Busy</Badge>}
                   </div>
+
                   {w.bio && <p className="mt-3 text-sm text-muted-foreground line-clamp-3">{w.bio}</p>}
-                  <p className="mt-3 text-sm font-semibold text-ink">
-                    {w.hourly_rate ? `${w.currency} ${w.hourly_rate}/hr` : w.daily_rate ? `${w.currency} ${w.daily_rate}/day` : "Rate on request"}
-                  </p>
+
+                  <div className="mt-3 flex items-center justify-between text-sm">
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> {w.jobs_completed} work done
+                    </span>
+                    <span className="font-semibold text-ink">
+                      {w.hourly_rate ? `${w.currency} ${w.hourly_rate}/hr` : w.daily_rate ? `${w.currency} ${w.daily_rate}/day` : "Rate on request"}
+                    </span>
+                  </div>
+
                   <div className="mt-4 flex gap-2">
                     <Dialog open={booking?.id === w.id} onOpenChange={(o) => setBooking(o ? w : null)}>
                       <DialogTrigger asChild>
