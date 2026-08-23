@@ -16,11 +16,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CompanyLogo } from "@/components/company-logo";
-import { Users, Pencil, Search, MoreHorizontal, Ban, PowerOff, Power, Plus, UserPlus, Building2, ExternalLink, Trash2, CheckCircle2, Users2, Mail } from "lucide-react";
+import { Users, Pencil, Search, MoreHorizontal, Ban, PowerOff, Power, Building2, Trash2, CheckCircle2, Users2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { logAudit } from "@/lib/audit";
 import { useServerFn } from "@tanstack/react-start";
-import { activateUser, enrollUserFull } from "@/lib/admin-actions.functions";
+import { activateUser } from "@/lib/admin-actions.functions";
 import { sendPasswordReset } from "@/lib/admin-password.functions";
 import { addExistingUserToCompanyTeam } from "@/lib/company-users.functions";
 
