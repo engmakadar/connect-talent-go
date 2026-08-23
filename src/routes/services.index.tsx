@@ -127,7 +127,7 @@ function ServicesPage() {
     queryKey: ["worker-match", trade],
     staleTime: 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("match_service_workers", { _trade: trade });
+      const { data, error } = await supabase.rpc("match_service_workers", { _trade: trade ?? undefined });
       if (error) throw error;
       return new Map((data ?? []).map((m) => [m.worker_id, Number(m.match_score)]));
     },
