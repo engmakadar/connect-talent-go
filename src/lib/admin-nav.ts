@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Users, Building2, UserCheck,
   ClipboardCheck, FileText, Tags, Sparkles,
   FileCode2, CreditCard, Receipt, Megaphone, Wrench,
-  History, Lock, Palette, Plus, UserPlus,
+  History, Lock, Palette, Plus, UserPlus, ShieldAlert,
 } from "lucide-react";
 
 
@@ -11,7 +11,7 @@ export type AdminPageKey =
   | "all_users" | "enrollment" | "employers" | "candidates" | "user_verification"
   | "job_approval" | "job_moderation" | "post_job" | "applicants" | "fraud_detection" | "categories"
   | "ai_matching" | "recommendations" | "cv_parsing"
-  | "skill_workers"
+  | "skill_workers" | "service_disputes"
   | "subscription_plans" | "subscriptions_list" | "transactions" | "revenue_analytics"
   | "announcements" | "notifications" | "messaging_center"
   | "audit_logs" | "permissions" | "roles_rbac" | "security_settings"
@@ -68,6 +68,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
     title: "Services",
     items: [
       { key: "skill_workers", label: "Skill Worker Registration", to: "/admin/skill-workers", icon: Wrench },
+      { key: "service_disputes", label: "Service Disputes", to: "/admin/service-disputes", icon: ShieldAlert },
     ],
   },
   {

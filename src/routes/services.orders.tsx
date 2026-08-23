@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { ClipboardList, Star, Wrench, CalendarCheck, CheckCircle2, Wallet } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { ClipboardList, Star, Wrench, CalendarCheck, CheckCircle2, Wallet, ShieldAlert, BadgeCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
@@ -12,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { advanceServiceBooking, rateServiceWorker, raiseServiceDispute } from "@/lib/services.functions";
+import { SERVICE_STATUS_LABEL, SERVICE_ACTIVE, SERVICE_DISPUTABLE } from "@/lib/service-lifecycle";
 
 export const Route = createFileRoute("/services/orders")({
   head: () => ({
@@ -27,11 +30,8 @@ export const Route = createFileRoute("/services/orders")({
   component: ServiceOrdersPortal,
 });
 
-const ACTIVE = new Set(["requested", "accepted", "in_progress"]);
-const LABEL: Record<string, string> = {
-  requested: "Requested", accepted: "Accepted", in_progress: "In progress",
-  completed: "Completed", cancelled: "Cancelled",
-};
+const ACTIVE = SERVICE_ACTIVE;
+const LABEL = SERVICE_STATUS_LABEL;
 
 function Kpi({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
   return (
@@ -48,10 +48,15 @@ function ServiceOrdersPortal() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [review, setReview] = useState<{ id: string; worker_id: string } | null>(null);
+  const advanceFn = useServerFn(advanceServiceBooking);
+  const rateFn = useServerFn(rateServiceWorker);
+  const disputeFn = useServerFn(raiseServiceDispute);
+  const [review, setReview] = useState<{ id: string; worker_id: string; name: string } | null>(null);
   const [perf, setPerf] = useState(5);
   const [behave, setBehave] = useState(5);
   const [comment, setComment] = useState("");
+  const [disputeId, setDisputeId] = useState<string | null>(null);
+  const [disputeReason, setDisputeReason] = useState("");
 
   useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [loading, user, navigate]);
 
@@ -90,25 +95,48 @@ function ServiceOrdersPortal() {
   const completed = rows.filter((r) => r.status === "completed");
   const awaitingRating = completed.filter((r) => !r.review);
 
-  const submitReview = async () => {
-    if (!user || !review) return;
-    const { error } = await supabase.from("service_reviews").insert({
-      booking_id: review.id, worker_id: review.worker_id, customer_id: user.id,
-      performance_rating: perf, behaviour_rating: behave, comment: comment.trim() || null,
-    });
-    if (error) return toast.error(error.message);
-    toast.success("Thanks for rating this worker.");
-    setReview(null); setComment(""); setPerf(5); setBehave(5);
+  const refresh = () => {
     qc.invalidateQueries({ queryKey: ["service-orders"] });
     qc.invalidateQueries({ queryKey: ["my-bookings"] });
     qc.invalidateQueries({ queryKey: ["skill-workers"] });
   };
 
-  const cancel = async (id: string) => {
-    const { error } = await supabase.from("service_bookings").update({ status: "cancelled" }).eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success("Order cancelled.");
-    qc.invalidateQueries({ queryKey: ["service-orders"] });
+  const run = async (fn: () => Promise<unknown>, ok: string) => {
+    try {
+      await fn();
+      toast.success(ok);
+      refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Action failed.");
+    }
+  };
+
+  const submitReview = () => {
+    if (!review) return;
+    void run(
+      () => rateFn({ data: { bookingId: review.id, performance: perf, behaviour: behave, comment: comment || undefined } }),
+      "Thanks for rating this worker.",
+    );
+    setReview(null); setComment(""); setPerf(5); setBehave(5);
+  };
+
+  const cancel = (id: string) =>
+    void run(() => advanceFn({ data: { bookingId: id, status: "cancelled" } }), "Order cancelled.");
+
+  const confirmCompletion = (id: string) =>
+    void run(() => advanceFn({ data: { bookingId: id, status: "customer_confirmed" } }), "Completion confirmed.");
+
+  const closeJob = (id: string) =>
+    void run(() => advanceFn({ data: { bookingId: id, status: "closed" } }), "Job closed.");
+
+  const submitDispute = () => {
+    if (!disputeId) return;
+    if (disputeReason.trim().length < 10) return toast.error("Please describe the issue (at least 10 characters).");
+    void run(
+      () => disputeFn({ data: { bookingId: disputeId, reason: disputeReason.trim() } }),
+      "Dispute opened. Our team will review it.",
+    );
+    setDisputeId(null); setDisputeReason("");
   };
 
   const RatingRow = ({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) => (
@@ -158,14 +186,19 @@ function ServiceOrdersPortal() {
               {b.worker?.phone && (
                 <a href={`tel:${b.worker.phone}`} className="text-xs font-semibold text-primary">{b.worker.phone}</a>
               )}
-              {ACTIVE.has(b.status) && (
-                <Button size="sm" variant="outline" onClick={() => void cancel(b.id)}>Cancel order</Button>
+              {(b.status === "requested" || b.status === "matched") && (
+                <Button size="sm" variant="outline" onClick={() => cancel(b.id)}>Cancel order</Button>
               )}
-              {b.status === "completed" && !b.review && (
-                <Dialog open={review?.id === b.id} onOpenChange={(o) => setReview(o ? { id: b.id, worker_id: b.worker_id } : null)}>
+              {b.status === "completed" && (
+                <Button size="sm" variant="outline" onClick={() => confirmCompletion(b.id)}>
+                  <BadgeCheck className="h-4 w-4 mr-1" /> Confirm completion
+                </Button>
+              )}
+              {(b.status === "completed" || b.status === "customer_confirmed") && !b.review && (
+                <Dialog open={review?.id === b.id} onOpenChange={(o) => setReview(o ? { id: b.id, worker_id: b.worker_id, name: b.worker?.full_name ?? "worker" } : null)}>
                   <DialogTrigger asChild><Button size="sm"><Star className="h-4 w-4 mr-1" /> Rate worker</Button></DialogTrigger>
                   <DialogContent>
-                    <DialogHeader><DialogTitle>Rate {b.worker?.full_name ?? "worker"}</DialogTitle></DialogHeader>
+                    <DialogHeader><DialogTitle>Rate {review?.name ?? "worker"}</DialogTitle></DialogHeader>
                     <div className="space-y-4">
                       <RatingRow label="Job performance" value={perf} onChange={setPerf} />
                       <RatingRow label="Behaviour & professionalism" value={behave} onChange={setBehave} />
@@ -175,10 +208,29 @@ function ServiceOrdersPortal() {
                   </DialogContent>
                 </Dialog>
               )}
+              {(b.status === "rated" || (b.status === "customer_confirmed" && !!b.review)) && (
+                <Button size="sm" variant="outline" onClick={() => closeJob(b.id)}>Close job</Button>
+              )}
               {b.review && (
                 <span className="text-xs text-muted-foreground">
                   Rated {((b.review.performance_rating + b.review.behaviour_rating) / 2).toFixed(1)}★
                 </span>
+              )}
+              {SERVICE_DISPUTABLE.has(b.status) && (
+                <Dialog open={disputeId === b.id} onOpenChange={(o) => { setDisputeId(o ? b.id : null); setDisputeReason(""); }}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="text-red-600"><ShieldAlert className="h-4 w-4 mr-1" /> Dispute</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader><DialogTitle>Open a dispute</DialogTitle></DialogHeader>
+                    <div>
+                      <Label>What went wrong?</Label>
+                      <Textarea rows={4} value={disputeReason} onChange={(e) => setDisputeReason(e.target.value)}
+                        placeholder="Describe the issue — our admin team will review it." />
+                    </div>
+                    <DialogFooter><Button onClick={submitDispute}>Submit dispute</Button></DialogFooter>
+                  </DialogContent>
+                </Dialog>
               )}
             </div>
           </div>

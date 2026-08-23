@@ -41,6 +41,7 @@ import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminTransactionsRouteImport } from './routes/admin.transactions'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
 import { Route as AdminSkillWorkersRouteImport } from './routes/admin.skill-workers'
+import { Route as AdminServiceDisputesRouteImport } from './routes/admin.service-disputes'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
 import { Route as AdminReviewRouteImport } from './routes/admin.review'
 import { Route as AdminPostJobRouteImport } from './routes/admin.post-job'
@@ -215,6 +216,11 @@ const AdminSkillWorkersRoute = AdminSkillWorkersRouteImport.update({
   path: '/admin/skill-workers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminServiceDisputesRoute = AdminServiceDisputesRouteImport.update({
+  id: '/admin/service-disputes',
+  path: '/admin/service-disputes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRolesRoute = AdminRolesRouteImport.update({
   id: '/admin/roles',
   path: '/admin/roles',
@@ -306,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/admin/post-job': typeof AdminPostJobRoute
   '/admin/review': typeof AdminReviewRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/service-disputes': typeof AdminServiceDisputesRoute
   '/admin/skill-workers': typeof AdminSkillWorkersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
@@ -353,6 +360,7 @@ export interface FileRoutesByTo {
   '/admin/post-job': typeof AdminPostJobRoute
   '/admin/review': typeof AdminReviewRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/service-disputes': typeof AdminServiceDisputesRoute
   '/admin/skill-workers': typeof AdminSkillWorkersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
@@ -401,6 +409,7 @@ export interface FileRoutesById {
   '/admin/post-job': typeof AdminPostJobRoute
   '/admin/review': typeof AdminReviewRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/service-disputes': typeof AdminServiceDisputesRoute
   '/admin/skill-workers': typeof AdminSkillWorkersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
@@ -450,6 +459,7 @@ export interface FileRouteTypes {
     | '/admin/post-job'
     | '/admin/review'
     | '/admin/roles'
+    | '/admin/service-disputes'
     | '/admin/skill-workers'
     | '/admin/subscriptions'
     | '/admin/transactions'
@@ -497,6 +507,7 @@ export interface FileRouteTypes {
     | '/admin/post-job'
     | '/admin/review'
     | '/admin/roles'
+    | '/admin/service-disputes'
     | '/admin/skill-workers'
     | '/admin/subscriptions'
     | '/admin/transactions'
@@ -544,6 +555,7 @@ export interface FileRouteTypes {
     | '/admin/post-job'
     | '/admin/review'
     | '/admin/roles'
+    | '/admin/service-disputes'
     | '/admin/skill-workers'
     | '/admin/subscriptions'
     | '/admin/transactions'
@@ -592,6 +604,7 @@ export interface RootRouteChildren {
   AdminPostJobRoute: typeof AdminPostJobRoute
   AdminReviewRoute: typeof AdminReviewRoute
   AdminRolesRoute: typeof AdminRolesRoute
+  AdminServiceDisputesRoute: typeof AdminServiceDisputesRoute
   AdminSkillWorkersRoute: typeof AdminSkillWorkersRoute
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminTransactionsRoute: typeof AdminTransactionsRoute
@@ -840,6 +853,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSkillWorkersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/service-disputes': {
+      id: '/admin/service-disputes'
+      path: '/admin/service-disputes'
+      fullPath: '/admin/service-disputes'
+      preLoaderRoute: typeof AdminServiceDisputesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/roles': {
       id: '/admin/roles'
       path: '/admin/roles'
@@ -971,6 +991,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminPostJobRoute: AdminPostJobRoute,
   AdminReviewRoute: AdminReviewRoute,
   AdminRolesRoute: AdminRolesRoute,
+  AdminServiceDisputesRoute: AdminServiceDisputesRoute,
   AdminSkillWorkersRoute: AdminSkillWorkersRoute,
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminTransactionsRoute: AdminTransactionsRoute,

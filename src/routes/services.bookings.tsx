@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { CalendarCheck, Star, Wrench } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { CalendarCheck, Star, Wrench, ShieldAlert, Check, X, Play, Flag, BadgeCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
@@ -12,12 +13,14 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { acceptServiceBooking, advanceServiceBooking, rateServiceWorker, raiseServiceDispute } from "@/lib/services.functions";
+import { SERVICE_STATUS_LABEL, SERVICE_DISPUTABLE } from "@/lib/service-lifecycle";
 
 export const Route = createFileRoute("/services/bookings")({
   head: () => ({
     meta: [
       { title: "My service bookings — SahanJobs" },
-      { name: "description", content: "Track your hand-skill service bookings, update job status and rate completed work." },
+      { name: "description", content: "Track your hand-skill service bookings through the full job lifecycle and rate completed work." },
       { property: "og:title", content: "My service bookings — SahanJobs" },
       { property: "og:description", content: "Track your hand-skill service bookings and rate completed work." },
       { property: "og:type", content: "website" },
@@ -27,20 +30,35 @@ export const Route = createFileRoute("/services/bookings")({
   component: BookingsPage,
 });
 
-const STATUSES = ["requested", "accepted", "in_progress", "completed", "cancelled"] as const;
-const LABEL: Record<string, string> = {
-  requested: "Requested", accepted: "Accepted", in_progress: "In progress",
-  completed: "Completed", cancelled: "Cancelled",
+const STATUS_STYLE: Record<string, string> = {
+  requested: "bg-amber-100 text-amber-800 border-0",
+  matched: "bg-amber-100 text-amber-800 border-0",
+  accepted: "bg-sky-100 text-sky-800 border-0",
+  confirmed: "bg-sky-100 text-sky-800 border-0",
+  in_progress: "bg-indigo-100 text-indigo-800 border-0",
+  completed: "bg-primary/10 text-primary border-0",
+  customer_confirmed: "bg-primary/10 text-primary border-0",
+  rated: "bg-primary/10 text-primary border-0",
+  closed: "bg-muted text-muted-foreground border-0",
+  cancelled: "bg-muted text-muted-foreground border-0",
+  disputed: "bg-red-100 text-red-800 border-0",
 };
 
 function BookingsPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [review, setReview] = useState<{ id: string; worker_id: string } | null>(null);
+  const acceptFn = useServerFn(acceptServiceBooking);
+  const advanceFn = useServerFn(advanceServiceBooking);
+  const rateFn = useServerFn(rateServiceWorker);
+  const disputeFn = useServerFn(raiseServiceDispute);
+
+  const [review, setReview] = useState<{ id: string; worker_id: string; name: string } | null>(null);
   const [perf, setPerf] = useState(5);
   const [behave, setBehave] = useState(5);
   const [comment, setComment] = useState("");
+  const [disputeId, setDisputeId] = useState<string | null>(null);
+  const [disputeReason, setDisputeReason] = useState("");
 
   useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [loading, user, navigate]);
 
@@ -71,24 +89,39 @@ function BookingsPage() {
     },
   });
 
-  const setStatus = async (id: string, status: string) => {
-    const { error } = await supabase.from("service_bookings").update({ status }).eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success(`Marked ${LABEL[status]}.`);
+  const refresh = () => {
     qc.invalidateQueries({ queryKey: ["my-bookings"] });
+    qc.invalidateQueries({ queryKey: ["service-orders"] });
+    qc.invalidateQueries({ queryKey: ["skill-workers"] });
   };
 
-  const submitReview = async () => {
-    if (!user || !review) return;
-    const { error } = await supabase.from("service_reviews").insert({
-      booking_id: review.id, worker_id: review.worker_id, customer_id: user.id,
-      performance_rating: perf, behaviour_rating: behave, comment: comment.trim() || null,
-    });
-    if (error) return toast.error(error.message);
-    toast.success("Thanks for your rating.");
+  const run = async (fn: () => Promise<unknown>, ok: string) => {
+    try {
+      await fn();
+      toast.success(ok);
+      refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Action failed.");
+    }
+  };
+
+  const submitReview = () => {
+    if (!review) return;
+    void run(
+      () => rateFn({ data: { bookingId: review.id, performance: perf, behaviour: behave, comment: comment || undefined } }),
+      "Thanks for your rating.",
+    );
     setReview(null); setComment(""); setPerf(5); setBehave(5);
-    qc.invalidateQueries({ queryKey: ["my-bookings"] });
-    qc.invalidateQueries({ queryKey: ["skill-workers"] });
+  };
+
+  const submitDispute = () => {
+    if (!disputeId) return;
+    if (disputeReason.trim().length < 10) return toast.error("Please describe the issue (at least 10 characters).");
+    void run(
+      () => disputeFn({ data: { bookingId: disputeId, reason: disputeReason.trim() } }),
+      "Dispute opened. Our team will review it.",
+    );
+    setDisputeId(null); setDisputeReason("");
   };
 
   const RatingRow = ({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) => (
@@ -104,6 +137,23 @@ function BookingsPage() {
     </div>
   );
 
+  const DisputeButton = ({ bookingId }: { bookingId: string }) => (
+    <Dialog open={disputeId === bookingId} onOpenChange={(o) => { setDisputeId(o ? bookingId : null); setDisputeReason(""); }}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline" className="text-red-600"><ShieldAlert className="h-4 w-4 mr-1" /> Dispute</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Open a dispute</DialogTitle></DialogHeader>
+        <div>
+          <Label>What went wrong?</Label>
+          <Textarea rows={4} value={disputeReason} onChange={(e) => setDisputeReason(e.target.value)}
+            placeholder="Describe the issue — our admin team will review it." />
+        </div>
+        <DialogFooter><Button onClick={submitDispute}>Submit dispute</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
     <div className="min-h-screen flex flex-col bg-hero-band/40">
       <SiteHeader />
@@ -112,7 +162,7 @@ function BookingsPage() {
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary"><CalendarCheck className="h-5 w-5" /></span>
           <div>
             <h1 className="font-serif text-3xl font-bold text-ink">Service bookings</h1>
-            <p className="text-sm text-muted-foreground">Track requests you've made and jobs you've been booked for.</p>
+            <p className="text-sm text-muted-foreground">Full job lifecycle: request → accept → confirm → in progress → completed → confirmed → rated → closed.</p>
           </div>
         </div>
 
@@ -138,17 +188,26 @@ function BookingsPage() {
                     <p className="mt-2 text-sm text-ink">{b.description}</p>
                     <p className="text-xs text-muted-foreground">{b.address}{b.scheduled_for ? ` · ${new Date(b.scheduled_for).toLocaleString()}` : ""}</p>
                   </div>
-                  <Badge variant="outline">{LABEL[b.status] ?? b.status}</Badge>
+                  <Badge variant="outline" className={STATUS_STYLE[b.status] ?? ""}>{SERVICE_STATUS_LABEL[b.status] ?? b.status}</Badge>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {b.status !== "cancelled" && b.status !== "completed" && (
-                    <Button size="sm" variant="outline" onClick={() => setStatus(b.id, "cancelled")}>Cancel</Button>
+                  {(b.status === "requested" || b.status === "matched") && (
+                    <Button size="sm" variant="outline"
+                      onClick={() => void run(() => advanceFn({ data: { bookingId: b.id, status: "cancelled" } }), "Booking cancelled.")}>
+                      Cancel
+                    </Button>
                   )}
-                  {b.status === "completed" && !b.reviewed && (
-                    <Dialog open={review?.id === b.id} onOpenChange={(o) => setReview(o ? { id: b.id, worker_id: b.worker_id } : null)}>
+                  {b.status === "completed" && (
+                    <Button size="sm" variant="outline"
+                      onClick={() => void run(() => advanceFn({ data: { bookingId: b.id, status: "customer_confirmed" } }), "Completion confirmed.")}>
+                      <BadgeCheck className="h-4 w-4 mr-1" /> Confirm completion
+                    </Button>
+                  )}
+                  {(b.status === "completed" || b.status === "customer_confirmed") && !b.reviewed && (
+                    <Dialog open={review?.id === b.id} onOpenChange={(o) => setReview(o ? { id: b.id, worker_id: b.worker_id, name: b.worker?.full_name ?? "worker" } : null)}>
                       <DialogTrigger asChild><Button size="sm"><Star className="h-4 w-4 mr-1" /> Rate worker</Button></DialogTrigger>
                       <DialogContent>
-                        <DialogHeader><DialogTitle>Rate {b.worker?.full_name ?? "worker"}</DialogTitle></DialogHeader>
+                        <DialogHeader><DialogTitle>Rate {review?.name ?? "worker"}</DialogTitle></DialogHeader>
                         <div className="space-y-4">
                           <RatingRow label="Job performance" value={perf} onChange={setPerf} />
                           <RatingRow label="Behaviour & professionalism" value={behave} onChange={setBehave} />
@@ -158,7 +217,14 @@ function BookingsPage() {
                       </DialogContent>
                     </Dialog>
                   )}
-                  {b.reviewed && <span className="text-xs text-muted-foreground self-center">Rated ✓</span>}
+                  {(b.status === "rated" || b.status === "customer_confirmed") && (
+                    <Button size="sm" variant="outline"
+                      onClick={() => void run(() => advanceFn({ data: { bookingId: b.id, status: "closed" } }), "Job closed.")}>
+                      Close job
+                    </Button>
+                  )}
+                  {b.reviewed && b.status !== "closed" && <span className="text-xs text-muted-foreground self-center">Rated ✓</span>}
+                  {SERVICE_DISPUTABLE.has(b.status) && <DisputeButton bookingId={b.id} />}
                 </div>
               </div>
             ))}
@@ -177,12 +243,36 @@ function BookingsPage() {
                       <p className="mt-2 text-sm text-ink">{b.description}</p>
                       <p className="text-xs text-muted-foreground">{b.address}{b.scheduled_for ? ` · ${new Date(b.scheduled_for).toLocaleString()}` : ""}</p>
                     </div>
-                    <Badge variant="outline">{LABEL[b.status] ?? b.status}</Badge>
+                    <Badge variant="outline" className={STATUS_STYLE[b.status] ?? ""}>{SERVICE_STATUS_LABEL[b.status] ?? b.status}</Badge>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {STATUSES.filter((s) => s !== b.status && s !== "requested").map((s) => (
-                      <Button key={s} size="sm" variant="outline" onClick={() => setStatus(b.id, s)}>{LABEL[s]}</Button>
-                    ))}
+                    {(b.status === "requested" || b.status === "matched") && (
+                      <>
+                        <Button size="sm" onClick={() => void run(() => acceptFn({ data: { bookingId: b.id } }), "Job accepted.")}>
+                          <Check className="h-4 w-4 mr-1" /> Accept job
+                        </Button>
+                        <Button size="sm" variant="outline"
+                          onClick={() => void run(() => advanceFn({ data: { bookingId: b.id, status: "cancelled" } }), "Job declined.")}>
+                          <X className="h-4 w-4 mr-1" /> Decline
+                        </Button>
+                      </>
+                    )}
+                    {b.status === "accepted" && (
+                      <Button size="sm" onClick={() => void run(() => advanceFn({ data: { bookingId: b.id, status: "confirmed" } }), "Job confirmed.")}>
+                        <BadgeCheck className="h-4 w-4 mr-1" /> Confirm job
+                      </Button>
+                    )}
+                    {b.status === "confirmed" && (
+                      <Button size="sm" onClick={() => void run(() => advanceFn({ data: { bookingId: b.id, status: "in_progress" } }), "Job started.")}>
+                        <Play className="h-4 w-4 mr-1" /> Start job
+                      </Button>
+                    )}
+                    {b.status === "in_progress" && (
+                      <Button size="sm" onClick={() => void run(() => advanceFn({ data: { bookingId: b.id, status: "completed" } }), "Marked completed.")}>
+                        <Flag className="h-4 w-4 mr-1" /> Mark completed
+                      </Button>
+                    )}
+                    {SERVICE_DISPUTABLE.has(b.status) && <DisputeButton bookingId={b.id} />}
                   </div>
                 </div>
               ))}
