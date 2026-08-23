@@ -343,19 +343,11 @@ function ApplicantsPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-hero-band/40">
-      <SiteHeader />
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 py-10">
-        <div className="flex items-center gap-3 mb-6">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary"><Sparkles className="h-5 w-5" /></span>
-          <div>
-            <h1 className="font-serif text-3xl font-bold text-ink">Applicants &amp; ATS</h1>
-            <p className="text-sm text-muted-foreground">
-              Match scores combine skills, experience and preferences. Candidates at {SHORTLIST_THRESHOLD}%+ are auto-shortlisted.
-            </p>
-          </div>
-        </div>
-
+    <AdminShell
+      pageKey="applicants"
+      title="Applicants & ATS"
+      subtitle={`Match scores combine skills, experience and preferences. Candidates at ${SHORTLIST_THRESHOLD}%+ are auto-shortlisted.`}
+    >
         {/* 1 — Filtering controls */}
         <section className="rounded-2xl bg-card p-4 ring-1 ring-black/5 mb-5">
           <div className="flex flex-wrap items-end gap-3">
