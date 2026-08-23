@@ -114,9 +114,22 @@ function ServicesPage() {
         .from("skill_workers")
         .select("id, full_name, trades, bio, phone, location, hourly_rate, daily_rate, currency, available, photo_url, rating_avg, rating_count, jobs_completed, bookings_count, years_experience, gender")
         .eq("approved", true)
+        .eq("suspended", false)
         .order("rating_avg", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Worker[];
+    },
+  });
+
+  /** Matching engine scores (skills 40 · distance 25 · rating 15 · availability 10 · experience 10). */
+  const { data: matchScores } = useQuery({
+    enabled: !!trade && sort === "match",
+    queryKey: ["worker-match", trade],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("match_service_workers", { _trade: trade });
+      if (error) throw error;
+      return new Map((data ?? []).map((m) => [m.worker_id, Number(m.match_score)]));
     },
   });
 
@@ -144,8 +157,9 @@ function ServicesPage() {
     return [...rows].sort((a, b) =>
       sort === "price" ? rateOf(a) - rateOf(b)
         : sort === "work" ? b.jobs_completed - a.jobs_completed
-          : Number(b.rating_avg) - Number(a.rating_avg));
-  }, [workers, q, trade, sort, minRating, maxPrice]);
+          : sort === "match" ? (matchScores?.get(b.id) ?? 0) - (matchScores?.get(a.id) ?? 0)
+            : Number(b.rating_avg) - Number(a.rating_avg));
+  }, [workers, q, trade, sort, minRating, maxPrice, matchScores]);
 
   const submitBooking = async () => {
     if (!user) return toast.error("Please sign in to book a service.");
@@ -202,6 +216,7 @@ function ServicesPage() {
                   <Select value={sort} onValueChange={setSort}>
                     <SelectTrigger className="w-[180px] bg-white"><SelectValue /></SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="match">Best match</SelectItem>
                       <SelectItem value="rating">Top rated</SelectItem>
                       <SelectItem value="price">Lowest price</SelectItem>
                       <SelectItem value="work">Most work done</SelectItem>
@@ -225,9 +240,13 @@ function ServicesPage() {
                   />
                 </>
               )}
-              {isAdmin && (
-                <Link to="/services/register" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
+              {isAdmin ? (
+                <Link to="/admin/skill-workers" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
                   <Wrench className="h-4 w-4" /> Register a skilled worker
+                </Link>
+              ) : (
+                <Link to="/services/register" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-primary ring-1 ring-primary/30 hover:bg-primary/5">
+                  <Wrench className="h-4 w-4" /> Become a worker
                 </Link>
               )}
 

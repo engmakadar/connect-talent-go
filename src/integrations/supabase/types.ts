@@ -1116,40 +1116,64 @@ export type Database = {
       }
       service_bookings: {
         Row: {
+          accepted_at: string | null
           address: string
+          closed_at: string | null
+          completed_at: string | null
+          confirmed_at: string | null
           created_at: string
+          customer_confirmed_at: string | null
           customer_id: string
           customer_name: string
           customer_phone: string | null
           description: string
           id: string
+          matched_at: string | null
+          rated_at: string | null
           scheduled_for: string | null
+          started_at: string | null
           status: string
           updated_at: string
           worker_id: string
         }
         Insert: {
+          accepted_at?: string | null
           address: string
+          closed_at?: string | null
+          completed_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
+          customer_confirmed_at?: string | null
           customer_id: string
           customer_name: string
           customer_phone?: string | null
           description: string
           id?: string
+          matched_at?: string | null
+          rated_at?: string | null
           scheduled_for?: string | null
+          started_at?: string | null
           status?: string
           updated_at?: string
           worker_id: string
         }
         Update: {
+          accepted_at?: string | null
           address?: string
+          closed_at?: string | null
+          completed_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
+          customer_confirmed_at?: string | null
           customer_id?: string
           customer_name?: string
           customer_phone?: string | null
           description?: string
           id?: string
+          matched_at?: string | null
+          rated_at?: string | null
           scheduled_for?: string | null
+          started_at?: string | null
           status?: string
           updated_at?: string
           worker_id?: string
@@ -1160,6 +1184,50 @@ export type Database = {
             columns: ["worker_id"]
             isOneToOne: false
             referencedRelation: "skill_workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_disputes: {
+        Row: {
+          booking_id: string
+          created_at: string
+          decision: string | null
+          id: string
+          raised_by: string
+          reason: string
+          resolved_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          decision?: string | null
+          id?: string
+          raised_by: string
+          reason: string
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          decision?: string | null
+          id?: string
+          raised_by?: string
+          reason?: string
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_disputes_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "service_bookings"
             referencedColumns: ["id"]
           },
         ]
@@ -1218,6 +1286,7 @@ export type Database = {
           available: boolean
           bio: string | null
           bookings_count: number
+          certifications: Json
           created_at: string
           currency: string
           daily_rate: number | null
@@ -1235,9 +1304,12 @@ export type Database = {
           photo_url: string | null
           rating_avg: number
           rating_count: number
+          service_radius_km: number
+          suspended: boolean
           trades: string[]
           updated_at: string
           user_id: string | null
+          verified_at: string | null
           years_experience: number | null
         }
         Insert: {
@@ -1245,6 +1317,7 @@ export type Database = {
           available?: boolean
           bio?: string | null
           bookings_count?: number
+          certifications?: Json
           created_at?: string
           currency?: string
           daily_rate?: number | null
@@ -1262,9 +1335,12 @@ export type Database = {
           photo_url?: string | null
           rating_avg?: number
           rating_count?: number
+          service_radius_km?: number
+          suspended?: boolean
           trades?: string[]
           updated_at?: string
           user_id?: string | null
+          verified_at?: string | null
           years_experience?: number | null
         }
         Update: {
@@ -1272,6 +1348,7 @@ export type Database = {
           available?: boolean
           bio?: string | null
           bookings_count?: number
+          certifications?: Json
           created_at?: string
           currency?: string
           daily_rate?: number | null
@@ -1289,9 +1366,12 @@ export type Database = {
           photo_url?: string | null
           rating_avg?: number
           rating_count?: number
+          service_radius_km?: number
+          suspended?: boolean
           trades?: string[]
           updated_at?: string
           user_id?: string | null
+          verified_at?: string | null
           years_experience?: number | null
         }
         Relationships: []
@@ -1593,6 +1673,36 @@ export type Database = {
       }
     }
     Functions: {
+      accept_service_booking: {
+        Args: { _booking_id: string }
+        Returns: {
+          accepted_at: string | null
+          address: string
+          closed_at: string | null
+          completed_at: string | null
+          confirmed_at: string | null
+          created_at: string
+          customer_confirmed_at: string | null
+          customer_id: string
+          customer_name: string
+          customer_phone: string | null
+          description: string
+          id: string
+          matched_at: string | null
+          rated_at: string | null
+          scheduled_for: string | null
+          started_at: string | null
+          status: string
+          updated_at: string
+          worker_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_confirm_user_email: {
         Args: { _user_id: string }
         Returns: undefined
@@ -1629,6 +1739,26 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      match_service_workers: {
+        Args: { _lat?: number; _lng?: number; _trade?: string }
+        Returns: {
+          bookings_count: number
+          currency: string
+          daily_rate: number
+          distance_km: number
+          full_name: string
+          hourly_rate: number
+          jobs_completed: number
+          location: string
+          match_score: number
+          photo_url: string
+          rating_avg: number
+          rating_count: number
+          trades: string[]
+          worker_id: string
+          years_experience: number
+        }[]
       }
       user_in_company: {
         Args: { _company_id: string; _user_id: string }
