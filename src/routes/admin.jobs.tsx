@@ -113,12 +113,18 @@ function ApprovedJobsTable() {
 
 function ApprovedRow({ job }: { job: Job & { _edits?: number } }) {
   const edits = job._edits ?? 0;
+  const expired = !!job.expires_at && new Date(job.expires_at).getTime() < Date.now();
   return (
     <li className="flex flex-wrap items-center gap-4 px-6 py-4 hover:bg-hero-band/40">
       <CompanyLogo company={job.company} size={48} className="h-12 w-12 shrink-0" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap mb-1">
           <h3 className="font-display text-lg font-semibold text-primary">{job.title}</h3>
+          {expired ? (
+            <Badge className="text-[10px] bg-rose-100 text-rose-700 border-0 hover:bg-rose-100">Expired</Badge>
+          ) : (
+            <Badge className="text-[10px] bg-emerald-100 text-emerald-700 border-0 hover:bg-emerald-100">Active</Badge>
+          )}
           <Badge variant="secondary" className="text-[10px]">{job.category}</Badge>
           <Badge variant="outline" className="text-[10px]">{formatEmploymentType(job.employment_type)}</Badge>
           {edits > 0 && (
