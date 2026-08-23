@@ -22,7 +22,7 @@ import { wordCount } from "@/lib/strip-html";
 
 export const Route = createFileRoute("/admin/post-job")({
   head: () => ({ meta: [{ title: "Post a Job — SahanJobs Admin" }] }),
-  validateSearch: (s: Record<string, unknown>) => ({ id: (s.id as string) || "" }),
+  validateSearch: (s: Record<string, unknown>): { id?: string } => ({ id: (s.id as string) || undefined }),
   component: () => (
     <AdminShell pageKey="post_job" title="Post a Job or Tender" subtitle="Submissions are queued for approval before going live.">
       <PostJobForm />
@@ -58,7 +58,8 @@ const baseSchema = z.object({
 function PostJobForm() {
   const { user, isAdmin } = useAuth();
   const router = useRouter();
-  const { id: editId } = Route.useSearch();
+  const { id: editIdParam } = Route.useSearch();
+  const editId = editIdParam ?? "";
   const isEdit = !!editId;
   const [submitting, setSubmitting] = useState(false);
   const [postingType, setPostingType] = useState<"job" | "tender">("job");
