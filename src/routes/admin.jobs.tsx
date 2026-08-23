@@ -18,7 +18,7 @@ type Job = Database["public"]["Tables"]["jobs"]["Row"];
 export const Route = createFileRoute("/admin/jobs")({
   head: () => ({ meta: [{ title: "Job Moderation — SahanJobs Admin" }] }),
   component: () => (
-    <AdminShell pageKey="job_moderation" title="Job Moderation" subtitle="All approved jobs. Edits open in the original posting form.">
+    <AdminShell pageKey="job_moderation" title="Job Moderation" subtitle="Approved jobs categorized as Active (still public) or Expired (deadline passed). Edits open in the original posting form.">
       <ApprovedJobsTable />
     </AdminShell>
   ),
@@ -26,6 +26,7 @@ export const Route = createFileRoute("/admin/jobs")({
 
 function ApprovedJobsTable() {
   const [q, setQ] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "expired">("all");
   const { isAdmin, user } = useAuth();
   const { data, isLoading } = useQuery({
     queryKey: ["admin-approved-jobs", isAdmin, user?.id],
@@ -53,16 +54,46 @@ function ApprovedJobsTable() {
     },
   });
   const filtered = useMemo(() => {
-    if (!q.trim()) return data ?? [];
+    const now = Date.now();
+    let rows = data ?? [];
+    if (statusFilter !== "all") {
+      rows = rows.filter((j) => {
+        const expired = !!j.expires_at && new Date(j.expires_at).getTime() < now;
+        return statusFilter === "expired" ? expired : !expired;
+      });
+    }
+    if (!q.trim()) return rows;
     const t = q.toLowerCase();
-    return (data ?? []).filter((j) => (j.title + j.company + j.location + j.category).toLowerCase().includes(t));
-  }, [data, q]);
+    return rows.filter((j) => (j.title + j.company + j.location + j.category).toLowerCase().includes(t));
+  }, [data, q, statusFilter]);
+
+  const counts = useMemo(() => {
+    const now = Date.now();
+    let active = 0, expired = 0;
+    (data ?? []).forEach((j) => {
+      if (j.expires_at && new Date(j.expires_at).getTime() < now) expired++; else active++;
+    });
+    return { all: active + expired, active, expired };
+  }, [data]);
 
   return (
     <div className="space-y-4">
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search approved jobs…" className="pl-9 h-11 bg-white" />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="relative max-w-md flex-1 min-w-[220px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search approved jobs…" className="pl-9 h-11 bg-white" />
+        </div>
+        <div className="inline-flex rounded-full bg-secondary p-1 text-xs font-semibold">
+          {([["all", `All (${counts.all})`], ["active", `Active (${counts.active})`], ["expired", `Expired (${counts.expired})`]] as const).map(([v, label]) => (
+            <button
+              key={v}
+              onClick={() => setStatusFilter(v)}
+              className={`px-3 py-1.5 rounded-full transition ${statusFilter === v ? "bg-primary text-primary-foreground shadow-sm" : "text-ink-soft hover:text-ink"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {isLoading ? (
@@ -82,12 +113,18 @@ function ApprovedJobsTable() {
 
 function ApprovedRow({ job }: { job: Job & { _edits?: number } }) {
   const edits = job._edits ?? 0;
+  const expired = !!job.expires_at && new Date(job.expires_at).getTime() < Date.now();
   return (
     <li className="flex flex-wrap items-center gap-4 px-6 py-4 hover:bg-hero-band/40">
       <CompanyLogo company={job.company} size={48} className="h-12 w-12 shrink-0" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap mb-1">
           <h3 className="font-display text-lg font-semibold text-primary">{job.title}</h3>
+          {expired ? (
+            <Badge className="text-[10px] bg-rose-100 text-rose-700 border-0 hover:bg-rose-100">Expired</Badge>
+          ) : (
+            <Badge className="text-[10px] bg-emerald-100 text-emerald-700 border-0 hover:bg-emerald-100">Active</Badge>
+          )}
           <Badge variant="secondary" className="text-[10px]">{job.category}</Badge>
           <Badge variant="outline" className="text-[10px]">{formatEmploymentType(job.employment_type)}</Badge>
           {edits > 0 && (
