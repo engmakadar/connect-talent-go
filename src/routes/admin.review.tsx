@@ -27,7 +27,7 @@ export const Route = createFileRoute("/admin/review")({
 function AdminReview() {
   const { user, isAdmin, loading } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"pending" | "approved" | "rejected" | "expired" | "flagged_fraud">("pending");
+  const [tab, setTab] = useState<"approved" | "expired">("approved");
   const [typeFilter, setTypeFilter] = useState<"all" | "job" | "tender">("all");
 
   // Companies need their own company_id to scope the list.
@@ -88,19 +88,16 @@ function AdminReview() {
       title="Job Approval"
       subtitle={
         isAdmin
-          ? "Approve or reject new submissions across every company."
-          : "Track the status of your company's job submissions. Only Super Admins can approve or reject."
+          ? "All active positions and expired listings across every company."
+          : "Track the status of your company's active and expired job posts."
       }
     >
       <div className="rounded-2xl bg-white p-6 ring-1 ring-black/5 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
             <TabsList className="bg-secondary">
-              <TabsTrigger value="pending">Pending</TabsTrigger>
-              <TabsTrigger value="approved">Approved</TabsTrigger>
-              <TabsTrigger value="rejected">Rejected</TabsTrigger>
+              <TabsTrigger value="approved">Active</TabsTrigger>
               <TabsTrigger value="expired">Expired</TabsTrigger>
-              <TabsTrigger value="flagged_fraud" className="text-rose-700 data-[state=active]:text-rose-700">Fraud</TabsTrigger>
             </TabsList>
           </Tabs>
 

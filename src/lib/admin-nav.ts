@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, Building2, UserCheck,
-  ClipboardCheck, FileText, AlertTriangle, Tags, Sparkles,
+  ClipboardCheck, FileText, Tags, Sparkles,
   FileCode2, CreditCard, Receipt, Megaphone, Wrench,
   History, Lock, Palette, Plus,
 } from "lucide-react";
@@ -59,7 +59,6 @@ export const ADMIN_NAV: AdminNavSection[] = [
       { key: "job_approval", label: "Job Approval", to: "/admin/review", icon: ClipboardCheck },
       { key: "applicants", label: "Applicants & ATS", to: "/company/applicants", icon: UserCheck },
       { key: "job_moderation", label: "Job Moderation", to: "/admin/jobs", icon: FileText },
-      { key: "fraud_detection", label: "Fraud Detection", to: "/admin/review", icon: AlertTriangle },
     ],
   },
 
@@ -106,7 +105,6 @@ export const ADMIN_NAV: AdminNavSection[] = [
     title: "User Tools",
     items: [
       { key: "my_resume", label: "My Resume", to: "/resume", icon: FileText },
-      { key: "my_billing", label: "Billing & Invoices", to: "/billing", icon: Receipt },
       { key: "matched_jobs", label: "Matched Jobs", to: "/matches", icon: Sparkles },
     ],
   },
