@@ -1,14 +1,14 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  Users, Star, Mail, Search, Briefcase, Sparkles, Ban, CalendarCheck,
+  Users, Star, Mail, Search, Briefcase, Ban, CalendarCheck,
   Download, Filter, CheckCircle2, XCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { SiteHeader, SiteFooter } from "@/components/site-chrome";
+import { AdminShell } from "@/components/admin-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -63,17 +63,12 @@ function isActiveJob(j: { status: string; expires_at: string | null }) {
 }
 
 function ApplicantsPage() {
-  const { user, loading, isAdmin } = useAuth();
-  const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
   const qc = useQueryClient();
   const update = useServerFn(updateApplication);
   const [category, setCategory] = useState<string>("all");
   const [jobFilter, setJobFilter] = useState<string>("all");
   const [q, setQ] = useState("");
-
-  useEffect(() => {
-    if (!loading && !user) navigate({ to: "/auth" });
-  }, [loading, user, navigate]);
 
   const { data: jobs } = useQuery({
     enabled: !!user,

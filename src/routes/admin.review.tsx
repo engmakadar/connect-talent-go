@@ -88,8 +88,8 @@ function AdminReview() {
       title="Job Approval"
       subtitle={
         isAdmin
-          ? "Approve or reject new submissions across every company."
-          : "Track the status of your company's job submissions. Only Super Admins can approve or reject."
+          ? "All active positions and expired listings across every company."
+          : "Track the status of your company's active and expired job posts."
       }
     >
       <div className="rounded-2xl bg-white p-6 ring-1 ring-black/5 shadow-sm">
