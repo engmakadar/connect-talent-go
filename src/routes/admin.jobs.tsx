@@ -26,6 +26,7 @@ export const Route = createFileRoute("/admin/jobs")({
 
 function ApprovedJobsTable() {
   const [q, setQ] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "expired">("all");
   const { isAdmin, user } = useAuth();
   const { data, isLoading } = useQuery({
     queryKey: ["admin-approved-jobs", isAdmin, user?.id],
