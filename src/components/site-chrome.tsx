@@ -112,7 +112,7 @@ export function SiteHeader() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-72 p-0">
-                {/* Admin Panel header — company logo + name */}
+                {/* Account header — company logo + name */}
                 <div className="flex items-center gap-3 px-3 py-3 border-b border-border bg-secondary/50">
                   {company ? (
                     <CompanyLogo company={company.name} logoUrl={company.logo_url} size={40} className="h-10 w-10" />
@@ -122,7 +122,7 @@ export function SiteHeader() {
                     </span>
                   )}
                   <div className="min-w-0">
-                    <p className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Admin Panel</p>
+                    <p className="text-xs uppercase tracking-wider font-bold text-muted-foreground">{isAdmin ? "Admin Panel" : "My Account"}</p>
                     <p className="text-sm font-semibold text-ink truncate">{company?.name ?? user.email}</p>
                     {onTrial && (
                       <p className="text-[11px] text-amber-700 font-medium">Free trial · {trialDaysLeft} day{trialDaysLeft === 1 ? "" : "s"} left</p>
@@ -212,10 +212,11 @@ export function SiteHeader() {
 }
 
 export function SiteFooter() {
+  const { isAdmin } = useAuth();
   return (
     <footer className="bg-footer text-footer-foreground">
       <div className="mx-auto max-w-7xl px-6 py-16">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-5">
+        <div className={`grid gap-12 md:grid-cols-2 ${isAdmin ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
           <div className="lg:col-span-1">
             <div className="rounded-lg bg-white/95 px-3 py-2 inline-block">
               <img src={logo} alt="SahanJobs" className="h-8 w-auto" />
@@ -241,11 +242,13 @@ export function SiteFooter() {
             { label: "Sign Up", to: "/auth" },
           ]} />
 
-          <FooterCol title="Admin" items={[
-            { label: "Review Queue", to: "/admin/review" },
-            { label: "Manage Users", to: "/admin/users" },
-            { label: "Companies", to: "/admin/companies" },
-          ]} />
+          {isAdmin && (
+            <FooterCol title="Admin" items={[
+              { label: "Review Queue", to: "/admin/review" },
+              { label: "Manage Users", to: "/admin/users" },
+              { label: "Companies", to: "/admin/companies" },
+            ]} />
+          )}
 
           <FooterCol title="Legal" items={[
             { label: "Privacy Policy", to: "/" },
