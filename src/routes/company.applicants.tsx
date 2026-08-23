@@ -441,10 +441,7 @@ function ApplicantsPage() {
           <TabsContent value="all" className="mt-4"><Table rows={filtered} /></TabsContent>
           <TabsContent value="shortlist" className="mt-4"><Table rows={shortlist} /></TabsContent>
         </Tabs>
-
-      </main>
-      <SiteFooter />
-    </div>
+    </AdminShell>
   );
 }
 
