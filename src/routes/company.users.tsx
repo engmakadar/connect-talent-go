@@ -1,11 +1,11 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Users, Plus, Search, MoreHorizontal, Ban, PowerOff, Trash2, Pencil, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { SiteHeader, SiteFooter } from "@/components/site-chrome";
+import { AdminShell } from "@/components/admin-shell";
 import { CompanyLogo } from "@/components/company-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ import {
 } from "@/lib/company-users.functions";
 
 export const Route = createFileRoute("/company/users")({
-  head: () => ({ meta: [{ title: "Team users — SahanJobs" }] }),
+  head: () => ({ meta: [{ title: "Enrollment — SahanJobs" }] }),
   component: CompanyUsersPage,
 });
 
@@ -38,9 +38,23 @@ type Row = {
   team_name: string | null;
 };
 
+// Company team enrollment lives inside the staff sidebar ("User Management →
+// Enrollment") and is company-users-only — the AdminShell gate bounces
+// Super Admins and Jobseekers to their first accessible page.
 function CompanyUsersPage() {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
+  return (
+    <AdminShell
+      pageKey="enrollment"
+      title="Enrollment"
+      subtitle="Enroll and manage your company's team users."
+    >
+      <CompanyUsersBody />
+    </AdminShell>
+  );
+}
+
+function CompanyUsersBody() {
+  const { user } = useAuth();
 
   const { data: prof, isLoading: profLoading } = useQuery({
     enabled: !!user,
@@ -53,49 +67,32 @@ function CompanyUsersPage() {
     },
   });
 
-  useEffect(() => {
-    if (!loading && !user) navigate({ to: "/auth" });
-  }, [loading, user, navigate]);
-
-  if (loading || profLoading) {
-    return <Shell><div className="py-20 text-center text-sm text-muted-foreground">Loading…</div></Shell>;
+  if (profLoading) {
+    return <div className="py-20 text-center text-sm text-muted-foreground">Loading…</div>;
   }
   if (!prof?.company) {
     return (
-      <Shell>
-        <div className="py-20 text-center">
-          <Users className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
-          <h2 className="font-display text-xl font-bold text-ink">No company assigned</h2>
-          <p className="text-sm text-muted-foreground mt-1">Your account isn't linked to a company yet. Contact your administrator.</p>
-        </div>
-      </Shell>
+      <div className="py-20 text-center">
+        <Users className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
+        <h2 className="font-display text-xl font-bold text-ink">No company assigned</h2>
+        <p className="text-sm text-muted-foreground mt-1">Your account isn't linked to a company yet. Contact your administrator.</p>
+      </div>
     );
   }
 
   return (
-    <Shell>
+    <div>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div className="flex items-center gap-3">
           <CompanyLogo company={prof.company.name} logoUrl={prof.company.logo_url} size={44} className="h-11 w-11" />
           <div>
-            <h1 className="font-display text-2xl font-bold text-ink">Team users</h1>
-            <p className="text-sm text-muted-foreground">Manage your company's internal users.</p>
+            <h2 className="font-display text-xl font-bold text-ink">{prof.company.name}</h2>
+            <p className="text-sm text-muted-foreground">Enroll team users, assign roles and manage access.</p>
           </div>
         </div>
         <InviteDialog companyId={prof.company.id} />
       </div>
       <UsersTable companyId={prof.company.id} company={prof.company} />
-    </Shell>
-  );
-}
-
-
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen flex flex-col bg-hero-band/40">
-      <SiteHeader />
-      <section className="mx-auto w-full max-w-6xl px-4 md:px-8 py-10 flex-1">{children}</section>
-      <SiteFooter />
     </div>
   );
 }

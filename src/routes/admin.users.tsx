@@ -16,11 +16,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CompanyLogo } from "@/components/company-logo";
-import { Users, Pencil, Search, MoreHorizontal, Ban, PowerOff, Power, Plus, UserPlus, Building2, ExternalLink, Trash2, CheckCircle2, Users2, Mail } from "lucide-react";
+import { Users, Pencil, Search, MoreHorizontal, Ban, PowerOff, Power, Building2, Trash2, CheckCircle2, Users2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { logAudit } from "@/lib/audit";
 import { useServerFn } from "@tanstack/react-start";
-import { activateUser, enrollUserFull } from "@/lib/admin-actions.functions";
+import { activateUser } from "@/lib/admin-actions.functions";
 import { sendPasswordReset } from "@/lib/admin-password.functions";
 import { addExistingUserToCompanyTeam } from "@/lib/company-users.functions";
 
@@ -60,15 +60,14 @@ type Row = {
 
 
 
-type RoleFilter = "all" | "admin" | "employer" | "jobseeker";
+type RoleFilter = "all" | "employer" | "jobseeker";
 
 function AdminUsers() {
   return (
     <AdminShell
       pageKey="all_users"
       title="All Users"
-      subtitle="Complete directory of admins, employers and jobseekers."
-      actions={<EnrollMenu />}
+      subtitle="Complete directory of platform users. Team enrollment happens in each company's Enrollment page."
     >
       <UsersTable />
     </AdminShell>
@@ -199,10 +198,10 @@ function UsersTable() {
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by username, name, email, company or location…" className="pl-9 h-11 bg-white" />
         </div>
         <div className="inline-flex rounded-full bg-secondary p-1 text-xs font-semibold">
-          {(["all", "admin", "employer", "jobseeker"] as const).map((r) => (
+          {(["all", "employer", "jobseeker"] as const).map((r) => (
             <button key={r} onClick={() => setRoleFilter(r)}
               className={`px-3 py-1.5 rounded-full transition capitalize ${roleFilter === r ? "bg-primary text-primary-foreground shadow-sm" : "text-ink-soft hover:text-ink"}`}>
-              {r === "admin" ? "Super Admin" : r}
+              {r}
             </button>
           ))}
         </div>
@@ -628,161 +627,6 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
           <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
           <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save"}</Button>
         </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function EnrollMenu() {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button className="rounded-full bg-primary hover:bg-primary/90">
-          <Plus className="h-4 w-4 mr-1" /> Enroll user
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <EnrollItem role="admin" label="Super Admin" />
-        <EnrollItem role="jobseeker" label="Jobseeker" />
-        <div className="px-2 py-1.5 text-[11px] text-muted-foreground border-t border-border mt-1">
-          Company team members are created by the company itself in their Users page.
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-
-function EnrollItem({ role, label }: { role: "admin" | "employer" | "jobseeker"; label: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <>
-      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setOpen(true); }}>
-        <UserPlus className="mr-2 h-4 w-4" /> {label}
-      </DropdownMenuItem>
-      <EnrollDialog role={role} open={open} onOpenChange={setOpen} />
-    </>
-  );
-}
-
-function EnrollDialog({ role, open, onOpenChange }: { role: "admin" | "employer" | "jobseeker"; open: boolean; onOpenChange: (v: boolean) => void }) {
-  const qc = useQueryClient();
-  const enroll = useServerFn(enrollUserFull);
-  const [form, setForm] = useState({
-    first_name: "", last_name: "", email: "", phone: "", location: "",
-    company_id: "", company_name: "", password: "",
-  });
-  const [createCompany, setCreateCompany] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [result, setResult] = useState<{ tempPassword: string | null } | null>(null);
-
-  const { data: companies } = useQuery({
-    queryKey: ["companies-options"],
-    queryFn: async () => (await supabase.from("companies").select("id, name").order("name")).data ?? [],
-    enabled: open && role === "employer",
-  });
-
-  // Auto-generate username preview from names.
-  const username = (form.first_name + form.last_name)
-    .toLowerCase().replace(/[^a-z0-9]/g, "") || "user";
-
-  const submit = async () => {
-    if (!form.first_name.trim() || !form.last_name.trim() || !form.email.trim()) {
-      return toast.error("First name, last name, and email are required.");
-    }
-    if (role === "employer" && !createCompany && !form.company_id) {
-      return toast.error("Select an existing company or create a new one.");
-    }
-    if (role === "employer" && createCompany && !form.company_name.trim()) {
-      return toast.error("Enter the new company name.");
-    }
-    setSaving(true);
-    try {
-      const res = await enroll({ data: {
-        role, first_name: form.first_name, last_name: form.last_name, email: form.email,
-        phone: form.phone, location: form.location,
-        company_id: role === "employer" && !createCompany ? form.company_id : null,
-        company_name: role === "employer" && createCompany ? form.company_name : "",
-        password: form.password || undefined,
-      } });
-      await logAudit({ action: "user.role_change", resource_type: "user", resource_id: res.userId, metadata: { role, enrolled: true } });
-      toast.success(`${role === "admin" ? "Super Admin" : role[0].toUpperCase() + role.slice(1)} enrolled.`);
-      setResult({ tempPassword: res.tempPassword });
-      qc.invalidateQueries({ queryKey: ["admin-users-full"] });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to enroll");
-    } finally { setSaving(false); }
-  };
-
-  const close = () => {
-    setForm({ first_name: "", last_name: "", email: "", phone: "", location: "", company_id: "", company_name: "", password: "" });
-    setCreateCompany(false); setResult(null);
-    onOpenChange(false);
-  };
-
-  const title = role === "admin" ? "Enroll Super Admin" : role === "employer" ? "Enroll Employer & Company" : "Enroll Jobseeker";
-
-  return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) close(); else onOpenChange(true); }}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>{title}</DialogTitle></DialogHeader>
-        {result ? (
-          <div className="space-y-3 py-2">
-            <p className="text-sm">User enrolled successfully. Share these credentials with them:</p>
-            <div className="rounded-lg bg-secondary p-3 text-sm">
-              <p><span className="font-semibold">Email:</span> {form.email}</p>
-              {result.tempPassword && <p><span className="font-semibold">Temp password:</span> <code className="font-mono">{result.tempPassword}</code></p>}
-              {!result.tempPassword && <p className="text-muted-foreground">Password was set as provided.</p>}
-            </div>
-            <p className="text-xs text-muted-foreground">The account is pre-activated. Ask the user to sign in and change their password.</p>
-            <DialogFooter><Button onClick={close}>Done</Button></DialogFooter>
-          </div>
-        ) : (
-          <>
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>First name *</Label><Input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></div>
-                <div><Label>Last name *</Label><Input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} /></div>
-              </div>
-              <div className="text-xs text-muted-foreground">Username (auto): <span className="font-mono">@{username}</span></div>
-              <div><Label>Email *</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-                <div><Label>Location</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="City, Country" /></div>
-              </div>
-              {role === "employer" && (
-                <div className="space-y-2 rounded-lg border border-border p-3">
-                  <Label className="text-xs uppercase tracking-wide">Company assignment</Label>
-                  <div className="inline-flex rounded-full bg-secondary p-1 text-xs font-semibold">
-                    <button type="button" onClick={() => setCreateCompany(false)}
-                      className={`px-3 py-1 rounded-full ${!createCompany ? "bg-primary text-primary-foreground" : ""}`}>Existing</button>
-                    <button type="button" onClick={() => setCreateCompany(true)}
-                      className={`px-3 py-1 rounded-full ${createCompany ? "bg-primary text-primary-foreground" : ""}`}>Create new</button>
-                  </div>
-                  {createCompany ? (
-                    <Input placeholder="Company name" value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} />
-                  ) : (
-                    <Select value={form.company_id} onValueChange={(v) => setForm({ ...form, company_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Select company" /></SelectTrigger>
-                      <SelectContent>
-                        {(companies ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  )}
-                </div>
-              )}
-              <div>
-                <Label>Password (optional)</Label>
-                <Input type="text" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Leave blank to auto-generate" />
-                <p className="text-[11px] text-muted-foreground mt-1">If blank, a temporary password will be generated and shown after enrollment.</p>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={close}>Cancel</Button>
-              <Button onClick={submit} disabled={saving}>{saving ? "Enrolling…" : "Enroll"}</Button>
-            </DialogFooter>
-          </>
-        )}
       </DialogContent>
     </Dialog>
   );

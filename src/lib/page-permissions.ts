@@ -10,6 +10,7 @@ const EMPLOYER_DEFAULT_KEYS: AdminPageKey[] = [
   "job_approval",
   "applicants",
   "job_moderation",
+  "enrollment",
 ];
 
 /** Returns the set of admin page_keys the current user can access.
@@ -43,7 +44,10 @@ export function usePagePermissions() {
   return {
     isAdmin,
     loading: loading || (!isAdmin && !!user && isLoading),
-    can: (key: AdminPageKey) => isAdmin || granted.has(key),
+    // "enrollment" is company-users-only: hidden from Super Admins and Jobseekers
+    // even if a key was explicitly granted.
+    can: (key: AdminPageKey) =>
+      key === "enrollment" ? (!isAdmin && isCompanyUser) : (isAdmin || granted.has(key)),
     grantedKeys: Array.from(granted),
   };
 }

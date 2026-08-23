@@ -2,13 +2,13 @@ import {
   LayoutDashboard, Users, Building2, UserCheck,
   ClipboardCheck, FileText, Tags, Sparkles,
   FileCode2, CreditCard, Receipt, Megaphone, Wrench,
-  History, Lock, Palette, Plus,
+  History, Lock, Palette, Plus, UserPlus,
 } from "lucide-react";
 
 
 export type AdminPageKey =
   | "dashboard" | "reports"
-  | "all_users" | "employers" | "candidates" | "user_verification"
+  | "all_users" | "enrollment" | "employers" | "candidates" | "user_verification"
   | "job_approval" | "job_moderation" | "post_job" | "applicants" | "fraud_detection" | "categories"
   | "ai_matching" | "recommendations" | "cv_parsing"
   | "skill_workers"
@@ -42,6 +42,8 @@ export const ADMIN_NAV: AdminNavSection[] = [
     title: "User Management",
     items: [
       { key: "all_users", label: "All Users", to: "/admin/users", icon: Users },
+      // Company team enrollment — visible to company users only (never Super Admin / Jobseeker).
+      { key: "enrollment", label: "Enrollment", to: "/company/users", icon: UserPlus },
       { key: "employers", label: "Employers (Companies)", to: "/admin/companies", icon: Building2 },
       { key: "candidates", label: "Candidates", to: "/admin/candidates", icon: Users },
     ],
