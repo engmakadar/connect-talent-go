@@ -17,6 +17,7 @@ const EMPTY = {
   full_name: "", phone: "", location: "", national_id: "", currency: "USD",
   photo_url: "", years_experience: "", gender: "", date_of_birth: "",
   trades: [] as string[], bio: "", hourly_rate: "", daily_rate: "", available: true, approved: true,
+  suspended: false, service_radius_km: "25",
 };
 
 export function SkillWorkerRegistration() {
@@ -76,6 +77,8 @@ export function SkillWorkerRegistration() {
       daily_rate: data.daily_rate?.toString() ?? "",
       available: data.available ?? true,
       approved: data.approved ?? true,
+      suspended: data.suspended ?? false,
+      service_radius_km: data.service_radius_km?.toString() ?? "25",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -101,6 +104,8 @@ export function SkillWorkerRegistration() {
       daily_rate: form.daily_rate ? Number(form.daily_rate) : null,
       available: form.available,
       approved: form.approved,
+      suspended: form.suspended,
+      service_radius_km: form.service_radius_km ? Number(form.service_radius_km) : 25,
     };
     const { error } = editId
       ? await supabase.from("skill_workers").update(payload).eq("id", editId)
@@ -154,6 +159,7 @@ export function SkillWorkerRegistration() {
           <div><Label>Currency</Label><Input value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} /></div>
           <div><Label>Hourly rate</Label><Input type="number" value={form.hourly_rate} onChange={(e) => setForm({ ...form, hourly_rate: e.target.value })} /></div>
           <div><Label>Daily rate</Label><Input type="number" value={form.daily_rate} onChange={(e) => setForm({ ...form, daily_rate: e.target.value })} /></div>
+          <div><Label>Service radius (km)</Label><Input type="number" value={form.service_radius_km} onChange={(e) => setForm({ ...form, service_radius_km: e.target.value })} /></div>
         </div>
 
         <div>
@@ -176,7 +182,7 @@ export function SkillWorkerRegistration() {
 
         <div><Label>About your work</Label><Textarea rows={4} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="Specialities, areas covered, notable jobs…" /></div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-3">
           <div className="flex items-center justify-between rounded-xl bg-secondary/50 px-4 py-3">
             <div>
               <p className="text-sm font-semibold text-ink">Available for work</p>
@@ -186,10 +192,17 @@ export function SkillWorkerRegistration() {
           </div>
           <div className="flex items-center justify-between rounded-xl bg-secondary/50 px-4 py-3">
             <div>
-              <p className="text-sm font-semibold text-ink">Approved / published</p>
-              <p className="text-xs text-muted-foreground">Visible on the public services portal.</p>
+              <p className="text-sm font-semibold text-ink">Verified / published</p>
+              <p className="text-xs text-muted-foreground">Visible on the public services portal and in matching.</p>
             </div>
             <Switch checked={form.approved} onCheckedChange={(v) => setForm({ ...form, approved: v })} />
+          </div>
+          <div className="flex items-center justify-between rounded-xl bg-red-50 px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-ink">Suspended</p>
+              <p className="text-xs text-muted-foreground">Blocked from matching and the public directory.</p>
+            </div>
+            <Switch checked={form.suspended} onCheckedChange={(v) => setForm({ ...form, suspended: v })} />
           </div>
         </div>
 

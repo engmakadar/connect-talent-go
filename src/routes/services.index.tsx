@@ -77,7 +77,7 @@ function ServicesPage() {
   const qc = useQueryClient();
   const [trade, setTrade] = useState<string | null>(null);
   const [q, setQ] = useState("");
-  const [sort, setSort] = useState("rating");
+  const [sort, setSort] = useState("match");
   const [minRating, setMinRating] = useState("0");
   const [maxPrice, setMaxPrice] = useState("");
   const [booking, setBooking] = useState<Worker | null>(null);
@@ -306,6 +306,9 @@ function ServicesPage() {
                     {w.trades.slice(0, 4).map((t) => (
                       <Badge key={t} variant="outline" className="text-[10px]">{t}</Badge>
                     ))}
+                    {sort === "match" && matchScores?.has(w.id) && (
+                      <Badge className="bg-primary/10 text-primary border-0 text-[10px]">Match {matchScores.get(w.id)}%</Badge>
+                    )}
                     {!w.available && <Badge className="bg-muted text-muted-foreground border-0 text-[10px]">Busy</Badge>}
                   </div>
 
