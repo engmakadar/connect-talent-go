@@ -1118,6 +1118,9 @@ export type Database = {
         Row: {
           accepted_at: string | null
           address: string
+          attachments: Json
+          cancel_reason: string | null
+          cancelled_by: string | null
           closed_at: string | null
           completed_at: string | null
           confirmed_at: string | null
@@ -1126,19 +1129,26 @@ export type Database = {
           customer_id: string
           customer_name: string
           customer_phone: string | null
+          declined_by: string[]
           description: string
+          expires_at: string | null
           id: string
           matched_at: string | null
           rated_at: string | null
           scheduled_for: string | null
           started_at: string | null
           status: string
+          trade: string | null
           updated_at: string
+          urgency: string
           worker_id: string
         }
         Insert: {
           accepted_at?: string | null
           address: string
+          attachments?: Json
+          cancel_reason?: string | null
+          cancelled_by?: string | null
           closed_at?: string | null
           completed_at?: string | null
           confirmed_at?: string | null
@@ -1147,19 +1157,26 @@ export type Database = {
           customer_id: string
           customer_name: string
           customer_phone?: string | null
+          declined_by?: string[]
           description: string
+          expires_at?: string | null
           id?: string
           matched_at?: string | null
           rated_at?: string | null
           scheduled_for?: string | null
           started_at?: string | null
           status?: string
+          trade?: string | null
           updated_at?: string
+          urgency?: string
           worker_id: string
         }
         Update: {
           accepted_at?: string | null
           address?: string
+          attachments?: Json
+          cancel_reason?: string | null
+          cancelled_by?: string | null
           closed_at?: string | null
           completed_at?: string | null
           confirmed_at?: string | null
@@ -1168,14 +1185,18 @@ export type Database = {
           customer_id?: string
           customer_name?: string
           customer_phone?: string | null
+          declined_by?: string[]
           description?: string
+          expires_at?: string | null
           id?: string
           matched_at?: string | null
           rated_at?: string | null
           scheduled_for?: string | null
           started_at?: string | null
           status?: string
+          trade?: string | null
           updated_at?: string
+          urgency?: string
           worker_id?: string
         }
         Relationships: [
@@ -1237,30 +1258,42 @@ export type Database = {
           behaviour_rating: number
           booking_id: string
           comment: string | null
+          communication_rating: number | null
           created_at: string
           customer_id: string
           id: string
           performance_rating: number
+          professionalism_rating: number | null
+          punctuality_rating: number | null
+          quality_rating: number | null
           worker_id: string
         }
         Insert: {
           behaviour_rating: number
           booking_id: string
           comment?: string | null
+          communication_rating?: number | null
           created_at?: string
           customer_id: string
           id?: string
           performance_rating: number
+          professionalism_rating?: number | null
+          punctuality_rating?: number | null
+          quality_rating?: number | null
           worker_id: string
         }
         Update: {
           behaviour_rating?: number
           booking_id?: string
           comment?: string | null
+          communication_rating?: number | null
           created_at?: string
           customer_id?: string
           id?: string
           performance_rating?: number
+          professionalism_rating?: number | null
+          punctuality_rating?: number | null
+          quality_rating?: number | null
           worker_id?: string
         }
         Relationships: [
@@ -1309,6 +1342,7 @@ export type Database = {
           trades: string[]
           updated_at: string
           user_id: string | null
+          verification_note: string | null
           verified_at: string | null
           years_experience: number | null
         }
@@ -1340,6 +1374,7 @@ export type Database = {
           trades?: string[]
           updated_at?: string
           user_id?: string | null
+          verification_note?: string | null
           verified_at?: string | null
           years_experience?: number | null
         }
@@ -1371,6 +1406,7 @@ export type Database = {
           trades?: string[]
           updated_at?: string
           user_id?: string | null
+          verification_note?: string | null
           verified_at?: string | null
           years_experience?: number | null
         }
@@ -1678,6 +1714,9 @@ export type Database = {
         Returns: {
           accepted_at: string | null
           address: string
+          attachments: Json
+          cancel_reason: string | null
+          cancelled_by: string | null
           closed_at: string | null
           completed_at: string | null
           confirmed_at: string | null
@@ -1686,14 +1725,18 @@ export type Database = {
           customer_id: string
           customer_name: string
           customer_phone: string | null
+          declined_by: string[]
           description: string
+          expires_at: string | null
           id: string
           matched_at: string | null
           rated_at: string | null
           scheduled_for: string | null
           started_at: string | null
           status: string
+          trade: string | null
           updated_at: string
+          urgency: string
           worker_id: string
         }
         SetofOptions: {
@@ -1710,6 +1753,43 @@ export type Database = {
       company_has_active_subscription: {
         Args: { _company_id: string }
         Returns: boolean
+      }
+      decline_service_booking: {
+        Args: { _booking_id: string }
+        Returns: {
+          accepted_at: string | null
+          address: string
+          attachments: Json
+          cancel_reason: string | null
+          cancelled_by: string | null
+          closed_at: string | null
+          completed_at: string | null
+          confirmed_at: string | null
+          created_at: string
+          customer_confirmed_at: string | null
+          customer_id: string
+          customer_name: string
+          customer_phone: string | null
+          declined_by: string[]
+          description: string
+          expires_at: string | null
+          id: string
+          matched_at: string | null
+          rated_at: string | null
+          scheduled_for: string | null
+          started_at: string | null
+          status: string
+          trade: string | null
+          updated_at: string
+          urgency: string
+          worker_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       get_company_teams_summary: {
         Args: { _company_id: string }
@@ -1760,6 +1840,7 @@ export type Database = {
           years_experience: number
         }[]
       }
+      service_admin_stats: { Args: never; Returns: Json }
       user_in_company: {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
