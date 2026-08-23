@@ -18,7 +18,7 @@ type Job = Database["public"]["Tables"]["jobs"]["Row"];
 export const Route = createFileRoute("/admin/jobs")({
   head: () => ({ meta: [{ title: "Job Moderation — SahanJobs Admin" }] }),
   component: () => (
-    <AdminShell pageKey="job_moderation" title="Job Moderation" subtitle="All approved jobs. Edits open in the original posting form.">
+    <AdminShell pageKey="job_moderation" title="Job Moderation" subtitle="Approved jobs categorized as Active (still public) or Expired (deadline passed). Edits open in the original posting form.">
       <ApprovedJobsTable />
     </AdminShell>
   ),
