@@ -84,6 +84,18 @@ function JobDetail() {
     },
   });
 
+  // Logos for the similar-jobs cards so branding stays consistent everywhere.
+  const { data: similarLogos } = useQuery({
+    enabled: !!similar && similar.length > 0,
+    queryKey: ["similar-company-logos", (similar ?? []).map((s) => s.company_id).join(",")],
+    queryFn: async () => {
+      const ids = [...new Set((similar ?? []).map((s) => s.company_id).filter((v): v is string => !!v))];
+      if (!ids.length) return new Map<string, string | null>();
+      const { data } = await supabase.from("companies").select("id, logo_url").in("id", ids);
+      return new Map((data ?? []).map((c) => [c.id, c.logo_url]));
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-hero-band">
@@ -292,6 +304,15 @@ function JobDetail() {
               {copied ? <><Check className="h-4 w-4" /> Copied</> : <><Share2 className="h-4 w-4" /> Share job link</>}
             </button>
           </div>
+
+          {/* Company bio (up to 200 words) + follow engagement below the share links. */}
+          {job.company_id && (
+            <CompanyFollowCard
+              companyId={job.company_id}
+              companyName={companyRow?.name ?? job.company}
+              description={companyRow?.description ?? null}
+            />
+          )}
         </aside>
       </section>
 
@@ -303,7 +324,7 @@ function JobDetail() {
               {similar.map((s) => (
                 <Link key={s.id} to="/jobs/$jobId" params={{ jobId: s.id }} className="group rounded-2xl bg-card p-6 ring-1 ring-black/5 hover:-translate-y-0.5 hover:shadow-md transition-all">
                   <div className="flex items-start gap-3 mb-4">
-                    <CompanyLogo company={s.company} size={40} className="h-10 w-10 shrink-0" />
+                    <CompanyLogo company={s.company} logoUrl={s.company_id ? similarLogos?.get(s.company_id) ?? null : null} size={40} className="h-10 w-10 shrink-0" />
                     <div>
                       <h3 className="font-semibold leading-snug text-ink line-clamp-2 group-hover:text-primary">{s.title}</h3>
                       <p className="mt-0.5 text-sm font-medium text-primary">{s.company}</p>
