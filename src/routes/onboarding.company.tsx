@@ -58,7 +58,13 @@ function OnboardingCompany() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  const MAX_LOGO_BYTES = 2 * 1024 * 1024;
+
   const pickLogo = (file: File | null) => {
+    if (file) {
+      if (!file.type.startsWith("image/")) { toast.error("Logo must be an image (PNG, JPG or SVG)."); return; }
+      if (file.size > MAX_LOGO_BYTES) { toast.error("Logo must be under 2 MB."); return; }
+    }
     setLogoFile(file);
     if (logoPreview) URL.revokeObjectURL(logoPreview);
     setLogoPreview(file ? URL.createObjectURL(file) : null);
@@ -96,12 +102,16 @@ function OnboardingCompany() {
       }).select("id").single();
       if (error) throw error;
 
-      // Upload logo (best-effort).
+      // Upload logo and surface failures so the company never ends up silently logo-less.
       try {
         const logoUrl = await uploadLogo(company.id);
-        if (logoUrl) await supabase.from("companies").update({ logo_url: logoUrl }).eq("id", company.id);
+        if (logoUrl) {
+          const { error: logoErr } = await supabase.from("companies").update({ logo_url: logoUrl }).eq("id", company.id);
+          if (logoErr) throw logoErr;
+        }
       } catch (uErr) {
         console.warn("Logo upload failed", uErr);
+        toast.warning("Logo upload failed — you can add it anytime from Brand Settings.");
       }
 
       // Link profile + add employer role (DB trigger blocks if user is already an Admin).

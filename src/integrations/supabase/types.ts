@@ -184,6 +184,35 @@ export type Database = {
         }
         Relationships: []
       }
+      company_followers: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_followers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_member_roles: {
         Row: {
           company_id: string
@@ -1750,6 +1779,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: undefined
       }
+      company_follower_count: { Args: { _company_id: string }; Returns: number }
       company_has_active_subscription: {
         Args: { _company_id: string }
         Returns: boolean
@@ -1820,6 +1850,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_company_follower: { Args: { _company_id: string }; Returns: boolean }
       match_service_workers: {
         Args: { _lat?: number; _lng?: number; _trade?: string }
         Returns: {
