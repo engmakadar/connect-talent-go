@@ -252,11 +252,46 @@ export function SiteFooter() {
             ]} />
           )}
 
-          <FooterCol title="Legal" items={[
-            { label: "Privacy Policy", to: "/" },
-            { label: "Terms & Conditions", to: "/" },
-          ]} />
+          <div>
+            <FooterCol title="Legal" items={[
+              { label: "Privacy Policy", to: "/" },
+              { label: "Terms & Conditions", to: "/" },
+            ]} />
+
+            <div className="mt-8">
+              <p className="text-xs font-bold uppercase tracking-wider text-footer-foreground/60 mb-3">Get the SahanJob app</p>
+              <div className="flex flex-wrap gap-3">
+                <a
+                  href="https://play.google.com/store"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Download the SahanJob Android app on Google Play"
+                  className="inline-flex items-center gap-2.5 rounded-xl bg-white/10 px-3.5 py-2 ring-1 ring-white/15 hover:bg-white/20 transition-colors"
+                >
+                  <Play className="size-5 text-footer-foreground" />
+                  <span className="leading-tight text-left">
+                    <span className="block text-[9px] uppercase tracking-wider text-footer-foreground/60">Get it on</span>
+                    <span className="block text-sm font-semibold text-white">Google Play</span>
+                  </span>
+                </a>
+                <a
+                  href="https://www.apple.com/app-store/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Download the SahanJob iOS app on the App Store"
+                  className="inline-flex items-center gap-2.5 rounded-xl bg-white/10 px-3.5 py-2 ring-1 ring-white/15 hover:bg-white/20 transition-colors"
+                >
+                  <Apple className="size-5 text-footer-foreground" />
+                  <span className="leading-tight text-left">
+                    <span className="block text-[9px] uppercase tracking-wider text-footer-foreground/60">Download on the</span>
+                    <span className="block text-sm font-semibold text-white">App Store</span>
+                  </span>
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
+
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 md:flex-row">
           <p className="text-xs text-footer-foreground/60">
