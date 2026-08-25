@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
-import { UserPlus, UserCheck, Users } from "lucide-react";
+import { useRouter, Link } from "@tanstack/react-router";
+import { UserPlus, UserCheck, Users, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { stripHtml } from "@/lib/strip-html";
