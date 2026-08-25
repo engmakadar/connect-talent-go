@@ -37,6 +37,7 @@ import { Route as FreelanceDashboardRouteImport } from './routes/freelance.dashb
 import { Route as FreelanceGigIdRouteImport } from './routes/freelance.$gigId'
 import { Route as CompanyUsersRouteImport } from './routes/company.users'
 import { Route as CompanyApplicantsRouteImport } from './routes/company.applicants'
+import { Route as CompaniesCompanyIdRouteImport } from './routes/companies.$companyId'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminTransactionsRouteImport } from './routes/admin.transactions'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
@@ -196,6 +197,11 @@ const CompanyApplicantsRoute = CompanyApplicantsRouteImport.update({
   path: '/company/applicants',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompaniesCompanyIdRoute = CompaniesCompanyIdRouteImport.update({
+  id: '/companies/$companyId',
+  path: '/companies/$companyId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/admin/users',
   path: '/admin/users',
@@ -317,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/companies/$companyId': typeof CompaniesCompanyIdRoute
   '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
   '/freelance/$gigId': typeof FreelanceGigIdRoute
@@ -365,6 +372,7 @@ export interface FileRoutesByTo {
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/companies/$companyId': typeof CompaniesCompanyIdRoute
   '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
   '/freelance/$gigId': typeof FreelanceGigIdRoute
@@ -414,6 +422,7 @@ export interface FileRoutesById {
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/companies/$companyId': typeof CompaniesCompanyIdRoute
   '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
   '/freelance/$gigId': typeof FreelanceGigIdRoute
@@ -464,6 +473,7 @@ export interface FileRouteTypes {
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
+    | '/companies/$companyId'
     | '/company/applicants'
     | '/company/users'
     | '/freelance/$gigId'
@@ -512,6 +522,7 @@ export interface FileRouteTypes {
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
+    | '/companies/$companyId'
     | '/company/applicants'
     | '/company/users'
     | '/freelance/$gigId'
@@ -560,6 +571,7 @@ export interface FileRouteTypes {
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
+    | '/companies/$companyId'
     | '/company/applicants'
     | '/company/users'
     | '/freelance/$gigId'
@@ -609,6 +621,7 @@ export interface RootRouteChildren {
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminTransactionsRoute: typeof AdminTransactionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
+  CompaniesCompanyIdRoute: typeof CompaniesCompanyIdRoute
   CompanyApplicantsRoute: typeof CompanyApplicantsRoute
   CompanyUsersRoute: typeof CompanyUsersRoute
   FreelanceGigIdRoute: typeof FreelanceGigIdRoute
@@ -825,6 +838,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompanyApplicantsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/companies/$companyId': {
+      id: '/companies/$companyId'
+      path: '/companies/$companyId'
+      fullPath: '/companies/$companyId'
+      preLoaderRoute: typeof CompaniesCompanyIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/users': {
       id: '/admin/users'
       path: '/admin/users'
@@ -996,6 +1016,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminTransactionsRoute: AdminTransactionsRoute,
   AdminUsersRoute: AdminUsersRoute,
+  CompaniesCompanyIdRoute: CompaniesCompanyIdRoute,
   CompanyApplicantsRoute: CompanyApplicantsRoute,
   CompanyUsersRoute: CompanyUsersRoute,
   FreelanceGigIdRoute: FreelanceGigIdRoute,
