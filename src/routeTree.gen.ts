@@ -25,6 +25,7 @@ import { Route as TenderIndexRouteImport } from './routes/tender.index'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as JobsIndexRouteImport } from './routes/jobs.index'
 import { Route as FreelanceIndexRouteImport } from './routes/freelance.index'
+import { Route as ServicesWorkflowRouteImport } from './routes/services.workflow'
 import { Route as ServicesRegisterRouteImport } from './routes/services.register'
 import { Route as ServicesOrdersRouteImport } from './routes/services.orders'
 import { Route as ServicesBookingsRouteImport } from './routes/services.bookings'
@@ -135,6 +136,11 @@ const JobsIndexRoute = JobsIndexRouteImport.update({
 const FreelanceIndexRoute = FreelanceIndexRouteImport.update({
   id: '/freelance/',
   path: '/freelance/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesWorkflowRoute = ServicesWorkflowRouteImport.update({
+  id: '/services/workflow',
+  path: '/services/workflow',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServicesRegisterRoute = ServicesRegisterRouteImport.update({
@@ -336,6 +342,7 @@ export interface FileRoutesByFullPath {
   '/services/bookings': typeof ServicesBookingsRoute
   '/services/orders': typeof ServicesOrdersRoute
   '/services/register': typeof ServicesRegisterRoute
+  '/services/workflow': typeof ServicesWorkflowRoute
   '/freelance/': typeof FreelanceIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/services/': typeof ServicesIndexRoute
@@ -385,6 +392,7 @@ export interface FileRoutesByTo {
   '/services/bookings': typeof ServicesBookingsRoute
   '/services/orders': typeof ServicesOrdersRoute
   '/services/register': typeof ServicesRegisterRoute
+  '/services/workflow': typeof ServicesWorkflowRoute
   '/freelance': typeof FreelanceIndexRoute
   '/jobs': typeof JobsIndexRoute
   '/services': typeof ServicesIndexRoute
@@ -435,6 +443,7 @@ export interface FileRoutesById {
   '/services/bookings': typeof ServicesBookingsRoute
   '/services/orders': typeof ServicesOrdersRoute
   '/services/register': typeof ServicesRegisterRoute
+  '/services/workflow': typeof ServicesWorkflowRoute
   '/freelance/': typeof FreelanceIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/services/': typeof ServicesIndexRoute
@@ -486,6 +495,7 @@ export interface FileRouteTypes {
     | '/services/bookings'
     | '/services/orders'
     | '/services/register'
+    | '/services/workflow'
     | '/freelance/'
     | '/jobs/'
     | '/services/'
@@ -535,6 +545,7 @@ export interface FileRouteTypes {
     | '/services/bookings'
     | '/services/orders'
     | '/services/register'
+    | '/services/workflow'
     | '/freelance'
     | '/jobs'
     | '/services'
@@ -584,6 +595,7 @@ export interface FileRouteTypes {
     | '/services/bookings'
     | '/services/orders'
     | '/services/register'
+    | '/services/workflow'
     | '/freelance/'
     | '/jobs/'
     | '/services/'
@@ -634,6 +646,7 @@ export interface RootRouteChildren {
   ServicesBookingsRoute: typeof ServicesBookingsRoute
   ServicesOrdersRoute: typeof ServicesOrdersRoute
   ServicesRegisterRoute: typeof ServicesRegisterRoute
+  ServicesWorkflowRoute: typeof ServicesWorkflowRoute
   FreelanceIndexRoute: typeof FreelanceIndexRoute
   JobsIndexRoute: typeof JobsIndexRoute
   ServicesIndexRoute: typeof ServicesIndexRoute
@@ -752,6 +765,13 @@ declare module '@tanstack/react-router' {
       path: '/freelance'
       fullPath: '/freelance/'
       preLoaderRoute: typeof FreelanceIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services/workflow': {
+      id: '/services/workflow'
+      path: '/services/workflow'
+      fullPath: '/services/workflow'
+      preLoaderRoute: typeof ServicesWorkflowRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/services/register': {
@@ -1029,6 +1049,7 @@ const rootRouteChildren: RootRouteChildren = {
   ServicesBookingsRoute: ServicesBookingsRoute,
   ServicesOrdersRoute: ServicesOrdersRoute,
   ServicesRegisterRoute: ServicesRegisterRoute,
+  ServicesWorkflowRoute: ServicesWorkflowRoute,
   FreelanceIndexRoute: FreelanceIndexRoute,
   JobsIndexRoute: JobsIndexRoute,
   ServicesIndexRoute: ServicesIndexRoute,
