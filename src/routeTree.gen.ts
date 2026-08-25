@@ -25,6 +25,7 @@ import { Route as TenderIndexRouteImport } from './routes/tender.index'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as JobsIndexRouteImport } from './routes/jobs.index'
 import { Route as FreelanceIndexRouteImport } from './routes/freelance.index'
+import { Route as ServicesWorkflowRouteImport } from './routes/services.workflow'
 import { Route as ServicesRegisterRouteImport } from './routes/services.register'
 import { Route as ServicesOrdersRouteImport } from './routes/services.orders'
 import { Route as ServicesBookingsRouteImport } from './routes/services.bookings'
@@ -37,6 +38,7 @@ import { Route as FreelanceDashboardRouteImport } from './routes/freelance.dashb
 import { Route as FreelanceGigIdRouteImport } from './routes/freelance.$gigId'
 import { Route as CompanyUsersRouteImport } from './routes/company.users'
 import { Route as CompanyApplicantsRouteImport } from './routes/company.applicants'
+import { Route as CompaniesCompanyIdRouteImport } from './routes/companies.$companyId'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminTransactionsRouteImport } from './routes/admin.transactions'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
@@ -136,6 +138,11 @@ const FreelanceIndexRoute = FreelanceIndexRouteImport.update({
   path: '/freelance/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ServicesWorkflowRoute = ServicesWorkflowRouteImport.update({
+  id: '/services/workflow',
+  path: '/services/workflow',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ServicesRegisterRoute = ServicesRegisterRouteImport.update({
   id: '/services/register',
   path: '/services/register',
@@ -194,6 +201,11 @@ const CompanyUsersRoute = CompanyUsersRouteImport.update({
 const CompanyApplicantsRoute = CompanyApplicantsRouteImport.update({
   id: '/company/applicants',
   path: '/company/applicants',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompaniesCompanyIdRoute = CompaniesCompanyIdRouteImport.update({
+  id: '/companies/$companyId',
+  path: '/companies/$companyId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
@@ -317,6 +329,7 @@ export interface FileRoutesByFullPath {
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/companies/$companyId': typeof CompaniesCompanyIdRoute
   '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
   '/freelance/$gigId': typeof FreelanceGigIdRoute
@@ -329,6 +342,7 @@ export interface FileRoutesByFullPath {
   '/services/bookings': typeof ServicesBookingsRoute
   '/services/orders': typeof ServicesOrdersRoute
   '/services/register': typeof ServicesRegisterRoute
+  '/services/workflow': typeof ServicesWorkflowRoute
   '/freelance/': typeof FreelanceIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/services/': typeof ServicesIndexRoute
@@ -365,6 +379,7 @@ export interface FileRoutesByTo {
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/companies/$companyId': typeof CompaniesCompanyIdRoute
   '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
   '/freelance/$gigId': typeof FreelanceGigIdRoute
@@ -377,6 +392,7 @@ export interface FileRoutesByTo {
   '/services/bookings': typeof ServicesBookingsRoute
   '/services/orders': typeof ServicesOrdersRoute
   '/services/register': typeof ServicesRegisterRoute
+  '/services/workflow': typeof ServicesWorkflowRoute
   '/freelance': typeof FreelanceIndexRoute
   '/jobs': typeof JobsIndexRoute
   '/services': typeof ServicesIndexRoute
@@ -414,6 +430,7 @@ export interface FileRoutesById {
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/companies/$companyId': typeof CompaniesCompanyIdRoute
   '/company/applicants': typeof CompanyApplicantsRoute
   '/company/users': typeof CompanyUsersRoute
   '/freelance/$gigId': typeof FreelanceGigIdRoute
@@ -426,6 +443,7 @@ export interface FileRoutesById {
   '/services/bookings': typeof ServicesBookingsRoute
   '/services/orders': typeof ServicesOrdersRoute
   '/services/register': typeof ServicesRegisterRoute
+  '/services/workflow': typeof ServicesWorkflowRoute
   '/freelance/': typeof FreelanceIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/services/': typeof ServicesIndexRoute
@@ -464,6 +482,7 @@ export interface FileRouteTypes {
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
+    | '/companies/$companyId'
     | '/company/applicants'
     | '/company/users'
     | '/freelance/$gigId'
@@ -476,6 +495,7 @@ export interface FileRouteTypes {
     | '/services/bookings'
     | '/services/orders'
     | '/services/register'
+    | '/services/workflow'
     | '/freelance/'
     | '/jobs/'
     | '/services/'
@@ -512,6 +532,7 @@ export interface FileRouteTypes {
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
+    | '/companies/$companyId'
     | '/company/applicants'
     | '/company/users'
     | '/freelance/$gigId'
@@ -524,6 +545,7 @@ export interface FileRouteTypes {
     | '/services/bookings'
     | '/services/orders'
     | '/services/register'
+    | '/services/workflow'
     | '/freelance'
     | '/jobs'
     | '/services'
@@ -560,6 +582,7 @@ export interface FileRouteTypes {
     | '/admin/subscriptions'
     | '/admin/transactions'
     | '/admin/users'
+    | '/companies/$companyId'
     | '/company/applicants'
     | '/company/users'
     | '/freelance/$gigId'
@@ -572,6 +595,7 @@ export interface FileRouteTypes {
     | '/services/bookings'
     | '/services/orders'
     | '/services/register'
+    | '/services/workflow'
     | '/freelance/'
     | '/jobs/'
     | '/services/'
@@ -609,6 +633,7 @@ export interface RootRouteChildren {
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminTransactionsRoute: typeof AdminTransactionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
+  CompaniesCompanyIdRoute: typeof CompaniesCompanyIdRoute
   CompanyApplicantsRoute: typeof CompanyApplicantsRoute
   CompanyUsersRoute: typeof CompanyUsersRoute
   FreelanceGigIdRoute: typeof FreelanceGigIdRoute
@@ -621,6 +646,7 @@ export interface RootRouteChildren {
   ServicesBookingsRoute: typeof ServicesBookingsRoute
   ServicesOrdersRoute: typeof ServicesOrdersRoute
   ServicesRegisterRoute: typeof ServicesRegisterRoute
+  ServicesWorkflowRoute: typeof ServicesWorkflowRoute
   FreelanceIndexRoute: typeof FreelanceIndexRoute
   JobsIndexRoute: typeof JobsIndexRoute
   ServicesIndexRoute: typeof ServicesIndexRoute
@@ -741,6 +767,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FreelanceIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/services/workflow': {
+      id: '/services/workflow'
+      path: '/services/workflow'
+      fullPath: '/services/workflow'
+      preLoaderRoute: typeof ServicesWorkflowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/services/register': {
       id: '/services/register'
       path: '/services/register'
@@ -823,6 +856,13 @@ declare module '@tanstack/react-router' {
       path: '/company/applicants'
       fullPath: '/company/applicants'
       preLoaderRoute: typeof CompanyApplicantsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/companies/$companyId': {
+      id: '/companies/$companyId'
+      path: '/companies/$companyId'
+      fullPath: '/companies/$companyId'
+      preLoaderRoute: typeof CompaniesCompanyIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/users': {
@@ -996,6 +1036,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminTransactionsRoute: AdminTransactionsRoute,
   AdminUsersRoute: AdminUsersRoute,
+  CompaniesCompanyIdRoute: CompaniesCompanyIdRoute,
   CompanyApplicantsRoute: CompanyApplicantsRoute,
   CompanyUsersRoute: CompanyUsersRoute,
   FreelanceGigIdRoute: FreelanceGigIdRoute,
@@ -1008,6 +1049,7 @@ const rootRouteChildren: RootRouteChildren = {
   ServicesBookingsRoute: ServicesBookingsRoute,
   ServicesOrdersRoute: ServicesOrdersRoute,
   ServicesRegisterRoute: ServicesRegisterRoute,
+  ServicesWorkflowRoute: ServicesWorkflowRoute,
   FreelanceIndexRoute: FreelanceIndexRoute,
   JobsIndexRoute: JobsIndexRoute,
   ServicesIndexRoute: ServicesIndexRoute,

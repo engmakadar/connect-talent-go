@@ -230,6 +230,34 @@ export function SiteFooter() {
               <li className="flex items-center gap-2"><Phone className="size-4" /><span>+252 612 333 542</span></li>
               <li className="flex items-center gap-2"><MapPin className="size-4" /><span>Mogadishu, Somalia</span></li>
             </ul>
+          </div>
+
+
+          <FooterCol title="For Job Seekers" items={[
+            { label: "Browse Jobs", to: "/jobs" },
+            { label: "Build Profile", to: "/profile" },
+            { label: "Sign In", to: "/auth" },
+          ]} />
+
+          <FooterCol title="For Employers" items={[
+            { label: "Post a Job", to: "/admin/post-job" },
+            { label: "Sign Up", to: "/auth" },
+          ]} />
+
+          {isAdmin && (
+            <FooterCol title="Admin" items={[
+              { label: "Review Queue", to: "/admin/review" },
+              { label: "Manage Users", to: "/admin/users" },
+              { label: "Companies", to: "/admin/companies" },
+            ]} />
+          )}
+
+          <div>
+            <FooterCol title="Legal" items={[
+              { label: "Privacy Policy", to: "/" },
+              { label: "Terms & Conditions", to: "/" },
+            ]} />
+
             <div className="mt-8">
               <p className="text-xs font-bold uppercase tracking-wider text-footer-foreground/60 mb-3">Get the SahanJob app</p>
               <div className="flex flex-wrap gap-3">
@@ -262,31 +290,8 @@ export function SiteFooter() {
               </div>
             </div>
           </div>
-
-          <FooterCol title="For Job Seekers" items={[
-            { label: "Browse Jobs", to: "/jobs" },
-            { label: "Build Profile", to: "/profile" },
-            { label: "Sign In", to: "/auth" },
-          ]} />
-
-          <FooterCol title="For Employers" items={[
-            { label: "Post a Job", to: "/admin/post-job" },
-            { label: "Sign Up", to: "/auth" },
-          ]} />
-
-          {isAdmin && (
-            <FooterCol title="Admin" items={[
-              { label: "Review Queue", to: "/admin/review" },
-              { label: "Manage Users", to: "/admin/users" },
-              { label: "Companies", to: "/admin/companies" },
-            ]} />
-          )}
-
-          <FooterCol title="Legal" items={[
-            { label: "Privacy Policy", to: "/" },
-            { label: "Terms & Conditions", to: "/" },
-          ]} />
         </div>
+
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 md:flex-row">
           <p className="text-xs text-footer-foreground/60">

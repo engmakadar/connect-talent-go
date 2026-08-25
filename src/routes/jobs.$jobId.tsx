@@ -198,8 +198,18 @@ function JobDetail() {
           </div>
 
           <article className="space-y-6">
-            {/* Requirements first, Skills directly below, then the rest of the posting. */}
+            {/* Requirements first, then the rest of the posting, with Skills displayed last. */}
             {sections.filter((s) => s.title === "Requirements").map((s) => (
+              <div key={s.title} className="rounded-2xl bg-card p-6 ring-1 ring-black/5">
+                <h2 className="font-serif text-lg font-semibold tracking-tight mb-4 flex items-center gap-3 text-ink">
+                  <span className="inline-grid place-items-center h-8 w-8 rounded-full bg-primary-soft text-primary">{s.icon}</span>
+                  {s.title}
+                </h2>
+                <RichTextView html={s.body} />
+              </div>
+            ))}
+
+            {sections.filter((s) => s.title !== "Requirements").map((s) => (
               <div key={s.title} className="rounded-2xl bg-card p-6 ring-1 ring-black/5">
                 <h2 className="font-serif text-lg font-semibold tracking-tight mb-4 flex items-center gap-3 text-ink">
                   <span className="inline-grid place-items-center h-8 w-8 rounded-full bg-primary-soft text-primary">{s.icon}</span>
@@ -218,15 +228,6 @@ function JobDetail() {
               </div>
             )}
 
-            {sections.filter((s) => s.title !== "Requirements").map((s) => (
-              <div key={s.title} className="rounded-2xl bg-card p-6 ring-1 ring-black/5">
-                <h2 className="font-serif text-lg font-semibold tracking-tight mb-4 flex items-center gap-3 text-ink">
-                  <span className="inline-grid place-items-center h-8 w-8 rounded-full bg-primary-soft text-primary">{s.icon}</span>
-                  {s.title}
-                </h2>
-                <RichTextView html={s.body} />
-              </div>
-            ))}
 
             {isTender && tenderDocs.length > 0 && (
               <div className="rounded-2xl bg-card p-6 ring-1 ring-black/5">
