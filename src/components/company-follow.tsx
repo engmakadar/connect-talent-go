@@ -71,16 +71,10 @@ export function CompanyFollowCard({ companyId, companyName, description }: Props
     toggle.mutate();
   };
 
-  const bio = truncateWords(stripHtml(description), 200);
+  const bio = truncateWords(stripHtml(description), 55);
 
   return (
     <div className="rounded-2xl bg-card p-5 ring-1 ring-black/5 space-y-3">
-      {bio && (
-        <div>
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">About {companyName}</p>
-          <p className="text-sm text-ink/80 leading-relaxed">{bio}</p>
-        </div>
-      )}
       <div className="flex items-center gap-3">
         <button
           onClick={onClick}
@@ -97,7 +91,24 @@ export function CompanyFollowCard({ companyId, companyName, description }: Props
           <Users className="h-3.5 w-3.5" /> {count.toLocaleString()} follower{count === 1 ? "" : "s"}
         </span>
       </div>
+
+      {bio && (
+        <div>
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">About {companyName}</p>
+          <p className="text-sm text-ink/80 leading-relaxed">{bio}</p>
+        </div>
+      )}
+
+      <Link
+        to="/companies/$companyId"
+        params={{ companyId }}
+        className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+      >
+        See the company details <ArrowRight className="h-3.5 w-3.5" />
+      </Link>
+
       {!user && <p className="text-[11px] text-muted-foreground">Sign in to follow this company.</p>}
     </div>
   );
 }
+
