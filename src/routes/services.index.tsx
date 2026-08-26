@@ -75,6 +75,7 @@ const rateOf = (w: Worker) => w.hourly_rate ?? w.daily_rate ?? Number.POSITIVE_I
 function ServicesPage() {
   const { user, isAdmin } = useAuth();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [trade, setTrade] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [sort, setSort] = useState("match");
