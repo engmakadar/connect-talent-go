@@ -1,9 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Search, Star, MapPin, Phone, Wrench, Hammer, CalendarPlus, ArrowLeft, CheckCircle2,
-  Zap, Ruler, Blocks, PaintRoller, Flame, Cog, Grid3x3, AirVent, Fuel, SprayCan, Car,
+  ClipboardList, Zap, Ruler, Blocks, PaintRoller, Flame, Cog, Grid3x3, AirVent, Fuel, SprayCan, Car,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
