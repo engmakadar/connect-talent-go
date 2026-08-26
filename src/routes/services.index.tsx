@@ -1,9 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Search, Star, MapPin, Phone, Wrench, Hammer, CalendarPlus, ArrowLeft, CheckCircle2,
-  Zap, Ruler, Blocks, PaintRoller, Flame, Cog, Grid3x3, AirVent, Fuel, SprayCan, Car,
+  ClipboardList, Zap, Ruler, Blocks, PaintRoller, Flame, Cog, Grid3x3, AirVent, Fuel, SprayCan, Car,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -75,6 +75,7 @@ const rateOf = (w: Worker) => w.hourly_rate ?? w.daily_rate ?? Number.POSITIVE_I
 function ServicesPage() {
   const { user, isAdmin } = useAuth();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [trade, setTrade] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [sort, setSort] = useState("match");
@@ -179,7 +180,10 @@ function ServicesPage() {
     });
     setSaving(false);
     if (error) return toast.error(error.message);
-    toast.success("Booking request sent. Rate the work once it's completed.");
+    toast.success("Booking request sent.", {
+      description: "Track and process the work lifecycle from your bookings page.",
+      action: { label: "Open lifecycle", onClick: () => void navigate({ to: "/services/workflow" }) },
+    });
     setBooking(null);
     setForm((f) => ({ ...f, description: "", scheduled_for: "" }));
     qc.invalidateQueries({ queryKey: ["my-bookings"] });
@@ -249,7 +253,9 @@ function ServicesPage() {
                   <Wrench className="h-4 w-4" /> Become a worker
                 </Link>
               )}
-
+              <Link to="/services/workflow" className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white hover:bg-ink/90">
+                <ClipboardList className="h-4 w-4" /> My bookings & work lifecycle
+              </Link>
             </div>
           </div>
         </section>
