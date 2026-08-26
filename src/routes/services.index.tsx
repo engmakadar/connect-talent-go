@@ -179,7 +179,10 @@ function ServicesPage() {
     });
     setSaving(false);
     if (error) return toast.error(error.message);
-    toast.success("Booking request sent. Rate the work once it's completed.");
+    toast.success("Booking request sent.", {
+      description: "Track and process the work lifecycle from your bookings page.",
+      action: { label: "Open lifecycle", onClick: () => void navigate({ to: "/services/workflow" }) },
+    });
     setBooking(null);
     setForm((f) => ({ ...f, description: "", scheduled_for: "" }));
     qc.invalidateQueries({ queryKey: ["my-bookings"] });
@@ -249,7 +252,9 @@ function ServicesPage() {
                   <Wrench className="h-4 w-4" /> Become a worker
                 </Link>
               )}
-
+              <Link to="/services/workflow" className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white hover:bg-ink/90">
+                <ClipboardList className="h-4 w-4" /> My bookings & work lifecycle
+              </Link>
             </div>
           </div>
         </section>

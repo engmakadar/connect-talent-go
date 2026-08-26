@@ -37,9 +37,9 @@ const rpc = (fn: string, args: Record<string, unknown>) =>
 
 function FactTile({ icon, value, label }: { icon: React.ReactNode; value: React.ReactNode; label: string }) {
   return (
-    <div className="border-b-2 border-accent-soft pb-3">
+    <div className="border-b-2 border-primary/25 pb-3">
       <div className="flex items-center gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent-soft text-ink">{icon}</span>
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">{icon}</span>
         <div className="min-w-0">
           <p className="truncate text-sm font-bold text-ink">{value}</p>
           <p className="truncate text-xs text-muted-foreground">{label}</p>
