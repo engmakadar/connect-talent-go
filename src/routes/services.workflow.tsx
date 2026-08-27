@@ -102,12 +102,15 @@ function ServiceWorkflowPage() {
 
   const { data } = useQuery({
     enabled: !!user,
-    queryKey: ["service-workflow", user?.id],
+    queryKey: ["service-workflow", user?.id, isAdmin],
     staleTime: 15_000,
     queryFn: async () => {
       const { data: worker } = await supabase.from("skill_workers").select("id, full_name").eq("user_id", user!.id).maybeSingle();
+      // Super Admins manage the whole pipeline, so they see every booking.
       const [{ data: asCustomer }, { data: asWorker }] = await Promise.all([
-        supabase.from("service_bookings").select("*").eq("customer_id", user!.id).order("created_at", { ascending: false }),
+        isAdmin
+          ? supabase.from("service_bookings").select("*").order("created_at", { ascending: false })
+          : supabase.from("service_bookings").select("*").eq("customer_id", user!.id).order("created_at", { ascending: false }),
         worker
           ? supabase.from("service_bookings").select("*").eq("worker_id", worker.id).order("created_at", { ascending: false })
           : Promise.resolve({ data: [] as never[] }),
