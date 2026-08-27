@@ -86,7 +86,7 @@ function StatCell({ label, value, tone = "" }: { label: string; value: number; t
 }
 
 function ServiceWorkflowPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const acceptFn = useServerFn(acceptServiceBooking);
@@ -167,26 +167,25 @@ function ServiceWorkflowPage() {
   };
 
   const Actions = ({ b }: { b: (typeof rows)[number] }) => {
-    const isWorker = !!workerId && b.worker_id === workerId;
     const isCustomer = b.customer_id === user?.id;
     const adv = (status: string, ok: string) => () => void run(() => advanceFn({ data: { bookingId: b.id, status } }), ok);
 
     return (
       <div className="mt-3 flex flex-wrap gap-2">
-        {isWorker && (b.status === "requested" || b.status === "matched") && (
-          <Button size="sm" onClick={() => void run(() => acceptFn({ data: { bookingId: b.id } }), "Job accepted.")}>
-            <Check className="h-4 w-4 mr-1" /> Accept job
+        {isAdmin && (b.status === "requested" || b.status === "matched") && (
+          <Button size="sm" onClick={() => void run(() => acceptFn({ data: { bookingId: b.id } }), "Order accepted.")}>
+            <Check className="h-4 w-4 mr-1" /> Accept order
           </Button>
         )}
-        {isWorker && b.status === "accepted" && (
-          <Button size="sm" variant="outline" onClick={adv("confirmed", "Booking confirmed.")}>
-            <BadgeCheck className="h-4 w-4 mr-1" /> Confirm booking
+        {isAdmin && b.status === "accepted" && (
+          <Button size="sm" variant="outline" onClick={adv("confirmed", "Job confirmed.")}>
+            <BadgeCheck className="h-4 w-4 mr-1" /> Confirm job
           </Button>
         )}
-        {isWorker && b.status === "confirmed" && (
+        {isAdmin && b.status === "confirmed" && (
           <Button size="sm" onClick={adv("in_progress", "Work started.")}><Play className="h-4 w-4 mr-1" /> Start work</Button>
         )}
-        {isWorker && b.status === "in_progress" && (
+        {isAdmin && b.status === "in_progress" && (
           <Button size="sm" onClick={adv("completed", "Work finished — returned to customer.")}>
             <Flag className="h-4 w-4 mr-1" /> Finish work
           </Button>
@@ -226,7 +225,7 @@ function ServiceWorkflowPage() {
         {isCustomer && b.status === "rated" && (
           <Button size="sm" variant="outline" onClick={adv("closed", "Job closed.")}>Close job</Button>
         )}
-        {(isCustomer || isWorker) && ["requested", "matched", "accepted", "confirmed"].includes(b.status) && (
+        {(isCustomer || isAdmin) && ["requested", "matched", "accepted", "confirmed"].includes(b.status) && (
           <Button size="sm" variant="outline" className="text-red-600" onClick={adv("cancelled", "Booking cancelled.")}>
             <X className="h-4 w-4 mr-1" /> Cancel
           </Button>
