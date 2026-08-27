@@ -3,7 +3,6 @@ import {
   LogOut, User as UserIcon, Shield, Plus, LayoutDashboard, Users,
   Facebook, Linkedin, Twitter, Instagram, Mail, Phone, MapPin,
   Building2, Receipt, ChevronDown, ClipboardCheck, FileText, Bookmark, Wrench,
-  Apple, Play,
 } from "lucide-react";
 import logo from "@/assets/sahan-logo.png";
 import { useAuth } from "@/lib/auth-context";
@@ -13,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CompanyLogo } from "@/components/company-logo";
+import { AppStoreBadges } from "@/components/app-store-badges";
 import { useCompanySummary } from "@/hooks/use-company-summary";
 import { Badge } from "@/components/ui/badge";
 import {
