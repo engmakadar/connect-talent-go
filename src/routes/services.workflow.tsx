@@ -131,7 +131,6 @@ function ServiceWorkflowPage() {
   });
 
   const rows = data?.rows ?? [];
-  const workerId = data?.workerId ?? null;
 
   const stats = useMemo(() => {
     const accepted = rows.filter((r) => ["accepted", "confirmed", "in_progress", "completed", "customer_confirmed", "rated", "closed"].includes(r.status)).length;
