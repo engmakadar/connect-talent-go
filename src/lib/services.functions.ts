@@ -34,28 +34,42 @@ export const advanceServiceBooking = createServerFn({ method: "POST" })
       .select("id")
       .eq("user_id", userId)
       .maybeSingle();
+    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
     const isCustomer = booking.customer_id === userId;
     const isWorker = !!worker && worker.id === booking.worker_id;
-    if (!isCustomer && !isWorker) throw new Error("Forbidden: you are not a party to this booking.");
+    if (!isCustomer && !isWorker && !isAdmin) {
+      throw new Error("Forbidden: you are not a party to this booking.");
+    }
 
-    // Allowed transitions per actor (accept goes through acceptServiceBooking for the lock).
-    const allowed: Record<string, string[]> = isWorker
-      ? {
-          requested: ["cancelled"],
-          matched: ["cancelled"],
-          accepted: ["confirmed", "cancelled"],
-          confirmed: ["in_progress", "cancelled"],
-          in_progress: ["completed"],
-        }
-      : {
-          requested: ["cancelled"],
-          matched: ["cancelled"],
-          completed: ["customer_confirmed"],
-          customer_confirmed: ["closed"],
-          rated: ["closed"],
-        };
+    // Allowed transitions per actor.
+    // Super Admins run the delivery side: accept → confirm → start work → finish work.
+    // Customers own the closing side: confirm completion → rating → close.
+    const adminAllowed: Record<string, string[]> = {
+      requested: ["cancelled"],
+      matched: ["cancelled"],
+      accepted: ["confirmed", "cancelled"],
+      confirmed: ["in_progress", "cancelled"],
+      in_progress: ["completed"],
+    };
+    const customerAllowed: Record<string, string[]> = {
+      requested: ["cancelled"],
+      matched: ["cancelled"],
+      completed: ["customer_confirmed"],
+      customer_confirmed: ["closed"],
+      rated: ["closed"],
+    };
+    const workerAllowed: Record<string, string[]> = {
+      requested: ["cancelled"],
+      matched: ["cancelled"],
+    };
 
-    if (!(allowed[booking.status] ?? []).includes(data.status)) {
+    const permitted = new Set<string>([
+      ...(isAdmin ? adminAllowed[booking.status] ?? [] : []),
+      ...(isCustomer ? customerAllowed[booking.status] ?? [] : []),
+      ...(isWorker ? workerAllowed[booking.status] ?? [] : []),
+    ]);
+
+    if (!permitted.has(data.status)) {
       throw new Error(`Cannot move a booking from "${booking.status}" to "${data.status}".`);
     }
 

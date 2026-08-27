@@ -152,6 +152,71 @@ function ServiceOrdersPortal() {
     </div>
   );
 
+  /** Structured table of every order — job details, worker, customer and satisfaction score. */
+  const OrdersTable = ({ list }: { list: typeof rows }) => (
+    list.length === 0 ? (
+      <div className="rounded-2xl bg-card p-12 ring-1 ring-black/5 text-center text-muted-foreground">No orders yet.</div>
+    ) : (
+      <div className="overflow-x-auto rounded-2xl bg-card ring-1 ring-black/5">
+        <table className="w-full min-w-[900px] text-sm">
+          <thead className="bg-secondary/60 text-left">
+            <tr className="text-[11px] uppercase tracking-wide text-muted-foreground">
+              <th className="px-4 py-3 font-semibold">Ordered</th>
+              <th className="px-4 py-3 font-semibold">Job details</th>
+              <th className="px-4 py-3 font-semibold">Worker</th>
+              <th className="px-4 py-3 font-semibold">Customer</th>
+              <th className="px-4 py-3 font-semibold">Schedule</th>
+              <th className="px-4 py-3 font-semibold">Status</th>
+              <th className="px-4 py-3 font-semibold">Satisfaction</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((b) => {
+              const score = b.review
+                ? (b.review.performance_rating + b.review.behaviour_rating) / 2
+                : null;
+              return (
+                <tr key={b.id} className="border-t border-black/5 align-top">
+                  <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                    {new Date(b.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-ink">{b.trade ?? (b.worker?.trades ?? []).join(", ") || "Service"}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2 max-w-[260px]">{b.description}</p>
+                    <p className="text-xs text-muted-foreground">{b.address}</p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-ink">{b.worker?.full_name ?? "—"}</p>
+                    {b.worker?.phone && <p className="text-xs text-muted-foreground">{b.worker.phone}</p>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-ink">{b.customer_name}</p>
+                    {b.customer_phone && <p className="text-xs text-muted-foreground">{b.customer_phone}</p>}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                    {b.scheduled_for ? new Date(b.scheduled_for).toLocaleString() : "Flexible"}
+                  </td>
+                  <td className="px-4 py-3"><Badge variant="outline">{LABEL[b.status] ?? b.status}</Badge></td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {score === null ? (
+                      <span className="text-xs text-muted-foreground">Not rated</span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-ink">
+                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                        {score.toFixed(1)}/5
+                        <span className="text-xs font-normal text-muted-foreground">({Math.round((score / 5) * 100)}%)</span>
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    )
+  );
+
   const OrderList = ({ list }: { list: typeof rows }) => (
     list.length === 0 ? (
       <div className="rounded-2xl bg-card p-12 ring-1 ring-black/5 text-center">
@@ -266,10 +331,12 @@ function ServiceOrdersPortal() {
             <TabsTrigger value="active">Active bookings ({active.length})</TabsTrigger>
             <TabsTrigger value="history">Contract history ({history.length})</TabsTrigger>
             <TabsTrigger value="ratings">Ratings ({awaitingRating.length})</TabsTrigger>
+            <TabsTrigger value="table">All orders ({rows.length})</TabsTrigger>
           </TabsList>
           <TabsContent value="active" className="mt-4"><OrderList list={active} /></TabsContent>
           <TabsContent value="history" className="mt-4"><OrderList list={history} /></TabsContent>
           <TabsContent value="ratings" className="mt-4"><OrderList list={awaitingRating} /></TabsContent>
+          <TabsContent value="table" className="mt-4"><OrdersTable list={rows} /></TabsContent>
         </Tabs>
       </main>
       <SiteFooter />
