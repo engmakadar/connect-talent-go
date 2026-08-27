@@ -260,34 +260,7 @@ export function SiteFooter() {
 
             <div className="mt-8">
               <p className="text-xs font-bold uppercase tracking-wider text-footer-foreground/60 mb-3">Get the SahanJob app</p>
-              <div className="flex flex-wrap gap-3">
-                <a
-                  href="https://play.google.com/store"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Download the SahanJob Android app on Google Play"
-                  className="inline-flex items-center gap-2.5 rounded-xl bg-white/10 px-3.5 py-2 ring-1 ring-white/15 hover:bg-white/20 transition-colors"
-                >
-                  <Play className="size-5 text-footer-foreground" />
-                  <span className="leading-tight text-left">
-                    <span className="block text-[9px] uppercase tracking-wider text-footer-foreground/60">Get it on</span>
-                    <span className="block text-sm font-semibold text-white">Google Play</span>
-                  </span>
-                </a>
-                <a
-                  href="https://www.apple.com/app-store/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Download the SahanJob iOS app on the App Store"
-                  className="inline-flex items-center gap-2.5 rounded-xl bg-white/10 px-3.5 py-2 ring-1 ring-white/15 hover:bg-white/20 transition-colors"
-                >
-                  <Apple className="size-5 text-footer-foreground" />
-                  <span className="leading-tight text-left">
-                    <span className="block text-[9px] uppercase tracking-wider text-footer-foreground/60">Download on the</span>
-                    <span className="block text-sm font-semibold text-white">App Store</span>
-                  </span>
-                </a>
-              </div>
+              <AppStoreBadges variant="dark" />
             </div>
           </div>
         </div>
