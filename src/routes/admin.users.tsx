@@ -549,7 +549,7 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
           <div>
             <Label>Roles</Label>
             <div className="flex flex-wrap gap-2 mt-1.5">
-              {(["jobseeker", "employer", "admin"] as const).map((r) => {
+              {(["employer", "admin"] as const).map((r) => {
                 const active = roleSet.has(r);
                 const disabled = row.id === user?.id && r === "admin";
                 return (
