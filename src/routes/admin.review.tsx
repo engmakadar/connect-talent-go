@@ -49,7 +49,9 @@ function AdminReview() {
         .from("jobs")
         .select("id,title,company,company_id,location,category,status,posting_type,employment_type,created_at,review_notes,description,responsibilities,requirements,education,tender_documents,expires_at")
         .order("created_at", { ascending: false });
-      if (tab === "expired") {
+      if (tab === "rejected") {
+        q = q.eq("status", "rejected");
+      } else if (tab === "expired") {
         q = q.eq("status", "approved").not("expires_at", "is", null).lt("expires_at", nowIso);
       } else {
         // Active tab: approved jobs still publicly available — no expiry date,
