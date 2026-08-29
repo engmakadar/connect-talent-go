@@ -181,7 +181,7 @@ function ServiceOrdersPortal() {
                     {new Date(b.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3">
-                    <p className="font-medium text-ink">{b.trade ?? (b.worker?.trades ?? []).join(", ") || "Service"}</p>
+                    <p className="font-medium text-ink">{b.trade ?? ((b.worker?.trades ?? []).join(", ") || "Service")}</p>
                     <p className="text-xs text-muted-foreground line-clamp-2 max-w-[260px]">{b.description}</p>
                     <p className="text-xs text-muted-foreground">{b.address}</p>
                   </td>
