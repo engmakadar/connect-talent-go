@@ -50,6 +50,7 @@ import { Route as AdminPostJobRouteImport } from './routes/admin.post-job'
 import { Route as AdminPlansRouteImport } from './routes/admin.plans'
 import { Route as AdminJobsRouteImport } from './routes/admin.jobs'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
+import { Route as AdminCvParsingRouteImport } from './routes/admin.cv-parsing'
 import { Route as AdminCompaniesRouteImport } from './routes/admin.companies'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as AdminCandidatesRouteImport } from './routes/admin.candidates'
@@ -263,6 +264,11 @@ const AdminDashboardRoute = AdminDashboardRouteImport.update({
   path: '/admin/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminCvParsingRoute = AdminCvParsingRouteImport.update({
+  id: '/admin/cv-parsing',
+  path: '/admin/cv-parsing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminCompaniesRoute = AdminCompaniesRouteImport.update({
   id: '/admin/companies',
   path: '/admin/companies',
@@ -318,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/admin/candidates': typeof AdminCandidatesRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/companies': typeof AdminCompaniesRouteWithChildren
+  '/admin/cv-parsing': typeof AdminCvParsingRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/plans': typeof AdminPlansRoute
@@ -368,6 +375,7 @@ export interface FileRoutesByTo {
   '/admin/candidates': typeof AdminCandidatesRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/companies': typeof AdminCompaniesRouteWithChildren
+  '/admin/cv-parsing': typeof AdminCvParsingRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/plans': typeof AdminPlansRoute
@@ -419,6 +427,7 @@ export interface FileRoutesById {
   '/admin/candidates': typeof AdminCandidatesRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/companies': typeof AdminCompaniesRouteWithChildren
+  '/admin/cv-parsing': typeof AdminCvParsingRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/plans': typeof AdminPlansRoute
@@ -471,6 +480,7 @@ export interface FileRouteTypes {
     | '/admin/candidates'
     | '/admin/categories'
     | '/admin/companies'
+    | '/admin/cv-parsing'
     | '/admin/dashboard'
     | '/admin/jobs'
     | '/admin/plans'
@@ -521,6 +531,7 @@ export interface FileRouteTypes {
     | '/admin/candidates'
     | '/admin/categories'
     | '/admin/companies'
+    | '/admin/cv-parsing'
     | '/admin/dashboard'
     | '/admin/jobs'
     | '/admin/plans'
@@ -571,6 +582,7 @@ export interface FileRouteTypes {
     | '/admin/candidates'
     | '/admin/categories'
     | '/admin/companies'
+    | '/admin/cv-parsing'
     | '/admin/dashboard'
     | '/admin/jobs'
     | '/admin/plans'
@@ -622,6 +634,7 @@ export interface RootRouteChildren {
   AdminCandidatesRoute: typeof AdminCandidatesRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminCompaniesRoute: typeof AdminCompaniesRouteWithChildren
+  AdminCvParsingRoute: typeof AdminCvParsingRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminJobsRoute: typeof AdminJobsRoute
   AdminPlansRoute: typeof AdminPlansRoute
@@ -942,6 +955,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/cv-parsing': {
+      id: '/admin/cv-parsing'
+      path: '/admin/cv-parsing'
+      fullPath: '/admin/cv-parsing'
+      preLoaderRoute: typeof AdminCvParsingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/companies': {
       id: '/admin/companies'
       path: '/admin/companies'
@@ -1025,6 +1045,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminCandidatesRoute: AdminCandidatesRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminCompaniesRoute: AdminCompaniesRouteWithChildren,
+  AdminCvParsingRoute: AdminCvParsingRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminJobsRoute: AdminJobsRoute,
   AdminPlansRoute: AdminPlansRoute,

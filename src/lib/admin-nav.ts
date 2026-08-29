@@ -74,7 +74,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
   {
     title: "AI Management",
     items: [
-      { key: "cv_parsing", label: "CV Parsing Models", to: "/resume", icon: FileCode2 },
+      { key: "cv_parsing", label: "CV Parsing Models", to: "/admin/cv-parsing", icon: FileCode2 },
     ],
   },
   {
