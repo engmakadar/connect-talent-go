@@ -51,7 +51,7 @@ export function AppStoreBadges({ variant = "dark", className = "" }: Props) {
       </a>
 
       <a
-        href="https://www.apple.com/app-store/"
+        href="https://apps.apple.com/za/app/sahanjob-app/id6763006880"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Download the SahanJobs iOS app on the App Store"
