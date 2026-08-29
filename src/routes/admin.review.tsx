@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Check, X, FileText, ShieldAlert, ExternalLink } from "lucide-react";
+import { Check, X, FileText, ShieldAlert, ExternalLink, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { formatEmploymentType, timeAgo, statusBadgeVariant } from "@/lib/format";
 import { logAudit } from "@/lib/audit";
