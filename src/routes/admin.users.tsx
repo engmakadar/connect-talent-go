@@ -60,7 +60,7 @@ type Row = {
 
 
 
-type RoleFilter = "all" | "employer" | "jobseeker";
+type RoleFilter = "all" | "employer" | "admin";
 
 function AdminUsers() {
   return (
