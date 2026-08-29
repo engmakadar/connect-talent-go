@@ -101,6 +101,7 @@ function AdminReview() {
             <TabsList className="bg-secondary">
               <TabsTrigger value="approved">Active</TabsTrigger>
               <TabsTrigger value="expired">Expired</TabsTrigger>
+              <TabsTrigger value="rejected">Rejected</TabsTrigger>
             </TabsList>
           </Tabs>
 
