@@ -27,7 +27,7 @@ export const Route = createFileRoute("/admin/review")({
 function AdminReview() {
   const { user, isAdmin, loading } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"approved" | "expired">("approved");
+  const [tab, setTab] = useState<"approved" | "expired" | "rejected">("approved");
   const [typeFilter, setTypeFilter] = useState<"all" | "job" | "tender">("all");
 
   // Companies need their own company_id to scope the list.
