@@ -184,7 +184,11 @@ function JobReviewCard({
             <Link to="/jobs/$jobId" params={{ jobId: job.id }} target="_blank"><ExternalLink className="h-4 w-4" /> Preview as public</Link>
           </Button>
           {canModerate && job.status !== "approved" && (
-            <Button size="sm" className="rounded-full" onClick={() => onApprove(notes)}><Check className="h-4 w-4" /> Approve</Button>
+            <Button size="sm" className="rounded-full" onClick={() => onApprove(notes)}>
+              {job.status === "rejected"
+                ? <><RotateCcw className="h-4 w-4" /> Re-Activate</>
+                : <><Check className="h-4 w-4" /> Approve</>}
+            </Button>
           )}
           {canModerate && job.status !== "rejected" && (
             <Button variant="outline" size="sm" className="rounded-full" onClick={() => onReject(notes)}><X className="h-4 w-4" /> Reject</Button>
