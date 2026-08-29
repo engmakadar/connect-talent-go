@@ -203,7 +203,7 @@ function UsersTable() {
           {(["all", "employer", "admin"] as const).map((r) => (
             <button key={r} onClick={() => setRoleFilter(r)}
               className={`px-3 py-1.5 rounded-full transition capitalize ${roleFilter === r ? "bg-primary text-primary-foreground shadow-sm" : "text-ink-soft hover:text-ink"}`}>
-              {r}
+              {r === "admin" ? "Super Admin" : r}
             </button>
           ))}
         </div>
