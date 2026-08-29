@@ -60,7 +60,7 @@ type Row = {
 
 
 
-type RoleFilter = "all" | "employer" | "jobseeker";
+type RoleFilter = "all" | "employer" | "admin";
 
 function AdminUsers() {
   return (
@@ -139,7 +139,9 @@ function UsersTable() {
   });
 
   const filtered = useMemo(() => {
-    let out = rows ?? [];
+    // Jobseeker accounts are excluded from the directory — only Employer and
+    // Super Admin accounts are managed here.
+    let out = (rows ?? []).filter((r) => r.roles.includes("employer") || r.roles.includes("admin"));
     if (roleFilter !== "all") out = out.filter((r) => r.roles.includes(roleFilter));
     const t = q.trim().toLowerCase();
     if (!t) return out;
@@ -198,10 +200,10 @@ function UsersTable() {
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by username, name, email, company or location…" className="pl-9 h-11 bg-white" />
         </div>
         <div className="inline-flex rounded-full bg-secondary p-1 text-xs font-semibold">
-          {(["all", "employer", "jobseeker"] as const).map((r) => (
+          {(["all", "employer", "admin"] as const).map((r) => (
             <button key={r} onClick={() => setRoleFilter(r)}
               className={`px-3 py-1.5 rounded-full transition capitalize ${roleFilter === r ? "bg-primary text-primary-foreground shadow-sm" : "text-ink-soft hover:text-ink"}`}>
-              {r}
+              {r === "admin" ? "Super Admin" : r}
             </button>
           ))}
         </div>
@@ -547,7 +549,7 @@ function EditUserDialog({ row, onSaved }: { row: Row; onSaved: () => void }) {
           <div>
             <Label>Roles</Label>
             <div className="flex flex-wrap gap-2 mt-1.5">
-              {(["jobseeker", "employer", "admin"] as const).map((r) => {
+              {(["employer", "admin"] as const).map((r) => {
                 const active = roleSet.has(r);
                 const disabled = row.id === user?.id && r === "admin";
                 return (

@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Check, X, FileText, ShieldAlert, ExternalLink } from "lucide-react";
+import { Check, X, FileText, ShieldAlert, ExternalLink, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { formatEmploymentType, timeAgo, statusBadgeVariant } from "@/lib/format";
 import { logAudit } from "@/lib/audit";
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/admin/review")({
 function AdminReview() {
   const { user, isAdmin, loading } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"approved" | "expired">("approved");
+  const [tab, setTab] = useState<"approved" | "expired" | "rejected">("approved");
   const [typeFilter, setTypeFilter] = useState<"all" | "job" | "tender">("all");
 
   // Companies need their own company_id to scope the list.
@@ -49,7 +49,9 @@ function AdminReview() {
         .from("jobs")
         .select("id,title,company,company_id,location,category,status,posting_type,employment_type,created_at,review_notes,description,responsibilities,requirements,education,tender_documents,expires_at")
         .order("created_at", { ascending: false });
-      if (tab === "expired") {
+      if (tab === "rejected") {
+        q = q.eq("status", "rejected");
+      } else if (tab === "expired") {
         q = q.eq("status", "approved").not("expires_at", "is", null).lt("expires_at", nowIso);
       } else {
         // Active tab: approved jobs still publicly available — no expiry date,
@@ -99,6 +101,7 @@ function AdminReview() {
             <TabsList className="bg-secondary">
               <TabsTrigger value="approved">Active</TabsTrigger>
               <TabsTrigger value="expired">Expired</TabsTrigger>
+              <TabsTrigger value="rejected">Rejected</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -181,7 +184,11 @@ function JobReviewCard({
             <Link to="/jobs/$jobId" params={{ jobId: job.id }} target="_blank"><ExternalLink className="h-4 w-4" /> Preview as public</Link>
           </Button>
           {canModerate && job.status !== "approved" && (
-            <Button size="sm" className="rounded-full" onClick={() => onApprove(notes)}><Check className="h-4 w-4" /> Approve</Button>
+            <Button size="sm" className="rounded-full" onClick={() => onApprove(notes)}>
+              {job.status === "rejected"
+                ? <><RotateCcw className="h-4 w-4" /> Re-Activate</>
+                : <><Check className="h-4 w-4" /> Approve</>}
+            </Button>
           )}
           {canModerate && job.status !== "rejected" && (
             <Button variant="outline" size="sm" className="rounded-full" onClick={() => onReject(notes)}><X className="h-4 w-4" /> Reject</Button>

@@ -37,7 +37,7 @@ export function AppStoreBadges({ variant = "dark", className = "" }: Props) {
   return (
     <div className={`flex flex-wrap items-center gap-3 ${className}`}>
       <a
-        href="https://play.google.com/store"
+        href="https://play.google.com/store/apps/details?id=com.hormuud.sahan"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Get the SahanJobs Android app on Google Play"
@@ -51,7 +51,7 @@ export function AppStoreBadges({ variant = "dark", className = "" }: Props) {
       </a>
 
       <a
-        href="https://www.apple.com/app-store/"
+        href="https://apps.apple.com/za/app/sahanjob-app/id6763006880"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Download the SahanJobs iOS app on the App Store"
