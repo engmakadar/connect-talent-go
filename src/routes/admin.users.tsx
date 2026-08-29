@@ -200,7 +200,7 @@ function UsersTable() {
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by username, name, email, company or location…" className="pl-9 h-11 bg-white" />
         </div>
         <div className="inline-flex rounded-full bg-secondary p-1 text-xs font-semibold">
-          {(["all", "employer", "jobseeker"] as const).map((r) => (
+          {(["all", "employer", "admin"] as const).map((r) => (
             <button key={r} onClick={() => setRoleFilter(r)}
               className={`px-3 py-1.5 rounded-full transition capitalize ${roleFilter === r ? "bg-primary text-primary-foreground shadow-sm" : "text-ink-soft hover:text-ink"}`}>
               {r}
