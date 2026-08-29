@@ -139,7 +139,9 @@ function UsersTable() {
   });
 
   const filtered = useMemo(() => {
-    let out = rows ?? [];
+    // Jobseeker accounts are excluded from the directory — only Employer and
+    // Super Admin accounts are managed here.
+    let out = (rows ?? []).filter((r) => r.roles.includes("employer") || r.roles.includes("admin"));
     if (roleFilter !== "all") out = out.filter((r) => r.roles.includes(roleFilter));
     const t = q.trim().toLowerCase();
     if (!t) return out;
