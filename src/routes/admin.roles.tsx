@@ -46,11 +46,14 @@ function RolesContent() {
       roles?.forEach((r) => { const a = roleMap.get(r.user_id) ?? []; a.push(r.role); roleMap.set(r.user_id, a); });
       const permMap = new Map<string, Set<string>>();
       perms?.forEach((p) => { const s = permMap.get(p.user_id) ?? new Set(); s.add(p.page_key); permMap.set(p.user_id, s); });
-      return (profiles ?? []).map((p: ProfileRow) => ({
-        ...p,
-        roles: roleMap.get(p.id) ?? [],
-        pages: Array.from(permMap.get(p.id) ?? []) as AdminPageKey[],
-      }));
+      return (profiles ?? [])
+        .map((p: ProfileRow) => ({
+          ...p,
+          roles: roleMap.get(p.id) ?? [],
+          pages: Array.from(permMap.get(p.id) ?? []) as AdminPageKey[],
+        }))
+        // Only Employer and Super Admin accounts are managed through RBAC.
+        .filter((p) => p.roles.includes("employer") || p.roles.includes("admin"));
     },
   });
 
